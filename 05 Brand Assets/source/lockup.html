@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Fortune Cookie Lockup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..700,0..100,0..1&display=swap" />
+<style>
+  html, body { margin: 0; background: transparent; }
+  .lockup { display: inline-flex; align-items: center; gap: 28px; padding: 24px 32px; }
+  .lockup svg { width: 132px; height: auto; display: block; }
+  .wordmark { font-family: "Fraunces", Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; font-weight: 650; font-size: 92px; letter-spacing: -0.02em; line-height: 1; color: var(--c, #24183D); padding-bottom: 8px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+    <symbol id="mark" viewBox="6 4 110 112">
+      <path d="M52 22 C 60 10, 88 8, 100 22 C 110 34, 112 58, 108 76 C 106 86, 102 94, 96 100 C 90 90, 76 84, 62 86 C 60 62, 57 40, 52 22 Z" fill="#E9A13D" />
+      <path d="M52 22 C 64 34, 70 60, 62 86 C 60 62, 57 40, 52 22 Z" fill="#C97E22" />
+      <g fill="#B8741F" opacity=".45"><circle cx="80" cy="24" r="1.4"/><circle cx="95" cy="44" r="1.4"/><circle cx="92" cy="68" r="1.4"/><circle cx="72" cy="40" r="1.4"/></g>
+      <path d="M57.9 86.3 L81.6 82.1 L86.1 107.7 L62.4 111.9 Z" fill="#FFF8EC" stroke="#E6D8C3" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M0 -7 C1 -2 2 -1 7 0 C2 1 1 2 0 7 C-1 2 -2 1 -7 0 C-2 -1 -1 -2 0 -7 Z" transform="translate(73 97) rotate(-10) scale(0.8)" fill="#FF8DB0" />
+      <path d="M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z" fill="#F4B652" />
+      <path d="M52 23 C 62 44, 67 70, 64 90 C 64 70, 60 46, 52 23 Z" fill="#FFDD95" />
+      <path d="M22 50 C 25 41, 32 34, 41 31" fill="none" stroke="#FFE2A6" stroke-width="3.5" stroke-linecap="round" />
+      <g fill="#B8741F" opacity=".45"><circle cx="28" cy="60" r="1.4"/><circle cx="40" cy="78" r="1.4"/><circle cx="24" cy="76" r="1.4"/><circle cx="36" cy="44" r="1.4"/></g>
+    </symbol>
+  </defs></svg>
+<div class="lockup" id="lockup">
+  <svg viewBox="6 4 110 112"><use href="#mark"/></svg>
+  <span class="wordmark">fortune cookie</span>
+</div>
+</body>
+</html>

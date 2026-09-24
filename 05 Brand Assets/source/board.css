@@ -1,0 +1,48 @@
+/* Shared styles for the Fortune Cookie brand boards. Rendered to PNG at 1600px. */
+:root {
+  --night: #1d1333;
+  --night-2: #2b1f4a;
+  --ink: #24183d;
+  --ink-2: #5d5078;
+  --ink-3: #857a9e;
+  --mist: #f6f1fb;
+  --band: #efe7f9;
+  --line: #e2d8ef;
+  --gold: #f2b04a;
+  --gold-deep: #d38a1c;
+  --pink: #ff8db0;
+  --pink-soft: #ffd3e1;
+  --pink-ink: #b02a5e;
+  --lilac: #bba7f4;
+  --paper: #fff8ec;
+  --wood: #a5e0c4; --wood-ink: #17634a;
+  --fire: #ffae9e; --fire-ink: #a33224;
+  --earth: #f7d27e; --earth-ink: #7d5406;
+  --metal: #c7cbe8; --metal-ink: #4d5270;
+  --water: #a9c4ff; --water-ink: #1e4d9c;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Nunito", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mist); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.board { width: 1600px; padding: 64px 80px 72px; display: grid; gap: 56px; }
+h1, h2, h3, .display { font-family: var(--display); font-variation-settings: "SOFT" 100, "WONK" 0; font-weight: 600; margin: 0; letter-spacing: -0.015em; }
+p { margin: 0; }
+.eyebrow { font-weight: 800; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pink-ink); }
+.label { font-weight: 800; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.topline { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--line); padding-bottom: 18px; }
+.topline .label:last-child { color: var(--ink-2); }
+.section { display: grid; gap: 22px; }
+.section-title { display: flex; align-items: baseline; gap: 14px; border-bottom: 1.5px solid var(--line); padding-bottom: 12px; }
+.section-title h2 { font-size: 30px; }
+.section-title p { color: var(--ink-3); font-weight: 700; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14.5px; }
+.wordmark { font-family: var(--display); font-variation-settings: "SOFT" 100, "WONK" 1; font-weight: 650; letter-spacing: -0.02em; line-height: 1; }
+em.w { font-style: italic; font-variation-settings: "SOFT" 100, "WONK" 1; color: var(--pink-ink); }
+.night { background: var(--night); color: #f4edff; }
+.tile { border-radius: 24px; padding: 28px; }
+.grid { display: grid; gap: 20px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 999px; font-size: 14px; font-weight: 800; }
+.chip i { width: 9px; height: 9px; border-radius: 50%; background: currentColor; display: inline-block; }
+.star { position: absolute; color: #fff3d6; }

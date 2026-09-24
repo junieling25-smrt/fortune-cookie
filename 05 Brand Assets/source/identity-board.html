@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Fortune Cookie Identity Board</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..700,0..100,0..1;1,9..144,400..700,0..100,0..1&family=Nunito:wght@400;600;700;800&display=swap" />
+<link rel="stylesheet" href="board.css" />
+<style>
+  .opener { display: grid; grid-template-columns: 540px 1fr; gap: 24px; }
+  .opener .night { position: relative; overflow: hidden; display: grid; place-items: center; min-height: 420px; }
+  .opener .moon { position: absolute; width: 330px; height: 330px; border-radius: 50%; background: var(--night-2); }
+  .opener .orbit { position: absolute; width: 440px; height: 440px; border-radius: 50%; border: 1.5px dashed rgba(244, 237, 255, 0.16); }
+  .opener .lock { position: relative; display: grid; justify-items: center; gap: 18px; }
+  .opener .lock svg { width: 190px; }
+  .opener .lock .wordmark { font-size: 56px; color: #f4edff; }
+  .manifesto { background: #fff; border: 1.5px solid var(--line); padding: 48px 52px; display: grid; gap: 22px; align-content: center; }
+  .manifesto .display { font-size: 40px; line-height: 1.15; }
+  .palette { grid-template-columns: repeat(7, 1fr); }
+  .swatch { display: grid; gap: 10px; }
+  .swatch .s { height: 150px; border-radius: 20px; }
+  .swatch p { font-size: 14px; }
+  .swatch .hex { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--ink-2); font-size: 13px; }
+  .data { grid-template-columns: 1.4fr 1fr; }
+  .elements { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .el { border-radius: 18px; padding: 16px 16px 14px; color: #24183d; display: grid; gap: 2px; }
+  .el b { font-family: var(--display); font-variation-settings: "SOFT" 100, "WONK" 1; font-size: 26px; font-weight: 650; }
+  .el span { font-size: 13px; font-weight: 800; }
+  .tones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+  .type { grid-template-columns: 1.2fr 1fr; }
+  .type .tile { background: #fff; border: 1.5px solid var(--line); display: grid; gap: 14px; align-content: start; }
+  .specimen { font-family: var(--display); font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 144; font-size: 92px; line-height: 0.95; letter-spacing: -0.03em; font-weight: 600; }
+  .specimen em { font-style: italic; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; color: var(--pink-ink); font-weight: 560; }
+  .scale { display: grid; gap: 8px; border-top: 1.5px solid var(--line); padding-top: 16px; }
+  .scale div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .components { grid-template-columns: 1fr 1fr; }
+  .stage-mini { position: relative; overflow: hidden; display: grid; place-items: center; padding: 48px 40px; }
+  .slip { position: relative; width: 100%; max-width: 520px; background: var(--paper); color: #2a1c44; border-radius: 16px; padding: 30px 30px 20px; rotate: -1.2deg; box-shadow: 0 26px 50px -24px rgba(0,0,0,0.7);
+    -webkit-mask: radial-gradient(circle at 0 50%, transparent 9px, #000 9.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 9px, #000 9.5px) right / 51% 100% no-repeat; }
+  .slip-tag { position: absolute; top: 12px; right: 18px; background: var(--pink); color: #3a0f24; font-weight: 800; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 10px; border-radius: 8px; rotate: 4deg; }
+  .slip .date { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6b5d85; }
+  .slip .text { font-family: var(--display); font-variation-settings: "SOFT" 100; font-weight: 500; font-size: 27px; line-height: 1.28; margin: 10px 0 16px; }
+  .slip .foot { display: flex; gap: 8px; border-top: 1.5px dashed #e6d9c4; padding-top: 14px; }
+  .area { background: #fff; border: 1.5px solid var(--line); border-radius: 22px; padding: 24px; display: grid; gap: 12px; align-content: start; }
+  .area-head { display: flex; align-items: center; gap: 12px; }
+  .area-icon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; }
+  .area h3 { font-size: 22px; flex: 1; }
+  .step { border: 1.5px dashed var(--line); border-radius: 14px; padding: 12px 14px; display: flex; gap: 12px; font-weight: 600; }
+  .step i { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--ink-3); flex: none; }
+  .voice { grid-template-columns: 1fr 1fr; }
+  .voice .tile { display: grid; gap: 14px; align-content: start; }
+  .before { background: #fff; border: 1.5px solid var(--line); }
+  .before q { font-size: 19px; color: var(--ink-3); quotes: none; }
+  .after { background: var(--band); }
+  .after p.big { font-size: 20px; }
+  .rules { grid-template-columns: repeat(3, 1fr); }
+  .rule { background: #fff; border: 1.5px solid var(--line); border-radius: 20px; padding: 22px 24px; display: grid; gap: 6px; }
+  .rule h3 { font-size: 21px; }
+  .footline { display: flex; justify-content: space-between; border-top: 1.5px solid var(--line); padding-top: 18px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <path id="cookie" d="M50.08 29.36 Q60 12 69.92 29.36 Q88.34 51.52 98.08 78.64 Q108 96 88 96 Q60 101 32 96 Q12 96 21.92 78.64 Q31.66 51.52 50.08 29.36 Z" />
+    <path id="spark" d="M0 -7 C1 -2 2 -1 7 0 C2 1 1 2 0 7 C-1 2 -2 1 -7 0 C-2 -1 -1 -2 0 -7 Z" />
+    <symbol id="mark" viewBox="6 4 110 112">
+      <path d="M52 22 C 60 10, 88 8, 100 22 C 110 34, 112 58, 108 76 C 106 86, 102 94, 96 100 C 90 90, 76 84, 62 86 C 60 62, 57 40, 52 22 Z" fill="#E9A13D" />
+      <path d="M52 22 C 64 34, 70 60, 62 86 C 60 62, 57 40, 52 22 Z" fill="#C97E22" />
+      <g fill="#B8741F" opacity=".45"><circle cx="80" cy="24" r="1.4"/><circle cx="95" cy="44" r="1.4"/><circle cx="92" cy="68" r="1.4"/><circle cx="72" cy="40" r="1.4"/></g>
+      <path d="M57.9 86.3 L81.6 82.1 L86.1 107.7 L62.4 111.9 Z" fill="#FFF8EC" stroke="#E6D8C3" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M0 -7 C1 -2 2 -1 7 0 C2 1 1 2 0 7 C-1 2 -2 1 -7 0 C-2 -1 -1 -2 0 -7 Z" transform="translate(73 97) rotate(-10) scale(0.8)" fill="#FF8DB0" />
+      <path d="M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z" fill="#F4B652" />
+      <path d="M52 23 C 62 44, 67 70, 64 90 C 64 70, 60 46, 52 23 Z" fill="#FFDD95" />
+      <path d="M22 50 C 25 41, 32 34, 41 31" fill="none" stroke="#FFE2A6" stroke-width="3.5" stroke-linecap="round" />
+      <g fill="#B8741F" opacity=".45"><circle cx="28" cy="60" r="1.4"/><circle cx="40" cy="78" r="1.4"/><circle cx="24" cy="76" r="1.4"/><circle cx="36" cy="44" r="1.4"/></g>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="board">
+  <div class="topline"><span class="label">Fortune Cookie · Identity board · v2.0</span><span class="label">Cute on the surface. Midnight underneath.</span></div>
+
+  <div class="opener">
+    <div class="tile night">
+      <span class="moon"></span><span class="orbit"></span>
+      <svg class="star" style="left: 60px; top: 58px" width="14" height="14" viewBox="-8 -8 16 16"><use href="#spark" fill="currentColor" /></svg>
+      <svg class="star" style="right: 70px; top: 90px" width="10" height="10" viewBox="-8 -8 16 16"><use href="#spark" fill="currentColor" /></svg>
+      <svg class="star" style="left: 90px; bottom: 80px" width="9" height="9" viewBox="-8 -8 16 16"><use href="#spark" fill="currentColor" /></svg>
+      <svg class="star" style="right: 50px; bottom: 60px" width="13" height="13" viewBox="-8 -8 16 16"><use href="#spark" fill="currentColor" /></svg>
+      <div class="lock"><svg viewBox="6 4 110 112"><use href="#mark" /></svg><span class="wordmark">fortune cookie</span></div>
+    </div>
+    <div class="tile manifesto">
+      <p class="eyebrow">Why a fortune cookie</p>
+      <p class="display">It's the friendliest way anyone has ever been handed a message about their life. We kept that feeling and put a real Four Pillars chart inside.</p>
+      <p class="muted" style="max-width: 62ch">The cookie is familiar all over the world, so nobody needs a glossary to walk in. The mystery comes from the night sky around it and from the chart doing real work underneath. The words stay plain, warm, and short enough to fit on a slip.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-title"><h2>Core palette</h2><p>A midnight ground, a golden cookie, one sticker of pink.</p></div>
+    <div class="grid palette">
+      <div class="swatch"><div class="s" style="background: #1D1333"></div><p class="label" style="color: var(--ink)">Midnight Plum</p><p class="hex">#1D1333</p><p class="muted">The night stage. Where the mystery lives.</p></div>
+      <div class="swatch"><div class="s" style="background: #24183D"></div><p class="label" style="color: var(--ink)">Plum Ink</p><p class="hex">#24183D</p><p class="muted">All text on light grounds.</p></div>
+      <div class="swatch"><div class="s" style="background: #F6F1FB; border: 1.5px solid var(--line)"></div><p class="label" style="color: var(--ink)">Lavender Mist</p><p class="hex">#F6F1FB</p><p class="muted">The light page. A little dreamy, never white.</p></div>
+      <div class="swatch"><div class="s" style="background: #F2B04A"></div><p class="label" style="color: var(--ink)">Cookie Gold</p><p class="hex">#F2B04A</p><p class="muted">The cookie, and the one button that matters.</p></div>
+      <div class="swatch"><div class="s" style="background: #FF8DB0"></div><p class="label" style="color: var(--ink)">Sticker Pink</p><p class="hex">#FF8DB0</p><p class="muted">The fortune inside. Tags and small delights.</p></div>
+      <div class="swatch"><div class="s" style="background: #FFF8EC; border: 1.5px solid var(--line)"></div><p class="label" style="color: var(--ink)">Slip Paper</p><p class="hex">#FFF8EC</p><p class="muted">The fortune slip, the same in both themes.</p></div>
+      <div class="swatch"><div class="s" style="background: #BBA7F4"></div><p class="label" style="color: var(--ink)">Moon Lilac</p><p class="hex">#BBA7F4</p><p class="muted">Hover, focus, quiet in-between moments.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>The data layer</h2><p>Elements and conditions are stickers: pastel fill, dark ink. Never a page background.</p></div>
+    <div class="grid data">
+      <div class="elements">
+        <div class="el" style="background: var(--wood)"><b>Wood</b><span style="color: var(--wood-ink)">#A5E0C4 · ink #17634A</span><span class="small" style="font-weight: 600">growth and fresh starts</span></div>
+        <div class="el" style="background: var(--fire)"><b>Fire</b><span style="color: var(--fire-ink)">#FFAE9E · ink #A33224</span><span class="small" style="font-weight: 600">warmth and being seen</span></div>
+        <div class="el" style="background: var(--earth)"><b>Earth</b><span style="color: var(--earth-ink)">#F7D27E · ink #7D5406</span><span class="small" style="font-weight: 600">steadiness and care</span></div>
+        <div class="el" style="background: var(--metal)"><b>Metal</b><span style="color: var(--metal-ink)">#C7CBE8 · ink #4D5270</span><span class="small" style="font-weight: 600">focus and clear edges</span></div>
+        <div class="el" style="background: var(--water)"><b>Water</b><span style="color: var(--water-ink)">#A9C4FF · ink #1E4D9C</span><span class="small" style="font-weight: 600">curiosity and flow</span></div>
+      </div>
+      <div class="tones">
+        <span class="chip" style="background: #C9F0DD; color: #135E40"><i></i>Flowing</span>
+        <span class="chip" style="background: #E4DCFB; color: #45327D"><i></i>Steady</span>
+        <span class="chip" style="background: #FBE6B5; color: #7A4A00"><i></i>Mixed</span>
+        <span class="chip" style="background: #FFD8E4; color: #9C2757"><i></i>Go gently</span>
+        <p class="muted small" style="grid-column: 1 / -1">Four conditions, no verdicts. There's no "bad day" chip, no score, and no percentage. The softest one tells you to be kind to yourself.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>Type</h2><p>Fraunces for the voice, Nunito for the facts.</p></div>
+    <div class="grid type">
+      <div class="tile">
+        <p class="label">Display · Fraunces 600, soft 100, wonky italics</p>
+        <p class="specimen">Crack open<br /><em>your day.</em></p>
+        <div class="scale">
+          <div><span class="display" style="font-size: 46px">Your day, area by area</span><span class="label">H2 · 46</span></div>
+          <div><span class="display" style="font-size: 27px; font-weight: 500">Clear lines make things easier today.</span><span class="label">Slip · 27</span></div>
+          <div><span class="display" style="font-size: 20px; font-style: italic; font-variation-settings: 'SOFT' 100, 'WONK' 1">What would you make today if nobody graded it?</span><span class="label">Ask · 19</span></div>
+        </div>
+      </div>
+      <div class="tile">
+        <p class="label">Body · Nunito 400 to 800</p>
+        <p style="font-size: 30px; font-weight: 700; line-height: 1.25">Rounded, friendly, and easy to read at any size.</p>
+        <p style="font-size: 17px">Body copy is Nunito 400 at 16.5 to 18 px with a 1.6 line height, kept under about 65 characters a line. Emphasis comes from weight, not from color or italics.</p>
+        <p class="eyebrow">Labels are Nunito 800, uppercase, +0.1em</p>
+        <p class="muted small">Italic Fraunces is kept for one thing: the question the reader carries through the day.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>Signature pieces</h2><p>The slip on the night stage, and the area card.</p></div>
+    <div class="grid components">
+      <div class="tile night stage-mini">
+        <div class="slip">
+          <span class="slip-tag">Your fortune</span>
+          <p class="date">Tuesday, September 22</p>
+          <p class="text">There's room to step back and think today. Enjoy it, then come back out.</p>
+          <div class="foot"><span class="chip" style="background: var(--earth); color: var(--earth-ink)">Yin Earth Pig day</span><span class="chip" style="background: #C9F0DD; color: #135E40"><i></i>Flowing</span></div>
+        </div>
+      </div>
+      <div class="area">
+        <div class="area-head">
+          <span class="area-icon" style="background: var(--pink-soft); color: #9c2757"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20s-6.5-4-6.5-9.2a3.7 3.7 0 0 1 6.5-2.4 3.7 3.7 0 0 1 6.5 2.4c0 5.2-6.5 9.2-6.5 9.2Z" /></svg></span>
+          <h3>Love &amp; friends</h3>
+          <span class="chip" style="background: #C9F0DD; color: #135E40"><i></i>Flowing</span>
+        </div>
+        <p>You know what you want from your relationships today. Say it kindly and clearly.</p>
+        <p class="muted" style="font-weight: 600">Connection comes easily. Reach out first.</p>
+        <p class="small muted" style="background: var(--band); border-radius: 12px; padding: 10px 12px">Today's Pig gets along with your Day Tiger, the part of your chart linked to your closest relationships.</p>
+        <div class="step"><i></i><span><span class="label" style="display: block">Tiny step</span>Text a friend just to check in. No reason needed.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>Voice</h2><p>A warm friend reading the weather with you. Plain words, short lines, no mystic fog.</p></div>
+    <div class="grid voice">
+      <div class="tile before">
+        <p class="label">Before · MING</p>
+        <q>Today's stem 己 (Earth) against a 壬 Water day master is Direct Officer 正官: structure and expectation. Season branch 申 is Metal, in the resource direction.</q>
+        <p class="small muted">Accurate, but it mixes Chinese characters into English and asks the reader to learn a system before they get anything back.</p>
+      </div>
+      <div class="tile after">
+        <p class="label" style="color: var(--pink-ink)">After · Fortune Cookie</p>
+        <p class="big">Today carries <b>Earth</b> energy. For a Yang Water person like you, Earth works as <b>Structure</b>: rules, deadlines, bosses, and responsibility.</p>
+        <p class="big">Career &amp; money · <b>Mixed</b>. Expectations at work are clear today. Double-check the details before you hit send.</p>
+        <p class="small muted">Same calculation underneath. The mechanism is still shown, in words anyone can check.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><h2>House rules</h2><p>Enforced by a copy check that fails the build.</p></div>
+    <div class="grid rules">
+      <div class="rule"><h3>Plain English only</h3><p class="muted">No Chinese characters and no romanized terms on screen. Four Pillars, not BaZi jargon.</p></div>
+      <div class="rule"><h3>Weather, not fate</h3><p class="muted">Say "may" and "today". Never "will happen", never luck, never a verdict.</p></div>
+      <div class="rule"><h3>Every chart is uneven</h3><p class="muted">Nothing is "missing" or "broken". An element you have less of just takes a little more effort.</p></div>
+      <div class="rule"><h3>Short enough for a slip</h3><p class="muted">Two sentences for a fortune. The deep calculation lives behind one "show me" toggle.</p></div>
+      <div class="rule"><h3>Human-written</h3><p class="muted">Every line is written by hand. No em dashes and no "it's not X, it's Y" lines.</p></div>
+      <div class="rule"><h3>Cute, never childish</h3><p class="muted">Rounded shapes and sparkles, yes. Faces on the cookie, zodiac clip art, red and gold luck styling, no.</p></div>
+    </div>
+  </section>
+
+  <div class="footline"><span class="label">Tends to, not will</span><span class="label">fortune cookie · 2026</span></div>
+</main>
+</body>
+</html>

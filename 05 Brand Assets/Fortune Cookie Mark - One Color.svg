@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 4 110 112" width="550" height="560">
+  <title>Fortune Cookie mark, one color</title>
+  <defs>
+    <mask id="fc-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120">
+      <rect width="120" height="120" fill="#fff"/>
+      <path d="M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M57.9 86.3 L81.6 82.1 L86.1 107.7 L62.4 111.9 Z" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    </mask>
+    <mask id="fc-cut-slip" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120">
+      <rect width="120" height="120" fill="#fff"/>
+      <path d="M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z" fill="#000" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <path d="M52 22 C 60 10, 88 8, 100 22 C 110 34, 112 58, 108 76 C 106 86, 102 94, 96 100 C 90 90, 76 84, 62 86 C 60 62, 57 40, 52 22 Z" fill="#24183D" mask="url(#fc-cut)"/>
+  <path d="M57.9 86.3 L81.6 82.1 L86.1 107.7 L62.4 111.9 Z" fill="#24183D" mask="url(#fc-cut-slip)"/>
+  <path d="M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z" fill="#24183D"/>
+</svg>
