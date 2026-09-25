@@ -9,7 +9,7 @@ A daily fortune from your Four Pillars birth chart, in plain English. It is the 
 | --- | --- |
 | `01 Project Submission` | Project guide and memo draft |
 | `02 Research and Strategy` | Product brief, engine worked example, audience notes, competitor snapshot |
-| `03 Product Screenshots` | 14 screens: onboarding, daily crack, reading, long-term views, share image, mobile |
+| `03 Product Screenshots` | 16 screens: onboarding, daily crack, reading, long-term views, share image, mobile |
 | `04 Source Code` | The app source and a single-file build |
 | `05 Brand Assets` | Cookie mark, icon, lockups, brand boards, brand system |
 

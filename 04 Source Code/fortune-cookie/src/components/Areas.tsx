@@ -1,22 +1,32 @@
 import { useEffect, useState } from "react";
+import { ReadMore } from "./ReadMore";
 import type { AreaId, AreaReading, DailyReading } from "../engine/reading";
-import { AREA_ICON, Check, Spark, Star5, ToneIcon } from "./Icons";
+import { AREA_ICON, Check, Pencil, Spark, Star5, ToneIcon } from "./Icons";
 
 export function Areas({
   reading,
   done,
   onToggle,
   tryDone,
+  plans,
+  onPlan,
 }: {
   reading: DailyReading;
   done: string[];
   onToggle: (id: AreaId) => void;
   tryDone: boolean;
+  plans: Partial<Record<AreaId, string>>;
+  onPlan: (id: AreaId, text: string | null) => void;
 }) {
   const ordered = [...reading.areas.filter((a) => a.interested), ...reading.areas.filter((a) => !a.interested)];
   const [open, setOpen] = useState<AreaId>(reading.focus);
   useEffect(() => setOpen(reading.focus), [reading.date, reading.focus]);
   const area = reading.areas.find((a) => a.id === open) as AreaReading;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  useEffect(() => setEditing(false), [open, reading.date]);
+  const plan = plans[area.id];
+  const stepText = plan ?? area.step;
   const total = reading.areas.length + 1;
   const count = done.length + (tryDone ? 1 : 0);
 
@@ -111,17 +121,62 @@ export function Areas({
               <span>{area.link}</span>
             </p>
           ) : null}
+          <ReadMore text={area.deep} resetKey={`${reading.date}-${area.id}`} />
           <p className="ap-why">{area.why}</p>
         </div>
         <aside className="ap-side">
-          <button type="button" className={`step ${done.includes(area.id) ? "is-done" : ""}`} aria-pressed={done.includes(area.id)} onClick={() => onToggle(area.id)}>
-            <span className="step-box">{done.includes(area.id) ? <Check size={13} /> : null}</span>
-            <span className="step-copy">
-              <small>Tiny step · {area.title}</small>
-              {area.step}
-            </span>
-          </button>
-          <p className="ap-side-note">{done.includes(area.id) ? "Nice. That counts." : "Small enough for today. Tap when it's done."}</p>
+          {editing ? (
+            <form
+              className="step-edit"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const t = draft.trim();
+                onPlan(area.id, t && t !== area.step ? t.slice(0, 200) : null);
+                setEditing(false);
+              }}
+            >
+              <label className="label" htmlFor="step-draft">
+                Your own tiny step · {area.title}
+              </label>
+              <textarea id="step-draft" className="field" rows={3} maxLength={200} value={draft} autoFocus onChange={(e) => setDraft(e.target.value)} />
+              <div className="step-edit-actions">
+                <button type="submit" className="btn btn-cookie btn-small">
+                  Save my step
+                </button>
+                <button type="button" className="btn btn-quiet btn-small" onClick={() => setEditing(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button type="button" className={`step ${done.includes(area.id) ? "is-done" : ""}`} aria-pressed={done.includes(area.id)} onClick={() => onToggle(area.id)}>
+              <span className="step-box">{done.includes(area.id) ? <Check size={13} /> : null}</span>
+              <span className="step-copy">
+                <small>{plan ? "Your step" : "Tiny step"} · {area.title}</small>
+                {stepText}
+              </span>
+            </button>
+          )}
+          {!editing ? (
+            <div className="step-tools">
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => {
+                  setDraft(stepText);
+                  setEditing(true);
+                }}
+              >
+                <Pencil size={13} /> Edit step
+              </button>
+              {plan ? (
+                <button type="button" className="link-btn" onClick={() => onPlan(area.id, null)}>
+                  Use the suggestion
+                </button>
+              ) : null}
+              <span className="ap-side-note">{done.includes(area.id) ? "Nice. That counts." : "Tap the step when it's done."}</span>
+            </div>
+          ) : null}
         </aside>
       </article>
     </section>

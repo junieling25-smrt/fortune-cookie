@@ -13,7 +13,7 @@
 
 ## Project overview
 
-Fortune Cookie turns a person's birth date, time, and place into a Four Pillars chart, a traditional Chinese way of reading a birth date through the solar calendar. Each day the reader cracks a cookie and gets a short fortune. Then comes a plain-English reading of what's in the air overall and in four areas of life: personal growth, career and money, love and friends, and family and pets. Month, year, and lifetime views zoom out from the day. It describes conditions, never outcomes: "We describe the weather. You choose the route."
+Fortune Cookie turns a person's birth date, time, and place into a Four Pillars chart, a traditional Chinese way of reading a birth date through the solar calendar. Each day the reader cracks a cookie and gets a short fortune. Then comes a plain-English reading of what's in the air overall and in four areas of life: personal growth, career and money, love and friends, and family and pets. Month, year, 3-, 5-, and 10-year, and lifetime views zoom out from the day. It describes conditions, never outcomes: "We describe the weather. You choose the route."
 
 ## Target audience
 
@@ -30,19 +30,24 @@ MING proved the calculation could be accurate and transparent, but it read like 
 
 ## What the project does
 
-- **Onboarding that cracks a cookie:** name, birthday, birth time (or "I don't know"), birthplace from 2,871 cities, the areas you care about, and a little about your life (work, love, who's at home, what you're working on). The cookie cracks a little more with each step and opens at the end.
+- **Onboarding that cracks a cookie:** it starts with a welcome cookie. Then come name, birthday (MM/DD/YYYY), birth time (12-hour with AM/PM, or "I don't know"), birthplace from 34,149 cities worldwide, and a little about your life (work, love, who's at home, what you're working on). Every question in the last step takes multiple answers. The cookie cracks a little more with each step and opens at the end.
 - **Real calculation:** clock time converted to sun time for the birthplace, using that day's historical time zone. The four pillars come from the sun's real position, with the year turning at the start of spring.
 - **A daily cookie:** sealed each morning and cracked with a tap. The fortune carries your name.
 - **Overall:** a weather-style condition (Flowing, Steady, Mixed, Go gently), a plain line on today's energy, "Your [element] today" written for your core element, one thing to try, and one question to carry.
-- **Four life areas in forecast tabs**, opening on the one "In focus today". Each has a plain explanation, a "For you" line matched to your situation, a relationship note when today's animal meets one of yours, and a tiny step in a fixed position.
+- **Four life areas in forecast tabs**, opening on the one "In focus today". Each has a plain explanation, a "For you" line matched to your situation, a "Read more" paragraph, a relationship note when today's animal meets one of yours, and a tiny step in a fixed position that you can edit into your own plan.
 - **200 tiny steps (50 per area) and 50 "Try this" lines**, rotated so a step doesn't repeat for at least 27 days. Pet, kid, and partner steps only go to people who have them.
 - **Reasons to return:** a streak with a seven-day cookie row, a "yesterday's tiny steps" check-in, tomorrow's teaser, and a daily calendar reminder.
-- **The bigger picture:** a colored month calendar of daily conditions, a year theme with a 12-month strip, and a lifetime view (core element, four animals, element mix, lifelong themes per area).
+- **The bigger picture:**
+  - a colored month calendar of daily conditions
+  - a year theme with a 12-month strip
+  - 3-, 5-, and 10-year timelines naming the smoothest year and the best year for each area
+- **Your lifetime:** its own section with your core element, four animals (each with a small hand-drawn picture), element mix, and lifelong themes per area.
+- **A living background:** drifting stars, floating cookies with ribbon slips, and a shooting star now and then, with gentle parallax as you scroll.
 - **Sharing:** a designed 1080 × 1350 fortune card to download, or plain text to copy.
 - **How it works:** a separate page with the method, the four conditions, and the math behind your chart.
 - **Privacy:** runs entirely in the browser, with no account and no server. "Forget me" erases everything.
 
-## What changed from MING, in two rounds
+## What changed from MING, in three rounds
 
 | Direction given | Result |
 | --- | --- |
@@ -58,6 +63,14 @@ MING proved the calculation could be accurate and transparent, but it read like 
 | Long-term fortune | This month, this year, and your lifetime |
 | Reason to come back | Daily sealed cookie, streak, yesterday check-in, tomorrow's teaser, calendar reminder |
 | Share as an image | A designed fortune card |
+| Logo less round, like the reference art | Redrawn as a classic outlined cartoon cookie with its slip and spark |
+| Onboarding starts with a cookie; multiple answers; no section question | Welcome cookie, five steps, multi-select answers rotated day by day |
+| Edit each tiny step | "Edit step" saves your own plan for the day |
+| 12-hour time, MM/DD/YYYY | Custom date and time fields, independent of browser locale |
+| Complete city list | 34,149 cities (GeoNames), with regional search |
+| Lifetime separate, with animal pictures; 3/5/10 years | Lifetime section with 12 animal faces; 3-, 5-, and 10-year tabs |
+| More text, still readable | "Read more" paragraphs under Overall, areas, and month |
+| More art with motion | Living background with parallax and a shooting star |
 
 ## Validation performed
 
@@ -70,39 +83,43 @@ MING proved the calculation could be accurate and transparent, but it read like 
   - Every test chart got a different full reading on all 365 days of a year.
   - The headline fortune never repeats within 20 days, and a tiny step never within 27.
   - Two unrelated charts shared a question on 0 of 365 days.
-  - Every one of the hand-written lines is reachable across 500 random charts and life situations.
+  - Every one of the hand-written lines is reachable across 500 random charts and life situations, including people with several answers per question.
+  - The 3-, 5-, and 10-year views start at the current chart year.
   - Pet, kid, and partner steps never reached a single person living solo.
-- **Copy rules:** an automated check over all 766 authored strings finds no Chinese characters, em dashes, "will", luck talk, "missing" or "broken", or "it's not X, it's Y".
+- **Copy rules:** an automated check over all 806 authored strings finds no Chinese characters, em dashes, "will", luck talk, "missing" or "broken", or "it's not X, it's Y".
 - **Interface:**
   - Tested from 320 to 1440 px wide, in light and dark themes, with no horizontal scrolling.
-  - The full flow worked end to end: onboarding and reveal, daily crack, tabs, steps and check-ins, the month calendar, the year and lifetime tabs, the share card, and the "How it works" page.
+  - The full flow worked end to end: onboarding (MM/DD/YYYY, 9:45 PM, Shaoyang, multiple answers) and reveal, daily crack, tabs, editing a step, "read more", the month calendar, year and multi-year tabs, lifetime, the share card, and the "How it works" page.
   - The single-file build runs from disk with no console errors.
 
 ## Product screenshots
 
 See `03 Product Screenshots`:
 
-1. Onboarding: Say hi
-2. Onboarding: Pick your areas
-3. Onboarding: About you
-4. Onboarding: the cookie cracks open
-5. Daily cookie, ready to crack
-6. Today's fortune
-7. Life areas
-8. Streak and this month
-9. This year
-10. Your lifetime
-11. How it works page
-12. Share image
-13. Mobile
-14. Mobile, dark
+1. Onboarding: welcome cookie
+2. Onboarding: birthday (MM/DD/YYYY)
+3. Onboarding: 34,000 cities
+4. Onboarding: about you, multiple answers
+5. Onboarding: the cookie cracks open
+6. Daily cookie, ready to crack
+7. Today's fortune
+8. Life areas, with an edited step
+9. Background art, streak, and this month
+10. This year
+11. Next 5 years
+12. Your lifetime, with animals
+13. How it works page
+14. Share image
+15. Mobile
+16. Mobile, dark
 
 ## Vibe coding process
 
-The rebuild was done with Claude Code in two rounds of direction, starting from the MING folders (memo, research, source code, and brand assets).
+The rebuild was done with Claude Code in three rounds of direction, starting from the MING folders (memo, research, source code, and brand assets).
 
 - **Round 1** set the new name, brand, and plain-English, five-section reading.
 - **Round 2** came after reviewing the prototype as a user. It added onboarding, a real fortune-cookie logo, a shorter layout, personalization, 50 steps per area, long-term views, habit features, and share images. It used reference illustrations for the cookie and the lavender, starry style.
+- **Round 3** redrew the logo closer to the reference cookies and simplified onboarding. It added multiple answers, editable steps, 12-hour and MM/DD/YYYY inputs, a complete city list, animal pictures, 3-, 5-, and 10-year views, "read more" text, and a moving background. The project also moved to a public GitHub repository with automatic tests and a GitHub Pages website.
 
 The AI:
 

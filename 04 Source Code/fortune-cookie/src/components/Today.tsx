@@ -3,6 +3,7 @@ import type { DailyReading, Profile } from "../engine/reading";
 import { fmtLongDate, fmtShortDate, greeting, localToday, shiftDate } from "../lib";
 import { Check, Chevron, Copy, ImageIcon, Spark, ToneIcon } from "./Icons";
 import { CookieArt, Mark } from "./Mark";
+import { ReadMore } from "./ReadMore";
 import { ShareModal } from "./ShareCard";
 
 const STARS: [number, number, number, number][] = [
@@ -203,6 +204,7 @@ export function Today({
               <strong className="fam">{energy.familyName}</strong>: {energy.means}. Underneath, the {undercurrent.animal} brings{" "}
               {undercurrent.familyName.toLowerCase()}.
             </p>
+            <ReadMore text={overall.deep} label="Read more about today" resetKey={reading.date} />
             <div className="personal">
               <span className="personal-mark" aria-hidden="true">
                 <Mark size={26} />

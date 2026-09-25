@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Areas } from "./components/Areas";
-import { BiggerPicture } from "./components/BiggerPicture";
+import { PageBackground } from "./components/BackgroundArt";
+import { BiggerPicture, Lifetime } from "./components/BiggerPicture";
 import { ComeBack } from "./components/ComeBack";
 import { HowPage } from "./components/HowPage";
 import { ArrowRight } from "./components/Icons";
@@ -14,10 +15,13 @@ import {
   forgetEverything,
   isSaved,
   load,
+  loadPlans,
   loadSteps,
+  normalizeSaved,
   localToday,
   markCracked,
   save,
+  savePlans,
   saveSteps,
   shiftDate,
   streakInfo,
@@ -47,10 +51,10 @@ function fromLink(): { saved: Saved | null; day: string | null; sealed: boolean 
       ...DEFAULT_PERSON,
       name: q.get("name") ?? "",
       interests: areas.length ? areas : [...AREAS],
-      career: q.get("career") || null,
-      love: q.get("love") || null,
+      career: list("career"),
+      love: list("love"),
       home: list("home"),
-      growth: q.get("growth") || null,
+      growth: list("growth"),
     } as Person;
     return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
   } catch {
@@ -62,13 +66,14 @@ const route = () => (window.location.hash === "#how" ? "how" : "main");
 
 export function App() {
   const link = useMemo(fromLink, []);
-  const [saved, setSaved] = useState<Saved | null>(() => link.saved ?? load(STORE_KEY, isSaved));
+  const [saved, setSaved] = useState<Saved | null>(() => link.saved ?? normalizeSaved(load(STORE_KEY, isSaved)));
   const [editing, setEditing] = useState(false);
   const [page, setPage] = useState(route);
   const [today, setToday] = useState(localToday);
   const [date, setDate] = useState(() => link.day ?? localToday());
   const [cracked, setCracked] = useState(crackedDays);
   const [done, setDone] = useState<string[]>(() => loadSteps(link.day ?? localToday()));
+  const [plans, setPlans] = useState(() => loadPlans(link.day ?? localToday()));
   const [yDone, setYDone] = useState<string[]>(() => loadSteps(shiftDate(localToday(), -1)));
   const [dismissed, setDismissed] = useState(() => load(DISMISS_KEY, (v): v is string => typeof v === "string"));
   const [revealing, setRevealing] = useState(false);
@@ -88,7 +93,10 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => setDone(loadSteps(date)), [date]);
+  useEffect(() => {
+    setDone(loadSteps(date));
+    setPlans(loadPlans(date));
+  }, [date]);
 
   const profile = useMemo(() => (saved ? readChart(saved.birth, saved.person) : null), [saved]);
   const reading = useMemo(() => (profile ? readDay(profile, date) : null), [profile, date]);
@@ -99,8 +107,9 @@ export function App() {
   const checkIn: CheckIn = useMemo(() => {
     if (!profile || date !== today || dismissed === today || !cracked.includes(yesterday)) return null;
     const y = readDay(profile, yesterday);
+    const yPlans = loadPlans(yesterday);
     const items = [
-      ...y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: a.step })),
+      ...y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: yPlans[a.id] ?? a.step })),
       ...(yDone.includes("try") ? [] : [{ id: "try", label: "Try this", text: y.overall.try }]),
     ].slice(0, 3);
     return items.length ? { date: yesterday, items } : null;
@@ -152,6 +161,7 @@ export function App() {
 
   return (
     <div className={`page ${revealing ? "is-revealing" : ""}`}>
+      {page === "main" ? <PageBackground /> : null}
       <header className="topbar">
         <button type="button" className="brand" onClick={goHome} aria-label="Fortune Cookie, today's reading">
           <Mark size={36} />
@@ -195,7 +205,20 @@ export function App() {
               save(DISMISS_KEY, today);
             }}
           />
-          <Areas reading={reading} done={done.filter((d) => d !== "try")} tryDone={done.includes("try")} onToggle={toggleStep} />
+          <Areas
+            reading={reading}
+            done={done.filter((d) => d !== "try")}
+            tryDone={done.includes("try")}
+            onToggle={toggleStep}
+            plans={plans}
+            onPlan={(id, text) => {
+              const next = { ...plans };
+              if (text) next[id] = text;
+              else delete next[id];
+              setPlans(next);
+              savePlans(date, next);
+            }}
+          />
           <ComeBack streak={streak} teaser={teaser} />
           <BiggerPicture
             profile={profile}
@@ -205,12 +228,13 @@ export function App() {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
+          <Lifetime profile={profile} />
         </main>
       )}
 
       <footer className="closing">
         <div className="closing-inner">
-          <Mark size={64} detail />
+          <Mark size={72} />
           <p className="closing-line">
             We describe the weather.
             <br />

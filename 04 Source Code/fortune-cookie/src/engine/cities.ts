@@ -1,48 +1,49 @@
-import rows from "./cities.json";
+import data from "./cities.json";
 
-/** 2,871 cities above 100,000 people, with coordinates and IANA time zone. */
+/**
+ * 34,149 cities with at least 15,000 people, from GeoNames (geonames.org, CC BY 4.0),
+ * each with coordinates and IANA time zone. Sorted by population, largest first.
+ */
 export type City = { name: string; region: string; country: string; lat: number; lon: number; tz: string };
 
-type Row = [string, string, string, number, number, string, number];
+type Row = [string, number, number, number, number, number];
+const { admins, countries, tzs, rows } = data as { admins: string[]; countries: string[]; tzs: string[]; rows: Row[] };
 
-const COUNTRY_SHORT: Record<string, string> = {
-  "United States of America": "USA",
-  "United Kingdom": "UK",
-};
-
-const CITIES: City[] = (rows as Row[]).map(([name, region, country, lat, lon, tz]) => ({
-  name,
-  region,
-  country: COUNTRY_SHORT[country] ?? country,
-  lat,
-  lon,
-  tz,
-}));
+const CITIES: City[] = rows.map(([name, a, c, lat, lon, t]) => ({ name, region: admins[a], country: countries[c], lat, lon, tz: tzs[t] }));
 
 const normalize = (s: string) =>
   s
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-const HAYSTACK = CITIES.map((c) => normalize(`${c.name} ${c.region} ${c.country}`));
 const NAMES = CITIES.map((c) => normalize(c.name));
+const HAYSTACK = CITIES.map((c) => normalize(`${c.name} ${c.region} ${c.country}`));
 
-/** Ranked prefix-then-substring search. Population order breaks ties. */
-export function searchCities(query: string, limit = 7): City[] {
-  const q = normalize(query.trim());
+/**
+ * The first word of the query must start the city name (or the whole query must
+ * start it); any other words must appear in the region or country, so
+ * "shaoyang, hunan" and "portland oregon" both work. Bigger cities rank first.
+ */
+export function searchCities(query: string, limit = 8): City[] {
+  const q = normalize(query);
   if (q.length < 2) return [];
+  const words = q.split(" ");
   const starts: City[] = [];
-  const contains: City[] = [];
-  for (let i = 0; i < CITIES.length; i++) {
+  const loose: City[] = [];
+  for (let i = 0; i < CITIES.length && starts.length < limit; i++) {
     if (NAMES[i].startsWith(q)) {
       starts.push(CITIES[i]);
-      if (starts.length >= limit) break;
-    } else if (contains.length < limit && HAYSTACK[i].includes(q)) {
-      contains.push(CITIES[i]);
+    } else if (loose.length < limit && NAMES[i].startsWith(words[0]) && words.slice(1).every((w) => HAYSTACK[i].includes(w))) {
+      loose.push(CITIES[i]);
+    } else if (loose.length < limit && q.length >= 4 && words.length === 1 && NAMES[i].includes(q)) {
+      loose.push(CITIES[i]);
     }
   }
-  return [...starts, ...contains].slice(0, limit);
+  return [...starts, ...loose].slice(0, limit);
 }
 
 export const describeCity = (c: City) =>
@@ -52,3 +53,5 @@ export function findCity(name: string): City | undefined {
   const q = normalize(name);
   return CITIES.find((c) => normalize(c.name) === q);
 }
+
+export const CITY_COUNT = CITIES.length;

@@ -32,6 +32,20 @@ Fortune Cookie is the rebuild of MING. The chart calculation underneath is MING'
 | 8. A reason to come back | The daily cookie arrives sealed: tap to crack it. Each crack grows a streak, shown in the header and a seven-day cookie row. A check-in asks "Yesterday's tiny steps: did you get to these?", and a teaser previews tomorrow ("Tomorrow looks Flowing for Personal growth"). "Add to my calendar" creates a daily reminder. |
 | 10. Shareable image | "Share image" draws a 1080 × 1350 fortune card with the night sky, the open cookie, the slip with your name and fortune, and the wordmark. You can download it or copy the text. |
 
+### Round 3: closer to the reference art, more room to breathe
+
+| Change requested | What we did |
+| --- | --- |
+| 1. Logo less round, like the reference cookies | Redrawn as a classic cartoon fortune cookie: a folded shell with a lighter left flap, the dark fold running up from the bottom-left corner, a warm brown outline, and the slip poking out at the bottom right with a pink spark. The page cookie, crack animation, favicon, and share card all use it. |
+| 2. Onboarding | It now opens on a welcome screen with just the cookie. Five steps follow (name, birthday, time, place, about you); the "what should it cover" step is gone, since all four sections are always included. Every "about you" question takes multiple answers, and the reading rotates through them day by day. The cookie cracks a little more with each step, then opens and reveals the page. |
+| 3. Edit each tiny step | "Edit step" swaps the suggestion for your own plan, saved for that day. "Use the suggestion" switches back, and the next day's check-in asks about your own version. |
+| 4. 12-hour time, MM/DD/YYYY | Birthday is three boxes (month, day, year), and time is hour : minute with an AM/PM switch. They no longer depend on the browser's regional format. |
+| 5. Complete city list | From 2,871 cities to 34,149 (every place over 15,000 people, from GeoNames), each with its time zone. Search understands "Shaoyang, Hunan" or "Portland Oregon". |
+| 6. Lifetime as its own section, with animal pictures | "Your lifetime" now sits below the long-term tabs. Each of the 12 animals has a small hand-drawn face in the same style as the cookie. |
+| 7. 3, 5, and 10 years | The long-term tabs are This month, This year, 3 years, 5 years, and 10 years. Each year gets its animal, a condition, a one-line theme, and a condition per life area, plus a summary of the smoothest year and the best year for each area. |
+| 8. More text, still readable | "Read more" under Overall, each life area, and the month opens a fuller paragraph (3 to 4 sentences) written to feel familiar, while the page stays short by default. |
+| 9. More art, with motion | Behind the whole page: drifting stars, sparks, and crumbs, a few floating fortune cookies trailing ribbon slips, and an occasional shooting star. They move at different speeds as you scroll, and switch off for people who prefer reduced motion. |
+
 ## Audience
 
 Carried over from the MING brief. It is still correct and still unvalidated.
@@ -42,12 +56,13 @@ Carried over from the MING brief. It is still correct and still unvalidated.
 
 ## The daily page, top to bottom
 
-1. **Today's cookie.** It starts sealed. Tap to crack it and see a one- or two-sentence fortune with your name on the slip.
+1. **Today's cookie.** It starts sealed, above a living background of drifting stars and floating cookies. Tap to crack it and see a one- or two-sentence fortune with your name on the slip.
 2. **Overall.** A weather-style condition (Flowing, Steady, Mixed, or Go gently) and one plain line on today's energy. Below that: **Your [element] today**, "Try this" (tickable), and "Ask yourself".
-3. **Your day, area by area.** Four forecast tabs with weather icons; the "In focus" area opens first. Each area has a plain explanation, a "For you" line, how to work with the condition, a note when today's animal meets one of yours, and the tiny step.
+3. **Your day, area by area.** Four forecast tabs with weather icons; the "In focus" area opens first. Each area has a plain explanation, a "For you" line, how to work with the condition, a "Read more" paragraph, a note when today's animal meets one of yours, and a tiny step you can edit into your own plan.
 4. **Come back tomorrow.** The streak, the week of cookies, tomorrow's teaser, and a daily reminder.
-5. **The bigger picture.** This month, this year, and your lifetime.
-6. **Footer link** to "How it works": the calendar method, the four conditions, and the math behind your chart.
+5. **The bigger picture.** This month, this year, and the next 3, 5, or 10 years.
+6. **Your lifetime.** Core element, your four animals with their pictures, element mix, and lifelong themes.
+7. **Footer link** to "How it works": the calendar method, the four conditions, and the math behind your chart.
 
 Everything is picked by chart math and written by hand. No language model runs when a reading is produced.
 
@@ -57,7 +72,7 @@ Everything is picked by chart math and written by hand. No language model runs w
 - No luck talk, no verdicts, no compatibility scores, no fear.
 - Plain English only on every surface a reader sees.
 - Every section shows where it came from, in one plain sentence.
-- Human-written. No em dashes and no "it's not X, it's Y" lines. A test enforces both across all 766 authored strings.
+- Human-written. No em dashes and no "it's not X, it's Y" lines. A test enforces both across all 806 authored strings.
 - The streak is gentle. Missing a day never shows a warning, and "Start a streak today" is the zero state.
 
 ## What the prototype is, and isn't

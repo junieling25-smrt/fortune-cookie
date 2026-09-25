@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { DailyReading } from "../engine/reading";
 import { downloadBlob, fmtLongDate, hostDownloads, inFrame } from "../lib";
 import { Close, Copy, ImageIcon } from "./Icons";
-import { COOKIE, COOKIE_COLORS } from "./Mark";
+import { CLIP_LEFT, CLIP_RIGHT, COOKIE_LAYERS, OUTLINE, PATHS, SLIP_LAYERS, type Layer } from "./Mark";
 
 const W = 1080;
 const H = 1350;
@@ -51,7 +51,7 @@ function spark(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, c
   ctx.translate(x, y);
   ctx.scale(s / 7, s / 7);
   ctx.fillStyle = color;
-  ctx.fill(new Path2D(COOKIE.spark));
+  ctx.fill(new Path2D(PATHS.spark));
   ctx.restore();
 }
 
@@ -74,8 +74,45 @@ function star5(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, c
   ctx.restore();
 }
 
+function drawLayers(ctx: CanvasRenderingContext2D, layers: Layer[]) {
+  for (const l of layers) {
+    ctx.save();
+    if (l.transform) {
+      const [tx, ty, rot, sc] = l.transform;
+      ctx.translate(tx, ty);
+      ctx.rotate((rot * Math.PI) / 180);
+      ctx.scale(sc, sc);
+    }
+    ctx.globalAlpha = l.opacity ?? 1;
+    const path = new Path2D(l.d);
+    if (l.fill) {
+      ctx.fillStyle = l.fill;
+      ctx.fill(path);
+    }
+    if (l.stroke) {
+      ctx.strokeStyle = l.stroke;
+      ctx.lineWidth = l.width ?? 1;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke(path);
+    }
+    ctx.restore();
+  }
+}
+
+const polygon = (pts: string) => {
+  const p = new Path2D();
+  pts.split(" ").forEach((xy, i) => {
+    const [x, y] = xy.split(",").map(Number);
+    if (i === 0) p.moveTo(x, y);
+    else p.lineTo(x, y);
+  });
+  p.closePath();
+  return p;
+};
+
+/** The cookie in cookie units (120 box), whole or cracked open with the slip out. */
 function drawCookie(ctx: CanvasRenderingContext2D, x: number, y: number, scale: number, open: boolean) {
-  const P = (d: string) => new Path2D(d);
   const piece = (pivotX: number, pivotY: number, angle: number, dx: number, dy: number, draw: () => void) => {
     ctx.save();
     ctx.translate(pivotX + dx, pivotY + dy);
@@ -84,52 +121,29 @@ function drawCookie(ctx: CanvasRenderingContext2D, x: number, y: number, scale: 
     draw();
     ctx.restore();
   };
+  const half = (clip: string) => () => {
+    ctx.save();
+    ctx.clip(polygon(clip));
+    drawLayers(ctx, COOKIE_LAYERS);
+    drawLayers(ctx, [{ d: PATHS.crack, stroke: OUTLINE, width: 3.2 }]);
+    ctx.restore();
+  };
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  piece(62, 88, open ? 24 : 0, open ? 12 : 0, open ? 4 : 0, () => {
-    ctx.fillStyle = COOKIE_COLORS.right;
-    ctx.fill(P(COOKIE.right));
-    ctx.fillStyle = COOKIE_COLORS.fold;
-    ctx.fill(P(COOKIE.fold));
-    ctx.fillStyle = COOKIE_COLORS.dots;
-    ctx.globalAlpha = 0.45;
-    COOKIE.dotsRight.forEach(([cx, cy]) => {
-      ctx.beginPath();
-      ctx.arc(cx, cy, 1.4, 0, Math.PI * 2);
-      ctx.fill();
+  if (!open) {
+    drawLayers(ctx, SLIP_LAYERS);
+    drawLayers(ctx, COOKIE_LAYERS);
+  } else {
+    piece(88, 98, -8, -16, -44, () => {
+      ctx.translate(88, 98);
+      ctx.scale(1.2, 1.2);
+      ctx.translate(-88, -98);
+      drawLayers(ctx, SLIP_LAYERS);
     });
-    ctx.globalAlpha = 1;
-  });
-  piece(72, 97, open ? 10 : 0, 0, open ? -34 : 0, () => {
-    ctx.fillStyle = COOKIE_COLORS.slip;
-    ctx.fill(P(COOKIE.slip));
-    ctx.save();
-    ctx.translate(73, 97);
-    ctx.rotate((-10 * Math.PI) / 180);
-    ctx.scale(0.8, 0.8);
-    ctx.fillStyle = COOKIE_COLORS.spark;
-    ctx.fill(P(COOKIE.spark));
-    ctx.restore();
-  });
-  piece(60, 92, open ? -28 : 0, open ? -12 : 0, open ? 6 : 0, () => {
-    ctx.fillStyle = COOKIE_COLORS.left;
-    ctx.fill(P(COOKIE.left));
-    ctx.fillStyle = COOKIE_COLORS.rim;
-    ctx.fill(P(COOKIE.rim));
-    ctx.strokeStyle = COOKIE_COLORS.shine;
-    ctx.lineWidth = 3.5;
-    ctx.lineCap = "round";
-    ctx.stroke(P(COOKIE.shine));
-    ctx.fillStyle = COOKIE_COLORS.dots;
-    ctx.globalAlpha = 0.45;
-    COOKIE.dotsLeft.forEach(([cx, cy]) => {
-      ctx.beginPath();
-      ctx.arc(cx, cy, 1.4, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-  });
+    piece(90, 96, 19, 12, 6, half(CLIP_RIGHT));
+    piece(50, 97, -17, -10, 6, half(CLIP_LEFT));
+  }
   ctx.restore();
 }
 

@@ -1,6 +1,6 @@
 # Fortune Cookie: project guide
 
-Fortune Cookie is the rebuild of MING: a daily fortune from your Four Pillars birth chart, in plain English. It has sections for overall, personal growth, career, relationships, and family and pets, plus a month, year, and lifetime view.
+Fortune Cookie is the rebuild of MING: a daily fortune from your Four Pillars birth chart, in plain English. It has sections for overall, personal growth, career, relationships, and family and pets, plus month, year, 3-, 5-, and 10-year, and lifetime views.
 
 ## Try it
 
@@ -17,7 +17,7 @@ Fortune Cookie is the rebuild of MING: a daily fortune from your Four Pillars bi
 
   Then open the local address it prints. `npm test` runs the engine checks, and `npm run build:single` rebuilds the single-file version.
 
-On first visit you go through onboarding: six short steps while the cookie cracks. After that, each day starts with a sealed cookie to crack. Everything is calculated in the browser and saved only on your device. "Your details" edits your answers, and "Forget me" in the footer erases them.
+On first visit you go through onboarding: a welcome cookie, then five short steps while it cracks. After that, each day starts with a sealed cookie to crack. Everything is calculated in the browser and saved only on your device. "Your details" edits your answers, and "Forget me" in the footer erases them.
 
 ## Folder guide
 
@@ -25,7 +25,7 @@ On first visit you go through onboarding: six short steps while the cookie crack
 | --- | --- |
 | `01 Project Submission` | This guide and the project memo draft |
 | `02 Research and Strategy` | Product brief (both rounds of changes), reading engine worked example, audience and language notes, competitor snapshot |
-| `03 Product Screenshots` | 14 screens: onboarding (4), daily crack, today's fortune, life areas, streak and month, year, lifetime, how it works, share image, mobile, mobile dark |
+| `03 Product Screenshots` | 16 screens: onboarding (5), daily crack, today's fortune, life areas with an edited step, background art with streak and month, this year, next 5 years, lifetime with animals, how it works, share image, mobile, mobile dark |
 | `04 Source Code` | The `fortune-cookie` app (Vite, React, TypeScript) and the single-file build |
 | `05 Brand Assets` | Cookie mark (SVG and PNG), app icon, lockups, mark system board, identity board, brand system, and editable board sources |
 

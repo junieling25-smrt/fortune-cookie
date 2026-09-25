@@ -40,7 +40,7 @@ Sources are cited on each rule in `src/engine/pillars.ts`, carried over unchange
 | Ask yourself | 17 |
 | Overall condition lines, tomorrow's teasers, links | 4 + 4 + 6 |
 
-That's 766 authored strings in total, counting labels and names.
+Round 3 added 40 more: 20 area "read more" paragraphs, 5 overall and 5 month paragraphs, and 10 year themes (one per energy). That makes 806 authored strings in total, counting labels and names.
 
 No language model runs when a reading is produced. The same birth details and the same date always give the same reading.
 
@@ -119,7 +119,7 @@ The pair with the Day pillar adds +1 to "Love & friends" and +0.75 to "Overall".
 The worked example person is named Maya. She works a job, is in a relationship, has a cat and kids at home, and is working on calm and balance.
 
 - **Your element today** comes from her core element (Yang Water, "the Ocean") meeting today's family (Structure).
-- **For you** lines come from her answers, matched to the energy each area reads that day.
+- **For you** lines come from her answers, matched to the energy each area reads that day. When someone gives several answers to one question (say, studying and running their own thing), the reading rotates through them day by day.
 - **Tiny steps** come from a pool of ten per family per area. Steps tagged for pets, kids, or a partner are filtered by her answers. The pick then rotates by how many times that family has come round since 2000, so consecutive occurrences get consecutive steps. The same day for someone with no answers gives different love and family steps, because their filtered pools differ.
 
 ### The reading those keys produce
@@ -161,6 +161,8 @@ The worked example person is named Maya. She works a job, is in a relationship, 
 - Career from the Month pillar (Yin Fire, Harvest): "You have a practical head for results, resources, and money."
 - Love from the Day animal (Tiger, Expression): "You love out loud."
 - Family from the Year pillar (Yang Wood, Expression): "You're the fun one at home."
+
+**The next 3, 5, and 10 years** read each chart year's pillar the same way as a day. Each row gets its animal, a condition, a theme line keyed to how that year's element meets the core element, and a condition per area. The summary names the smoothest year and the best year for each area. For this chart, the next five years (2026 to 2030) run Horse, Goat, Monkey, Rooster, and Dog.
 
 **Tomorrow's teaser:** "Tomorrow looks Flowing for Personal growth. Come back and crack it."
 

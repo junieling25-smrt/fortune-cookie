@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { ELEMENTS } from "../engine/pillars";
-import { PILLAR_META, readLife, readMonth, readYear, type Profile, type Tone } from "../engine/reading";
+import { PILLAR_META, readLife, readMonth, readYear, readYears, type Profile, type Tone } from "../engine/reading";
+import { AnimalIcon } from "./Animals";
+import { ReadMore } from "./ReadMore";
 import { fmtMonthDay, localToday, weekdayIndex } from "../lib";
 import { AREA_ICON, Spark, ToneIcon } from "./Icons";
 
-type Tab = "month" | "year" | "life";
+type Tab = "month" | "year" | "y3" | "y5" | "y10";
 const TONES: [Tone, string][] = [
   ["flowing", "Flowing"],
   ["steady", "Steady"],
@@ -39,6 +41,7 @@ function Month({ profile, date, onPick }: { profile: Profile; date: string; onPi
         <p className="muted">
           {m.element} works as {m.familyName} for you. Solar months turn with the sun, so this one runs {m.range}.
         </p>
+        <ReadMore text={m.deep} label="Read more about this month" resetKey={m.range} />
         <div className="bp-areas">
           {m.areas.map((a) => {
             const Icon = AREA_ICON[a.id];
@@ -93,7 +96,8 @@ function Year({ profile, date }: { profile: Profile; date: string }) {
         <p className="bp-kicker">
           Your {y.chartYear} · {y.label} year · {y.range}
         </p>
-        <h3>{y.text}</h3>
+        <h3>{y.flavor}</h3>
+        <p className="muted">{y.text}</p>
         {y.link ? (
           <p className="ap-link">
             <Spark size={12} />
@@ -137,6 +141,21 @@ function Year({ profile, date }: { profile: Profile; date: string }) {
         })}
       </ul>
     </div>
+  );
+}
+
+export function Lifetime({ profile }: { profile: Profile }) {
+  return (
+    <section className="section" id="lifetime" aria-labelledby="life-title">
+      <div className="section-head">
+        <p className="eyebrow">Your lifetime</p>
+        <h2 id="life-title">The part of you that doesn't change</h2>
+        <p className="lede">Your birth chart stays the same for life. This is the starting point every daily, monthly, and yearly reading is measured against.</p>
+      </div>
+      <div className="bp-panel">
+        <Life profile={profile} />
+      </div>
+    </section>
   );
 }
 
@@ -190,7 +209,10 @@ function Life({ profile }: { profile: Profile }) {
                 <p className="pillar-label">
                   {meta.label} <span>· {meta.theme}</span>
                 </p>
-                <p className="pillar-animal">{p.known ? p.animal : "Unknown"}</p>
+                <div className="pillar-top">
+                  {p.known ? <AnimalIcon animal={p.animal} size={56} /> : <span className="animal-unknown">?</span>}
+                  <p className="pillar-animal">{p.known ? p.animal : "Unknown"}</p>
+                </div>
                 <p className="pillar-el">
                   {p.known ? (
                     <>
@@ -228,19 +250,79 @@ function Life({ profile }: { profile: Profile }) {
   );
 }
 
+function Years({ profile, date, count }: { profile: Profile; date: string; count: number }) {
+  const ys = useMemo(() => readYears(profile, date, count), [profile, date, count]);
+  return (
+    <div className="bp-body bp-body-stack">
+      <div className="bp-intro">
+        <p className="bp-kicker">
+          Your next {count} years · {ys.from} to {ys.to}
+        </p>
+        <h3>
+          {ys.smoothest ? `${ys.smoothest.year} looks like your smoothest year in this stretch.` : ""}
+          {ys.gentlest ? ` Go easier on yourself in ${ys.gentlest.year}.` : ""}
+        </h3>
+        <p className="muted">
+          Each chart year starts when spring begins, in early February. Best years by area:{" "}
+          {ys.bestFor.map((b, i) => (
+            <span key={b.id}>
+              {i ? ", " : ""}
+              {b.title} in <strong>{b.year}</strong>
+            </span>
+          ))}
+          .
+        </p>
+      </div>
+      <ol className={`years ${count >= 10 ? "years-compact" : ""}`}>
+        {ys.rows.map((r) => (
+          <li key={r.year} className={r.current ? "is-now" : ""} data-tone={r.tone}>
+            <div className="yr-head">
+              <AnimalIcon animal={r.animal} size={count >= 10 ? 38 : 48} />
+              <div>
+                <p className="yr-year">
+                  {r.year} {r.current ? <span className="yr-now">now</span> : null}
+                </p>
+                <p className="yr-label">{r.label}</p>
+              </div>
+            </div>
+            <span className="chip yr-chip" data-tone={r.tone}>
+              <ToneIcon tone={r.tone} size={16} />
+              {r.toneLabel}
+            </span>
+            {count < 10 ? <p className="yr-flavor">{r.flavor}</p> : null}
+            <div className="yr-areas">
+              {r.areas.map((a) => {
+                const Icon = AREA_ICON[a.id];
+                return (
+                  <span key={a.id} className="yr-area" data-tone={a.tone} data-area={a.id} title={`${a.id}: ${a.tone}`}>
+                    <Icon size={14} />
+                  </span>
+                );
+              })}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <Legend />
+    </div>
+  );
+}
+
 export function BiggerPicture({ profile, date, onPick }: { profile: Profile; date: string; onPick: (d: string) => void }) {
   const [tab, setTab] = useState<Tab>("month");
   const tabs: [Tab, string, string][] = [
     ["month", "This month", "Changes about every 30 days"],
-    ["year", "This year", "Changes each spring"],
-    ["life", "Your lifetime", "Never changes"],
+    ["year", "This year", "Month by month"],
+    ["y3", "3 years", "One row per year"],
+    ["y5", "5 years", "One row per year"],
+    ["y10", "10 years", "The long view"],
   ];
   return (
     <section className="section" id="bigger" aria-labelledby="bigger-title">
       <div className="section-head">
         <p className="eyebrow">The bigger picture</p>
         <h2 id="bigger-title">Zoom out from today</h2>
-        <p className="lede">Days change fast. These change slowly, so they're worth a look once in a while.</p>
+        <p className="lede">Days change fast. Months, years, and the decade ahead change slowly, so they're worth a look once in a while.</p>
       </div>
       <div className="seg" role="tablist" aria-label="Time scale">
         {tabs.map(([id, label, hint]) => (
@@ -251,7 +333,13 @@ export function BiggerPicture({ profile, date, onPick }: { profile: Profile; dat
         ))}
       </div>
       <div className="bp-panel" role="tabpanel">
-        {tab === "month" ? <Month profile={profile} date={date} onPick={onPick} /> : tab === "year" ? <Year profile={profile} date={date} /> : <Life profile={profile} />}
+        {tab === "month" ? (
+          <Month profile={profile} date={date} onPick={onPick} />
+        ) : tab === "year" ? (
+          <Year profile={profile} date={date} />
+        ) : (
+          <Years profile={profile} date={date} count={tab === "y3" ? 3 : tab === "y5" ? 5 : 10} />
+        )}
       </div>
     </section>
   );

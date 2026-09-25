@@ -9,7 +9,7 @@
 import * as copy from "../src/engine/copy";
 import * as more from "../src/engine/copy-more";
 import { computePillars, dayPillarForCivilDate, jdToDate, springStartJD, zonedWallClockToMs } from "../src/engine/pillars";
-import { readChart, readDay, readLife, readMonth, readYear, type BirthDetails, type Person } from "../src/engine/reading";
+import { readChart, readDay, readLife, readMonth, readYear, readYears, type BirthDetails, type Person } from "../src/engine/reading";
 // @ts-expect-error untyped test-only dependency
 import lunar from "lunar-javascript";
 
@@ -70,10 +70,10 @@ const pick = <T,>(xs: readonly T[]) => xs[rnd(0, xs.length - 1)];
 const randomPerson = (): Person => ({
   name: pick(["", "Maya", "Sam"]),
   interests: AREAS.filter(() => Math.random() < 0.7),
-  career: pick([null, "study", "job", "own", "search", "break"] as const),
-  love: pick([null, "single", "dating", "partnered", "complicated"] as const),
+  career: (["study", "job", "own", "search", "break"] as const).filter(() => Math.random() < 0.25),
+  love: (["single", "dating", "partnered", "complicated"] as const).filter(() => Math.random() < 0.3),
   home: (["cat", "dog", "pet", "kids", "parents", "roommates", "solo"] as const).filter(() => Math.random() < 0.3),
-  growth: pick([null, "energy", "skill", "confidence", "calm", "creative"] as const),
+  growth: (["energy", "skill", "confidence", "calm", "creative"] as const).filter(() => Math.random() < 0.25),
 });
 const people: BirthDetails[] = [
   { date: "1994-03-17", time: "07:42", timeKnown: true, place: "San Francisco", tz: "America/Los_Angeles", lat: 37.77, lon: -122.4194 },
@@ -81,7 +81,7 @@ const people: BirthDetails[] = [
   { date: "2001-06-30", time: "14:05", timeKnown: true, place: "London", tz: "Europe/London", lat: 51.5, lon: -0.1276 },
   { date: "1997-09-09", time: "", timeKnown: false, place: "Toronto", tz: "America/Toronto", lat: 43.7, lon: -79.42 },
 ];
-const fullPerson: Person = { name: "Maya", interests: [...AREAS], career: "job", love: "partnered", home: ["cat", "kids"], growth: "calm" };
+const fullPerson: Person = { name: "Maya", interests: [...AREAS], career: ["job"], love: ["partnered"], home: ["cat", "kids"], growth: ["calm"] };
 const seen: Record<string, Set<string>> = {
   slip: new Set(), try: new Set(), ask: new Set(), season: new Set(), areaText: new Set(), areaTone: new Set(),
   step: new Set(), core: new Set(), forYou: new Set(), year: new Set(), yearArea: new Set(), life: new Set(),
@@ -186,12 +186,16 @@ assert("no tone is rarer than 8% or commoner than 45%", Object.values(toneCount)
 
 const tz = readChart(people[3]);
 assert("unknown birth time: hour pillar left out", tz.keys.length === 3 && !tz.pillars[3].known);
-const noPets = readChart(people[0], { ...fullPerson, home: ["solo"], love: "single" });
+const noPets = readChart(people[0], { ...fullPerson, home: ["solo"], love: ["single"] });
 const petHits = dates.flatMap((d) => readDay(noPets, d).areas.map((a) => a.step)).filter((t) => /\b(your cat|your dog|your pets?|a kid|story together|Cuddle|your person)\b/i.test(t));
 assert("no pet, kid, or partner steps for a single person living solo", petHits.length === 0, petHits.slice(0, 3).join(" / "));
 const m = readMonth(readChart(people[0], fullPerson), "2026-09-22");
 assert("month view covers one solar month", m.days.length >= 29 && m.days.length <= 32, `${m.range}, ${m.days.length} days`);
 const yr = readYear(readChart(people[0], fullPerson), "2026-09-22");
+for (const n of [3, 5, 10]) {
+  const ys = readYears(readChart(people[0], fullPerson), "2026-09-22", n);
+  assert(`${n}-year view: ${n} rows from the current year`, ys.rows.length === n && ys.rows[0].current && ys.from === 2026, `${ys.from} to ${ys.to}, smoothest ${ys.smoothest?.year}`);
+}
 assert("year view has 12 months, one current", yr.months.length === 12 && yr.months.filter((x) => x.current).length === 1, `${yr.label} ${yr.range}`);
 
 // ------------------------------------------------------------------ 4

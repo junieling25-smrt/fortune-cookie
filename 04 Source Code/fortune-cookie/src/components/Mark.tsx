@@ -1,102 +1,92 @@
+import { useId } from "react";
+
 /**
- * The Fortune Cookie mark: a folded fortune cookie (two lobes and a crease)
- * with the fortune slip peeking out, printed with a small spark. One set of
- * paths drives the logo, the favicon, the cracking animation, and the share image.
+ * The Fortune Cookie mark, drawn after the classic cartoon cookie: a folded
+ * shell with a lighter left flap, the dark fold running from the bottom-left
+ * corner up to the top, a warm outline, and the fortune slip poking out at the
+ * bottom right with a pink spark on it. One set of layers drives the logo, the
+ * favicon, the cracking animation, and the share image.
  */
 
-export const COOKIE = {
-  right: "M52 22 C 60 10, 88 8, 100 22 C 110 34, 112 58, 108 76 C 106 86, 102 94, 96 100 C 90 90, 76 84, 62 86 C 60 62, 57 40, 52 22 Z",
-  fold: "M52 22 C 64 34, 70 60, 62 86 C 60 62, 57 40, 52 22 Z",
-  left: "M52 22 C 38 18, 20 28, 15 46 C 10 64, 16 82, 30 92 C 40 99, 54 98, 64 90 C 66 70, 62 44, 52 22 Z",
-  rim: "M52 23 C 62 44, 67 70, 64 90 C 64 70, 60 46, 52 23 Z",
-  shine: "M22 50 C 25 41, 32 34, 41 31",
-  slip: "M57.9 86.3 L81.6 82.1 L86.1 107.7 L62.4 111.9 Z",
-  crack: "M52 22 L57 31 L53 40 L59 50 L55 60 L61 70 L58 79 L63 88",
+export const OUTLINE = "#6B4423";
+
+export type Layer = { d: string; fill?: string; stroke?: string; width?: number; opacity?: number; transform?: [number, number, number, number] };
+
+export const PATHS = {
+  body: "M10 46 C 18 24, 44 10, 70 11 C 94 12, 108 34, 106 58 C 104 82, 88 96, 64 97 L 38 96 C 31 96, 28 92, 30 87 C 33 77, 36 67, 40 58 C 30 55, 19 52, 10 46 Z",
+  shade: "M96 26 C 106 40, 108 60, 101 76 C 94 90, 80 96, 64 97 C 82 88, 94 74, 96 56 C 97 44, 98 34, 96 26 Z",
+  flap: "M10 46 C 18 24, 42 12, 66 14 C 51 36, 40 62, 33 90 C 32 80, 36 67, 40 58 C 30 55, 19 52, 10 46 Z",
+  flapShine: "M16 44 C 22 30, 36 22, 50 19",
+  slit: "M33 90 C 40 62, 51 36, 66 16 C 69 13, 72 14, 71 18",
+  bodyShine: "M73 24 C 78 32, 80 42, 79 50",
+  rim: "M40 92 C 50 94, 62 94, 74 92",
+  slip: "M74 84 L108 92 L100 112 L68 100 Z",
   spark: "M0 -7 C1 -2 2 -1 7 0 C2 1 1 2 0 7 C-1 2 -2 1 -7 0 C-2 -1 -1 -2 0 -7 Z",
-  dotsRight: [
-    [80, 24],
-    [95, 44],
-    [92, 68],
-    [72, 40],
-  ] as [number, number][],
-  dotsLeft: [
-    [28, 60],
-    [40, 78],
-    [24, 76],
-    [36, 44],
-  ] as [number, number][],
+  crack: "M72 11 L76 23 L70 35 L77 47 L71 59 L78 71 L72 83 L75 97",
+  dot1: "M74.3 58 A 2.3 2.3 0 1 1 69.7 58 A 2.3 2.3 0 1 1 74.3 58 Z",
+  dot2: "M69.4 64 A 1.4 1.4 0 1 1 66.6 64 A 1.4 1.4 0 1 1 69.4 64 Z",
 };
 
-export const COOKIE_COLORS = {
-  right: "#E9A13D",
-  fold: "#C97E22",
-  left: "#F4B652",
-  rim: "#FFDD95",
-  shine: "#FFE2A6",
-  dots: "#B8741F",
-  slip: "#FFF8EC",
-  slipEdge: "#E6D8C3",
-  spark: "#FF8DB0",
-  crack: "#8A4E12",
-};
+/** The two halves meet along the crack. */
+export const CLIP_LEFT = "0,0 72,0 72,11 76,23 70,35 77,47 71,59 78,71 72,83 75,97 75,120 0,120";
+export const CLIP_RIGHT = "72,0 120,0 120,120 75,120 75,97 72,83 78,71 71,59 77,47 70,35 76,23 72,11";
 
-const SPARK_ON_SLIP = "translate(73 97) rotate(-10) scale(0.8)";
+/** Slip layers (drawn behind the cookie). transform = [translateX, translateY, rotateDeg, scale]. */
+export const SLIP_LAYERS: Layer[] = [
+  { d: PATHS.slip, fill: "#FFFDF8", stroke: OUTLINE, width: 2.6 },
+  { d: PATHS.spark, fill: "#FF8DB0", transform: [89, 99, 14, 0.8] },
+];
 
-function Dots({ pts }: { pts: [number, number][] }) {
+/** Cookie layers, bottom to top. */
+export const COOKIE_LAYERS: Layer[] = [
+  { d: PATHS.body, fill: "#E7AE5D" },
+  { d: PATHS.shade, fill: "#D39247" },
+  { d: PATHS.flap, fill: "#F4CF8E" },
+  { d: PATHS.flapShine, stroke: "#FFF1D2", width: 3, opacity: 0.9 },
+  { d: PATHS.slit, stroke: OUTLINE, width: 3.2 },
+  { d: PATHS.bodyShine, stroke: "#FFF1D2", width: 3 },
+  { d: PATHS.dot1, fill: "#FFF1D2" },
+  { d: PATHS.dot2, fill: "#FFF1D2" },
+  { d: PATHS.rim, stroke: "#FFE3AE", width: 2.6 },
+  { d: PATHS.body, stroke: OUTLINE, width: 3.2 },
+];
+
+export const MARK_VIEWBOX = "4 4 112 112";
+
+function Layers({ layers }: { layers: Layer[] }) {
   return (
-    <g fill={COOKIE_COLORS.dots} opacity="0.45">
-      {pts.map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x} cy={y} r="1.4" />
+    <>
+      {layers.map((l, i) => (
+        <path
+          key={i}
+          d={l.d}
+          fill={l.fill ?? "none"}
+          stroke={l.stroke}
+          strokeWidth={l.width}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={l.opacity}
+          transform={l.transform ? `translate(${l.transform[0]} ${l.transform[1]}) rotate(${l.transform[2]}) scale(${l.transform[3]})` : undefined}
+        />
       ))}
-    </g>
-  );
-}
-
-function Slip() {
-  return (
-    <>
-      <path d={COOKIE.slip} fill={COOKIE_COLORS.slip} stroke={COOKIE_COLORS.slipEdge} strokeWidth="0.8" strokeLinejoin="round" />
-      <path d={COOKIE.spark} transform={SPARK_ON_SLIP} fill={COOKIE_COLORS.spark} />
     </>
   );
 }
 
-function RightLobe({ detail }: { detail: boolean }) {
-  return (
-    <>
-      <path d={COOKIE.right} fill={COOKIE_COLORS.right} />
-      <path d={COOKIE.fold} fill={COOKIE_COLORS.fold} />
-      {detail ? <Dots pts={COOKIE.dotsRight} /> : null}
-    </>
-  );
-}
-
-function LeftLobe({ detail }: { detail: boolean }) {
-  return (
-    <>
-      <path d={COOKIE.left} fill={COOKIE_COLORS.left} />
-      <path d={COOKIE.rim} fill={COOKIE_COLORS.rim} />
-      <path d={COOKIE.shine} fill="none" stroke={COOKIE_COLORS.shine} strokeWidth="3.5" strokeLinecap="round" />
-      {detail ? <Dots pts={COOKIE.dotsLeft} /> : null}
-    </>
-  );
-}
-
-/** The logo. `detail` adds the little baking dots, for sizes above ~48px. */
-export function Mark({ size = 36, detail = false, title }: { size?: number; detail?: boolean; title?: string }) {
+/** The logo. */
+export function Mark({ size = 36, title }: { size?: number; title?: string }) {
   return (
     <svg
       className="mark"
       width={size}
       height={size}
-      viewBox="6 4 110 112"
+      viewBox={MARK_VIEWBOX}
       role={title ? "img" : undefined}
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <RightLobe detail={detail} />
-      <Slip />
-      <LeftLobe detail={detail} />
+      <Layers layers={SLIP_LAYERS} />
+      <Layers layers={COOKIE_LAYERS} />
     </svg>
   );
 }
@@ -104,36 +94,53 @@ export function Mark({ size = 36, detail = false, title }: { size?: number; deta
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
 
 /**
- * The cookie that cracks. `progress` (0 to 1) draws the crack down the crease
- * and eases the halves apart; `open` swings them wide and lifts the slip out.
+ * The cookie that cracks. `progress` (0 to 1) draws the crack and eases the
+ * halves apart; `open` swings them wide and pulls the slip out between them.
  */
 export function CookieArt({ progress = 0, open = false, className = "" }: { progress?: number; open?: boolean; className?: string }) {
+  const id = useId().replace(/:/g, "");
   const crack = clamp01(progress / 0.55);
   const part = clamp01((progress - 0.4) / 0.6);
-  const left = open ? "translate(-16px, 8px) rotate(-36deg)" : `rotate(${-part * 13}deg)`;
-  const right = open ? "translate(16px, 6px) rotate(30deg)" : `rotate(${part * 11}deg)`;
-  const slip = open ? "translate(-2px, -44px) rotate(12deg) scale(1.25)" : `translate(0px, ${-part * 12}px)`;
+  const left = open ? "translate(-10px, 6px) rotate(-17deg)" : `rotate(${-part * 10}deg)`;
+  const right = open ? "translate(12px, 6px) rotate(19deg)" : `rotate(${part * 9}deg)`;
+  const slip = open ? "translate(-16px, -44px) rotate(-8deg) scale(1.2)" : `translate(${-part * 4}px, ${-part * 8}px)`;
+  const crackLine = (
+    <path
+      className="ca-crack"
+      d={PATHS.crack}
+      pathLength={1}
+      fill="none"
+      stroke={OUTLINE}
+      strokeWidth="3.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ strokeDasharray: 1, strokeDashoffset: open ? 0 : 1 - crack, opacity: crack > 0 || open ? 1 : 0 }}
+    />
+  );
   return (
-    <svg className={`cookie-art ${open ? "is-open" : ""} ${className}`} viewBox="-10 -30 140 160" aria-hidden="true">
-      <g className="ca-right" style={{ transform: right }}>
-        <RightLobe detail />
+    <svg className={`cookie-art ${open ? "is-open" : ""} ${className}`} viewBox="-22 -30 164 168" aria-hidden="true">
+      <defs>
+        <clipPath id={`l${id}`}>
+          <polygon points={CLIP_LEFT} />
+        </clipPath>
+        <clipPath id={`r${id}`}>
+          <polygon points={CLIP_RIGHT} />
+        </clipPath>
+      </defs>
+      <g className="ca-slip" style={{ transform: slip, transformOrigin: "88px 98px", transformBox: "view-box" }}>
+        <Layers layers={SLIP_LAYERS} />
       </g>
-      <g className="ca-slip" style={{ transform: slip }}>
-        <Slip />
+      <g className="ca-right" style={{ transform: right, transformOrigin: "90px 96px", transformBox: "view-box" }}>
+        <g clipPath={`url(#r${id})`}>
+          <Layers layers={COOKIE_LAYERS} />
+          {crackLine}
+        </g>
       </g>
-      <g className="ca-left" style={{ transform: left }}>
-        <LeftLobe detail />
-        <path
-          className="ca-crack"
-          d={COOKIE.crack}
-          pathLength={1}
-          fill="none"
-          stroke={COOKIE_COLORS.crack}
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ strokeDasharray: 1, strokeDashoffset: 1 - crack, opacity: open ? 0 : crack > 0 ? 0.85 : 0 }}
-        />
+      <g className="ca-left" style={{ transform: left, transformOrigin: "50px 97px", transformBox: "view-box" }}>
+        <g clipPath={`url(#l${id})`}>
+          <Layers layers={COOKIE_LAYERS} />
+          {crackLine}
+        </g>
       </g>
     </svg>
   );

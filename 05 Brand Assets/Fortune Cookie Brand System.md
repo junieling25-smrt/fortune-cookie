@@ -4,20 +4,19 @@
 
 The visual references are `01 Fortune Cookie Mark System.png` and `02 Fortune Cookie Identity Board.png`. Their editable sources are in `source/`, and the live code is `04 Source Code/fortune-cookie/src/styles.css`.
 
-## The mark
+## The mark (v3)
 
-A **folded fortune cookie**: a front lobe and a back lobe meeting at a crease, with a pointed wing on the right and the **fortune slip** peeking out underneath, printed with a pink **spark**. It is drawn flat, with no outline: toasty golds, a lighter rim along the opening, one highlight, and a few baking dots at larger sizes.
+A **classic cartoon fortune cookie**: a folded shell with a lighter left flap, the dark fold running from the bottom-left corner up to the top, a warm brown outline, a couple of shine marks, and the **fortune slip** poking out at the bottom right, printed with a pink **spark**. Version 3 replaces the rounder v2 cookie and follows the style of the reference illustrations.
 
-- Geometry: drawn on a 120-unit grid, shown in the box (6, 4, 110, 112). The exact paths live in `source/mark-system.html` and in `04 Source Code/fortune-cookie/src/components/Mark.tsx`, which is the single source for the logo, favicon, crack animation, and share image.
-- Colors: front lobe `#F4B652`, back lobe `#E9A13D`, fold `#C97E22`, rim `#FFDD95`, slip `#FFF8EC`, spark `#FF8DB0`, baking dots `#B8741F` at 45%.
-- Files:
-  - `Fortune Cookie Mark.svg` and `.png` (full color)
-  - `Fortune Cookie Mark - One Color.svg` (lobes separated by a knockout gap)
-  - `Fortune Cookie App Icon.svg` and `.png` (framed on midnight with three sparks, for 32 px and below)
-  - `Fortune Cookie Lockup.png` and `Fortune Cookie Lockup - On Midnight.png`
-- Clear space: one slip height on every side.
-- Motion: the only animation the mark does is **crack**. During onboarding a crack line draws down the crease, crumbs fall, and the halves part a little more with each step. On the last step they swing open and the slip flies out. Each day's sealed cookie cracks the same way when tapped.
-- Don't outline it, give it a face, turn it red and gold or add a lucky coin, rotate or flip it, or stretch it.
+- Colors: shell `#E7AE5D`, front flap `#F4CF8E`, shade `#D39247`, outline `#6B4423`, shine `#FFF1D2`, slip `#FFFDF8`, spark `#FF8DB0`.
+- Source of truth: `04 Source Code/fortune-cookie/src/components/Mark.tsx` (layer list used by the logo, favicon, crack animation, and share image). The board is `01 Fortune Cookie Mark System.png`.
+- Files: `Fortune Cookie Mark.svg` / `.png`, `Fortune Cookie Mark - One Color.svg` (line art in plum), `Fortune Cookie App Icon.svg` / `.png`, and the two lockups.
+- Motion: during onboarding a crack draws down the middle and the halves part a little more each step. On the last step they swing open and the slip pops up between them. Each day's sealed cookie cracks the same way.
+- Don't give it a face, turn it red and gold, rotate or flip it, or stretch it.
+
+## The animals
+
+Twelve small faces (Rat to Pig) in the cookie's style: round heads, dot eyes, pink cheeks, warm outlines. They appear on the four pillars and in the year timeline. Source: `src/components/Animals.tsx`.
 
 **Wordmark:** `fortune cookie`, lowercase, Fraunces 650 with SOFT 100 and WONK 1, letter-spacing −0.02em.
 
@@ -77,6 +76,7 @@ https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..
 - The fortune slip has ticket notches on both sides and a dashed divider.
 - The only illustration is the cookie. On the night stage: a flat moon disc, one dotted orbit with a pink dot, and a few four-point sparks that twinkle slowly.
 - On lavender (onboarding), the cookie floats in a confetti field: five-point stars and crumb blobs in lilac `#C9BAF0`, small gold sparks, and dots, drifting gently.
+- Behind the main page, a living background: scattered confetti at different depths (parallax on scroll), four floating mini cookies trailing ribbon slips, and a gold shooting star every few seconds. It is off for reduced-motion users.
 - Weather icons mark the four conditions: sun (Flowing), sun behind a cloud (Steady), cloud (Mixed), crescent moon (Go gently).
 - Primary buttons are "pressable": a gold pill with a darker gold shadow underneath that squashes on click.
 - No photos, zodiac clip art, dragons, coins, red-and-gold luck styling, brush calligraphy, gradients as decoration, or star fields dense enough to read as astrology wallpaper.

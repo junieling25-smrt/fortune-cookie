@@ -125,6 +125,15 @@ export function Bell({ size = 16 }: IconProps) {
   );
 }
 
+export function Pencil({ size = 16 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5Z" />
+      <path d="M13.5 7l3 3" />
+    </svg>
+  );
+}
+
 export function Close({ size = 18 }: IconProps) {
   return (
     <svg {...base(size)} strokeWidth={2.2}>
