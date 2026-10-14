@@ -101,8 +101,9 @@ MING proved the calculation could be accurate and transparent, but it read like 
 | Drop tiny steps now that small tweaks exist | Tiny steps removed; tweaks can be ticked off, and yesterday's check-in asks about a tweak |
 | Tweaks need BaZi backing, with an (i) | Each tweak has an (i) explaining its element (color, taste, activity, hour) and why that element helps today |
 | Desktop looks like a phone app; floating background gone | Two-column desktop layout, wider pages, and a slowly drifting background across every page |
-| Forecast scores too low next to a 96 day | Checked across 80 charts: month and year scores share the daily median (65), so a great day can fall in a hard month. Scores stay read from the month and year pillars, as BaZi does, with a note explaining the difference |
+| Forecast scores too low next to a 96 day | Checked across 80 charts: month and year scores share the daily median, so a great day can fall in a hard month. Scores stay read from the month and year pillars, as BaZi does, with a note explaining the difference |
 | A tutorial after onboarding | A ten-second tour: six one-sentence steps that spotlight the real screen |
+| Raise the median score to 85 | The 0 to 100 scale now centers on 85 (range 50 to 99). The ranking of days is unchanged, and the color bands moved with it |
 
 ## Validation performed
 
@@ -122,7 +123,7 @@ MING proved the calculation could be accurate and transparent, but it read like 
 - **Interface:**
   - Tested from 320 to 1440 px wide, in light and dark themes, with no horizontal scrolling.
   - The full flow worked end to end: welcome, onboarding (MM/DD/YYYY, 12-hour time, several answers) and reveal, map pick, daily crack, steps, editing a step, "Read more", and check-ins, the month calendar, the year, years-ahead, and lifetime tabs, profile edits, match, the share card, and the "What it means" and "How it works" pages.
-  - Daily scores across a year of readings for 504 charts: median 65, with most days between 45 and 82.
+  - Daily scores across a year of readings for 504 charts: median 85, with most days between 69 and 93 (the scale was raised in round 5 so ordinary days read in the 80s).
   - The single-file build runs from disk with no console errors.
 
 ## Product screenshots

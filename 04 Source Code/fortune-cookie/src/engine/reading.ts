@@ -286,19 +286,22 @@ const REL_MOD: Record<BranchRelation, number> = { clash: -1.25, harmony: 1, echo
 const REL_RANK: Record<BranchRelation, number> = { clash: 3, harmony: 2, echo: 1, none: 0 };
 
 /**
- * The daily number. The raw score (about -3 to +3) maps onto 0 to 100, with a
- * small fixed wobble so two days with the same energy don't print the same
- * number. Same details and same date always give the same number.
+ * The daily number. The raw score (about -3 to +3) maps onto a 0 to 100 scale
+ * centered on 85: an ordinary day reads about 85, the hardest days the low 50s,
+ * and the easiest reach the high 90s. The top half is compressed so good days
+ * don't pile up at 99. A small fixed wobble keeps two days with the same
+ * energy from printing the same number. Same details and date, same number.
  */
 export function toNumber(raw: number, wobble = 0): number {
-  return Math.round(clamp(64 + raw * 12 + wobble, 28, 99));
+  const base = raw >= 0 ? 85 + raw * 5 : 85 + raw * 11;
+  return Math.round(clamp(base + wobble, 50, 99));
 }
 
-/** The color band behind a number. */
+/** The color band behind a number. The cut points match the raw thresholds the copy was written for. */
 export function toneOfNumber(n: number): Tone {
-  if (n >= 76) return "flowing";
-  if (n >= 61) return "steady";
-  if (n >= 49) return "mixed";
+  if (n >= 90) return "flowing";
+  if (n >= 82) return "steady";
+  if (n >= 71) return "mixed";
   return "gentle";
 }
 
@@ -701,7 +704,7 @@ export function readMatch(me: Profile, other: Profile, name: string): MatchReadi
   const BOND_PTS: Record<Bond, number> = { harmony: 11, trine: 8, echo: 3, none: 0, clash: -9 };
   const fills = other.most === me.helpful.element ? 6 : 0;
   const raw = 60 + FAM_PTS[fam] + BOND_PTS[day] + 0.8 * BOND_PTS[year] + fills + (me.core.yang !== other.core.yang ? 3 : 0);
-  const score = Math.round(clamp(raw, 34, 98));
+  const score = Math.round(clamp(raw + 23, 55, 99));
   const tone = toneOfNumber(score);
   const nick = CORE_NICK[`${theirEl}.${yy(other.core.yang)}`];
   return {
@@ -930,7 +933,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     to: cy + count - 1,
     rows,
     smoothest: count > 1 ? lbl(byOverall[0]) : null,
-    gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 61 ? lbl(byOverall[byOverall.length - 1]) : null,
+    gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 82 ? lbl(byOverall[byOverall.length - 1]) : null,
     bestFor: AREAS.map((id) => {
       const area = (x: (typeof scored)[number]) => x.sc.scores[id];
       const best = [...scored].sort((a, b) => area(b) - area(a))[0];

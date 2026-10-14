@@ -178,7 +178,7 @@ assert("best-time windows vary", seen.time.size >= 6, [...seen.time].join(", "))
 const sorted = [...scores].sort((a, b) => a - b);
 const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))];
 console.log(`      daily numbers: min ${sorted[0]}, 10% ${q(0.1)}, median ${q(0.5)}, 90% ${q(0.9)}, max ${sorted[sorted.length - 1]}`);
-assert("daily numbers spread between 30 and 99", sorted[0] >= 28 && sorted[sorted.length - 1] <= 99 && q(0.9) - q(0.1) >= 25);
+assert("daily numbers center near 85 and still spread out", sorted[0] >= 50 && sorted[sorted.length - 1] <= 99 && q(0.5) >= 82 && q(0.5) <= 88 && q(0.9) - q(0.1) >= 16);
 check("ask lines reached", String(seen.ask.size), String(Object.keys(copy.ASK).length));
 check("month-theme lines reached", String(seen.season.size), String(Object.keys(copy.SEASON).length));
 check("area lines reached", String(seen.areaText.size), "40");
@@ -212,7 +212,7 @@ for (const n of [3, 5, 10]) {
 assert("year view has 12 months, one current", yr.months.length === 12 && yr.months.filter((x) => x.current).length === 1, `${yr.label} ${yr.range}`);
 
 const pair = readMatch(readChart(people[0], fullPerson), readChart(people[1]), "Sam");
-assert("compatibility gives a score and four rows", pair.score >= 34 && pair.score <= 98 && pair.rows.length === 4, `${pair.score}: ${pair.headline}`);
+assert("compatibility gives a score and four rows", pair.score >= 50 && pair.score <= 99 && pair.rows.length === 4, `${pair.score}: ${pair.headline}`);
 const selfMatch = readMatch(readChart(people[0]), readChart(people[0]), "Me");
 assert("compatibility is stable", selfMatch.score === readMatch(readChart(people[0]), readChart(people[0]), "Me").score);
 
