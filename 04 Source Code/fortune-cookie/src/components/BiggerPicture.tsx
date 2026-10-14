@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { readLife, readMonth, readYear, readYears, toneOfNumber, type Profile } from "../engine/reading";
+import { LONG_VIEW_NOTE } from "../engine/copy-guide";
 import { AnimalIcon } from "./Animals";
 import { ReadMore } from "./ReadMore";
 import { fmtMonthDay, weekdayIndex } from "../lib";
@@ -24,6 +25,7 @@ function Month({ profile, date, today, cracked, onPick }: { profile: Profile; da
           </p>
           <p className="fc-text">{m.text}</p>
           <ReadMore text={m.deep} resetKey={m.start} />
+          <p className="hint">{LONG_VIEW_NOTE.replace("the month or year", "the month")}</p>
         </div>
       </div>
       <ul className="fc-areas">
@@ -87,6 +89,7 @@ function Year({ profile, date }: { profile: Profile; date: string }) {
           </p>
           <p className="fc-text">{y.text}</p>
           {y.link ? <p className="muted small">{y.link}</p> : null}
+          <p className="hint">{LONG_VIEW_NOTE.replace("the month or year", "the year").replace("a harder month", "a harder year")}</p>
         </div>
       </div>
       <div>

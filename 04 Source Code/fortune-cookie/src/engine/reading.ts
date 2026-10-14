@@ -727,54 +727,6 @@ export function readMatch(me: Profile, other: Profile, name: string): MatchReadi
 }
 
 
-// ------------------------------------------------------------ long-term numbers
-
-type Tally = { overall: number; areas: Record<AreaId, number> };
-const saltOf = (natal: Chart) => natal.day.branchIdx * 3 + natal.hour.branchIdx;
-
-/** The mean of the daily numbers for day numbers from..to (inclusive), read in one season. */
-function tallyDays(profile: Profile, from: number, to: number, seasonEl: ElementName): Tally & { count: number } {
-  const salt = saltOf(profile.chart);
-  const t: Tally = { overall: 0, areas: { growth: 0, career: 0, love: 0, family: 0 } };
-  let count = 0;
-  for (let n = from; n <= to; n++) {
-    const sc = score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores;
-    t.overall += toNumber(sc.overall, wobble(n, salt, 0));
-    AREAS.forEach((id, i) => (t.areas[id] += toNumber(sc[id], wobble(n, salt, i + 1))));
-    count++;
-  }
-  const k = Math.max(1, count);
-  return { overall: t.overall / k, areas: { growth: t.areas.growth / k, career: t.areas.career / k, love: t.areas.love / k, family: t.areas.family / k }, count };
-}
-
-/** Adds tallies, weighted by how many days each covers. */
-function mergeTallies(list: (Tally & { count: number })[]): Tally {
-  const total = list.reduce((a, b) => a + b.count, 0) || 1;
-  const w = (f: (t: Tally) => number) => list.reduce((a, b) => a + f(b) * b.count, 0) / total;
-  return { overall: w((t) => t.overall), areas: { growth: w((t) => t.areas.growth), career: w((t) => t.areas.career), love: w((t) => t.areas.love), family: w((t) => t.areas.family) } };
-}
-
-/**
- * A month's or year's number: the average of its daily numbers, nudged by how
- * that month's or year's own pillar meets the chart. Long-term numbers stay in
- * step with the days a reader actually sees.
- */
-const blend = (avg: number, pillarRaw: number) => Math.round(clamp(avg + 0.35 * (toNumber(pillarRaw) - 64), 28, 99));
-
-/** Day numbers (integer JD at noon) whose noon falls in [startJD, endJD). */
-const dayRange = (startJD: number, endJD: number): [number, number] => [Math.ceil(startJD), Math.ceil(endJD) - 1];
-
-/** Daily tallies for each solar month of a chart year. */
-function yearTallies(profile: Profile, cy: number) {
-  const starts = Array.from({ length: 12 }, (_, i) => solarMonthStartJD(cy, i));
-  const nextSpring = springStartJD(cy + 1);
-  return starts.map((jd, i) => {
-    const b = mod(2 + i, 12);
-    const [from, to] = dayRange(jd, i < 11 ? starts[i + 1] : nextSpring);
-    return { jd, b, tally: tallyDays(profile, from, to, BRANCHES[b].element) };
-  });
-}
-
 // ------------------------------------------------------------ this month
 
 export type MonthReading = {
@@ -800,10 +752,8 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   const start = solarMonthStart(noonMs) ?? new Date(noonMs);
   const end = solarMonthEnd(noonMs) ?? new Date(noonMs + 30 * 86400000);
 
-  const salt = saltOf(natal);
+  const salt = natal.day.branchIdx * 3 + natal.hour.branchIdx;
   const days: { date: string; tone: Tone; score: number }[] = [];
-  let firstN = 0;
-  let lastN = 0;
   let [y, m, d] = parseYmd(ymdInZone(start, birth.tz));
   for (let guard = 0; guard < 34; guard++) {
     const ymd = `${y}-${pad(m)}-${pad(d)}`;
@@ -811,8 +761,6 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     if (noon >= end.getTime()) break;
     if (noon >= start.getTime()) {
       const n = dayNumber(y, m, d);
-      if (!firstN) firstN = n;
-      lastN = n;
       const sc = toNumber(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall, wobble(n, salt, 0));
       days.push({ date: ymd, tone: toneOfNumber(sc), score: sc });
     }
@@ -821,7 +769,6 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   }
 
   const ms = score(profile, here.month.stemIdx, here.month.branchIdx, seasonEl);
-  const avg = tallyDays(profile, firstN, lastN, seasonEl);
   const fam = familyOf(dmEl, seasonEl);
   return {
     element: seasonEl,
@@ -830,11 +777,11 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     deep: MONTH_DEEP[fam],
     start: days[0]?.date ?? date,
     range: days.length ? `${fmtShort(days[0].date)} to ${fmtShort(days[days.length - 1].date)}` : "",
-    score: blend(avg.overall, ms.scores.overall),
+    score: toNumber(ms.scores.overall),
     days,
     smoother: days.filter((x) => x.tone === "flowing").map((x) => x.date),
     areas: AREAS.map((id) => {
-      const sc = blend(avg.areas[id], ms.scores[id]);
+      const sc = toNumber(ms.scores[id]);
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], score: sc };
     }),
@@ -869,11 +816,12 @@ export function readYear(profile: Profile, date: string): YearReading {
 
   const nextSpring = springStartJD(cy + 1);
   const base = FIVE_TIGERS_BASE(yp.stemIdx);
-  const tallies = yearTallies(profile, cy);
-  const months = tallies.map(({ jd, b, tally }, i) => {
+  const starts = Array.from({ length: 12 }, (_, i) => solarMonthStartJD(cy, i));
+  const months = starts.map((jd, i) => {
+    const b = mod(2 + i, 12);
     const sc = score(profile, mod(base + i, 10), b, BRANCHES[b].element);
-    const endJD = i < 11 ? tallies[i + 1].jd : nextSpring;
-    const num = blend(tally.overall, sc.scores.overall);
+    const endJD = i < 11 ? starts[i + 1] : nextSpring;
+    const num = toNumber(sc.scores.overall);
     return {
       label: fmtDay(jdToDate(jd), birth.tz, { month: "short", day: "numeric" }),
       element: BRANCHES[b].element,
@@ -882,7 +830,6 @@ export function readYear(profile: Profile, date: string): YearReading {
       current: nowJD >= jd && nowJD < endJD,
     };
   });
-  const yearAvg = mergeTallies(tallies.map((t) => t.tally));
 
   const ys = score(profile, yp.stemIdx, yp.branchIdx, here.month.branch.element);
   let link: string | null = null;
@@ -905,10 +852,10 @@ export function readYear(profile: Profile, date: string): YearReading {
     flavor: YEAR_ENERGY[energyOf(natal.dayMasterIdx, yp.stemIdx)],
     text: YEAR[`${fam}.${profile.band}`],
     link,
-    score: blend(yearAvg.overall, ys.scores.overall),
+    score: toNumber(ys.scores.overall),
     months,
     areas: AREAS.map((id) => {
-      const sc = blend(yearAvg.areas[id], ys.scores[id]);
+      const sc = toNumber(ys.scores[id]);
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam], score: sc };
     }),
@@ -953,11 +900,10 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     const stem = mod(cyc, 10);
     const branch = mod(cyc, 12);
     const sc = score(profile, stem, branch, BRANCHES[branch].element);
-    const avg = mergeTallies(yearTallies(profile, year).map((t) => t.tally));
-    return { year, stem, branch, sc, avg };
+    return { year, stem, branch, sc };
   });
-  const rows = scored.map(({ year, stem, branch, sc, avg }) => {
-    const sco = blend(avg.overall, sc.scores.overall);
+  const rows = scored.map(({ year, stem, branch, sc }) => {
+    const sco = toNumber(sc.scores.overall);
     const tone = toneOfNumber(sco);
     return {
       year,
@@ -970,7 +916,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
       current: year === cy,
       score: sco,
       areas: AREAS.map((id) => {
-        const n = blend(avg.areas[id], sc.scores[id]);
+        const n = toNumber(sc.scores[id]);
         return { id, tone: toneOfNumber(n), score: n };
       }),
     };
@@ -986,7 +932,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     smoothest: count > 1 ? lbl(byOverall[0]) : null,
     gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 61 ? lbl(byOverall[byOverall.length - 1]) : null,
     bestFor: AREAS.map((id) => {
-      const area = (x: (typeof scored)[number]) => blend(x.avg.areas[id], x.sc.scores[id]);
+      const area = (x: (typeof scored)[number]) => x.sc.scores[id];
       const best = [...scored].sort((a, b) => area(b) - area(a))[0];
       return { id, title: AREA_META[id].title, year: best.year };
     }),

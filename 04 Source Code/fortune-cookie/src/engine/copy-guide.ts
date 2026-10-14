@@ -88,6 +88,10 @@ export const CHANGES: { when: string; text: string }[] = [
   { when: "Never", text: "Your own four pillars are fixed at birth. They're the lens for everything else." },
 ];
 
+/** Why a day and its month can score very differently. */
+export const LONG_VIEW_NOTE =
+  "Your daily score reads one day. This score reads the month or year as a whole, from its own pillar, so a great day can sit inside a harder month.";
+
 export const SCORE_INFO = {
   what: "The daily number is our own shorthand for how easy today's energy is for your chart, from 0 to 100.",
   bands: [

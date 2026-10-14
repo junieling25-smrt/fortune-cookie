@@ -101,7 +101,7 @@ MING proved the calculation could be accurate and transparent, but it read like 
 | Drop tiny steps now that small tweaks exist | Tiny steps removed; tweaks can be ticked off, and yesterday's check-in asks about a tweak |
 | Tweaks need BaZi backing, with an (i) | Each tweak has an (i) explaining its element (color, taste, activity, hour) and why that element helps today |
 | Desktop looks like a phone app; floating background gone | Two-column desktop layout, wider pages, and a slowly drifting background across every page |
-| Forecast scores too low next to a 96 day | Month, year, and multi-year scores now average the daily scores, nudged by that period's own pillar |
+| Forecast scores too low next to a 96 day | Checked across 80 charts: month and year scores share the daily median (65), so a great day can fall in a hard month. Scores stay read from the month and year pillars, as BaZi does, with a note explaining the difference |
 | A tutorial after onboarding | A ten-second tour: six one-sentence steps that spotlight the real screen |
 
 ## Validation performed
@@ -156,7 +156,7 @@ The rebuild was done with Claude Code in five rounds of direction, starting from
 - **Round 1** set the new name, brand, and plain-English, five-section reading.
 - **Round 2** came after reviewing the prototype as a user. It added onboarding, a real fortune-cookie logo, a shorter layout, personalization, 50 steps per area, long-term views, habit features, and share images. It used reference illustrations for the cookie and the lavender, starry style.
 - **Round 3** redrew the logo closer to the reference cookies and simplified onboarding. It added multiple answers, editable steps, 12-hour and MM/DD/YYYY inputs, a complete city list, animal pictures, 3-, 5-, and 10-year views, "read more" text, and a moving background. The project also moved to a public GitHub repository with automatic tests and a GitHub Pages website.
-- **Round 5** rewrote the intro around BaZi, fixed the city list, made love life one answer, rewrote the fortunes in plainer words, replaced tiny steps with tickable tweaks that explain themselves, gave desktop a real layout with a drifting background, put long-term scores in step with daily ones, and added a ten-second tour.
+- **Round 5** rewrote the intro around BaZi, fixed the city list, made love life one answer, rewrote the fortunes in plainer words, replaced tiny steps with tickable tweaks that explain themselves, gave desktop a real layout with a drifting background, explained why a day and its month can differ, and added a ten-second tour.
 - **Round 4** simplified the interface, swapped the four condition words for a daily score, added the welcome, profile, map, match, and "What it means" pages, and kept each day sealed until it's opened.
 
 The AI:
