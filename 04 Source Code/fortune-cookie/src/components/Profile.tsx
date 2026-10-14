@@ -289,6 +289,17 @@ export function ProfilePage({
       <section className="block">
         <h2 className="block-title">Your elements</h2>
         <ElementMix profile={profile} />
+        <div className="core-box" data-el={profile.core.element}>
+          <p className="label">Your core</p>
+          <p className="core-name">
+            {profile.core.title} · {profile.core.yang ? "Yang" : "Yin"} {profile.core.element}
+          </p>
+          <p className="small">{profile.core.text}</p>
+          <p className="hint">
+            Your core is one sign: the element of the day you were born, and it stands for you. The bars above count all eight signs in your chart, so
+            other elements can outweigh your own. That's common, and it's why your balancing element can differ from your core.
+          </p>
+        </div>
       </section>
 
       <section className="block" aria-labelledby="details-title">

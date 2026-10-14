@@ -4002,3 +4002,23 @@ select.field {
     transform: scaleX(1);
   }
 }
+
+.core-box {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 16px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--el) 35%, var(--card));
+}
+
+.core-box .label {
+  color: var(--el-ink);
+}
+
+.core-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2;
+}
