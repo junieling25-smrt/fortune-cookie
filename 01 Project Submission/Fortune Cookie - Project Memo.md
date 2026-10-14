@@ -103,7 +103,8 @@ MING proved the calculation could be accurate and transparent, but it read like 
 | Desktop looks like a phone app; floating background gone | Two-column desktop layout, wider pages, and a slowly drifting background across every page |
 | Forecast scores too low next to a 96 day | Checked across 80 charts: month and year scores share the daily median, so a great day can fall in a hard month. Scores stay read from the month and year pillars, as BaZi does, with a note explaining the difference |
 | A tutorial after onboarding | A ten-second tour: six one-sentence steps that spotlight the real screen |
-| Raise the median score to 85 | The 0 to 100 scale now centers on 85 (range 50 to 99). The ranking of days is unchanged, and the color bands moved with it |
+| Raise the median score to 85; nothing under 60; don't max out every area at once | Every score (day, month, year, area, match) is standardized against its own spread, then mapped onto one curve centered on 85 with soft floors and ceilings (about 60 to 98). The four areas are half-centered on their average, so they never all hit 95 on the same day |
+| Desktop: one wider column, not two | One column, 860 px wide, with four-across tweaks and area bars |
 
 ## Validation performed
 
@@ -123,7 +124,7 @@ MING proved the calculation could be accurate and transparent, but it read like 
 - **Interface:**
   - Tested from 320 to 1440 px wide, in light and dark themes, with no horizontal scrolling.
   - The full flow worked end to end: welcome, onboarding (MM/DD/YYYY, 12-hour time, several answers) and reveal, map pick, daily crack, steps, editing a step, "Read more", and check-ins, the month calendar, the year, years-ahead, and lifetime tabs, profile edits, match, the share card, and the "What it means" and "How it works" pages.
-  - Daily scores across a year of readings for 504 charts: median 85, with most days between 69 and 93 (the scale was raised in round 5 so ordinary days read in the 80s).
+  - Daily scores across a year of readings for 504 charts: median 85, never below 60, with most days between 71 and 93. In 7,200 sampled days the four areas never all reached 95 together.
   - The single-file build runs from disk with no console errors.
 
 ## Product screenshots
@@ -157,7 +158,7 @@ The rebuild was done with Claude Code in five rounds of direction, starting from
 - **Round 1** set the new name, brand, and plain-English, five-section reading.
 - **Round 2** came after reviewing the prototype as a user. It added onboarding, a real fortune-cookie logo, a shorter layout, personalization, 50 steps per area, long-term views, habit features, and share images. It used reference illustrations for the cookie and the lavender, starry style.
 - **Round 3** redrew the logo closer to the reference cookies and simplified onboarding. It added multiple answers, editable steps, 12-hour and MM/DD/YYYY inputs, a complete city list, animal pictures, 3-, 5-, and 10-year views, "read more" text, and a moving background. The project also moved to a public GitHub repository with automatic tests and a GitHub Pages website.
-- **Round 5** rewrote the intro around BaZi, fixed the city list, made love life one answer, rewrote the fortunes in plainer words, replaced tiny steps with tickable tweaks that explain themselves, gave desktop a real layout with a drifting background, explained why a day and its month can differ, and added a ten-second tour.
+- **Round 5** rewrote the intro around BaZi, fixed the city list, made love life one answer, rewrote the fortunes in plainer words, replaced tiny steps with tickable tweaks that explain themselves, gave desktop a wider single-column layout with a drifting background, rescaled every score around 85, explained why a day and its month can differ, and added a ten-second tour.
 - **Round 4** simplified the interface, swapped the four condition words for a daily score, added the welcome, profile, map, match, and "What it means" pages, and kept each day sealed until it's opened.
 
 The AI:

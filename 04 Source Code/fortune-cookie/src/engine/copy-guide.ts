@@ -95,10 +95,10 @@ export const LONG_VIEW_NOTE =
 export const SCORE_INFO = {
   what: "The daily number is our own shorthand for how easy today's energy is for your chart, from 0 to 100.",
   bands: [
-    { tone: "flowing", range: "90 to 100", text: "Leans your way" },
-    { tone: "steady", range: "82 to 89", text: "Balanced" },
-    { tone: "mixed", range: "71 to 81", text: "Some push and pull" },
-    { tone: "gentle", range: "Below 71", text: "Go gently" },
+    { tone: "flowing", range: "91 to 100", text: "Leans your way" },
+    { tone: "steady", range: "83 to 90", text: "Balanced" },
+    { tone: "mixed", range: "74 to 82", text: "Some push and pull" },
+    { tone: "gentle", range: "Below 74", text: "Go gently" },
   ] as const,
   note: "A low number is a reason to be kind to yourself, never a bad day in disguise.",
 };

@@ -178,7 +178,9 @@ assert("best-time windows vary", seen.time.size >= 6, [...seen.time].join(", "))
 const sorted = [...scores].sort((a, b) => a - b);
 const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))];
 console.log(`      daily numbers: min ${sorted[0]}, 10% ${q(0.1)}, median ${q(0.5)}, 90% ${q(0.9)}, max ${sorted[sorted.length - 1]}`);
-assert("daily numbers center near 85 and still spread out", sorted[0] >= 50 && sorted[sorted.length - 1] <= 99 && q(0.5) >= 82 && q(0.5) <= 88 && q(0.9) - q(0.1) >= 16);
+assert("daily numbers center near 85, never below 60, and still spread out", sorted[0] >= 60 && sorted[sorted.length - 1] <= 99 && q(0.5) >= 82 && q(0.5) <= 88 && q(0.9) - q(0.1) >= 16);
+const allHigh = dates.slice(0, 120).filter((d) => readDay(readChart(people[0], fullPerson), d).areas.every((a) => a.score >= 95)).length;
+assert("the four areas never all reach 95 on the same day", allHigh === 0, `${allHigh} days`);
 check("ask lines reached", String(seen.ask.size), String(Object.keys(copy.ASK).length));
 check("month-theme lines reached", String(seen.season.size), String(Object.keys(copy.SEASON).length));
 check("area lines reached", String(seen.areaText.size), "40");

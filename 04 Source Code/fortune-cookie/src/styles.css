@@ -3745,89 +3745,35 @@ select.field {
   translate: 0 0;
 }
 
-/* ------------------------------------------------------------- round 5: wide screens get a real web layout */
+/* ------------------------------------------------------------- wide screens: one column, just wider */
 
 @media (min-width: 980px) {
   .main {
-    max-width: 1160px;
+    max-width: 860px;
   }
 
   .topbar {
-    padding-inline: max(var(--gutter), calc((100vw - 1160px) / 2));
-  }
-
-  .today-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-    gap: 48px;
-    align-items: start;
-  }
-
-  .today-main {
-    position: sticky;
-    top: 84px;
-  }
-
-  .today-side > .block:first-child {
-    border-top: 0;
-    padding-top: 0;
-  }
-
-  .today.is-sealed .today-grid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    padding-inline: max(var(--gutter), calc((100vw - 1040px) / 2));
   }
 
   .stage.is-sealed {
-    min-height: 520px;
+    min-height: 480px;
   }
 
-  .score-block {
-    padding-top: 26px;
+  .tweak-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .page-body {
-    max-width: 960px;
-    margin: 0 auto;
+  .mini-scores {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .profile {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 48px;
-    align-items: start;
-  }
-
-  .profile > .me-head,
-  .profile > .flash {
-    grid-column: 1 / -1;
-  }
-
-  .meaning {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 48px;
-    align-items: start;
-  }
-
-  .meaning > .page-head,
-  .meaning > .how-link {
-    grid-column: 1 / -1;
-  }
-
-  .fc-body {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 40px;
-    align-items: start;
-  }
-
-  .fc-body > .fc-lead,
-  .fc-body > .chips,
-  .fc-body > .fc-text,
-  .fc-body > p,
-  .fc-body > div:has(.year-strip) {
-    grid-column: 1 / -1;
+  .profile .area-picks {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .closing {
-    max-width: 1160px;
+    max-width: 860px;
   }
 }
 

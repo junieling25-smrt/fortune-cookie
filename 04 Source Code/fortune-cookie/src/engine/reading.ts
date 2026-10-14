@@ -286,22 +286,57 @@ const REL_MOD: Record<BranchRelation, number> = { clash: -1.25, harmony: 1, echo
 const REL_RANK: Record<BranchRelation, number> = { clash: 3, harmony: 2, echo: 1, none: 0 };
 
 /**
- * The daily number. The raw score (about -3 to +3) maps onto a 0 to 100 scale
- * centered on 85: an ordinary day reads about 85, the hardest days the low 50s,
- * and the easiest reach the high 90s. The top half is compressed so good days
- * don't pile up at 99. A small fixed wobble keeps two days with the same
- * energy from printing the same number. Same details and date, same number.
+ * Every number the reader sees (day, month, year, each life area, match) goes
+ * through the same statistical scale:
+ *
+ * 1. Standardize: each raw score becomes a z-score using that dimension's own
+ *    mean and spread, measured over 600 charts against all 60 pillars in all
+ *    five seasons. So growth, career, love, and family sit on equal footing.
+ * 2. Squash: the z-score maps onto a curve centered on 85. A tanh on each side
+ *    bends the tails, so the lowest scores flatten out above 60 and the
+ *    highest flatten out in the high 90s instead of piling up at 100.
+ *
+ * A small fixed wobble keeps two days with the same energy from printing the
+ * same number. Same details and date, same number.
  */
-export function toNumber(raw: number, wobble = 0): number {
-  const base = raw >= 0 ? 85 + raw * 5 : 85 + raw * 11;
-  return Math.round(clamp(base + wobble, 50, 99));
+type Dim = "overall" | AreaId;
+const RAW_STATS: Record<Dim, { m: number; s: number }> = {
+  overall: { m: -0.006, s: 1.057 },
+  growth: { m: 0.081, s: 1.26 },
+  career: { m: 0.084, s: 1.023 },
+  love: { m: 0.03, s: 1.274 },
+  family: { m: 0.06, s: 0.999 },
+};
+const zOf = (raw: number, dim: Dim) => (raw - RAW_STATS[dim].m) / RAW_STATS[dim].s;
+
+/** A z-score on the 85-centered scale: median 85, floor about 61, ceiling about 98. */
+export function fromZ(z: number, wobble = 0): number {
+  const n = z >= 0 ? 85 + 13 * Math.tanh(z / 1.6) : 85 + 25 * Math.tanh(z / 1.8);
+  return Math.round(clamp(n + wobble, 60, 99));
 }
 
-/** The color band behind a number. The cut points match the raw thresholds the copy was written for. */
+export function toNumber(raw: number, dim: Dim = "overall", wobble = 0): number {
+  return fromZ(zOf(raw, dim), wobble);
+}
+
+/**
+ * The four life areas, standardized, then half-centered on their own average.
+ * When every area runs high (or low) at once, each is pulled toward the middle,
+ * so four 99s on one day can't happen; the differences between areas stay.
+ */
+function areaNumbers(scores: Record<Dim, number>, wobbleFor: (i: number) => number = () => 0): Record<AreaId, number> {
+  const z = AREAS.map((id) => zOf(scores[id], id));
+  const mean = z.reduce((a, b) => a + b, 0) / z.length;
+  const out = {} as Record<AreaId, number>;
+  AREAS.forEach((id, i) => (out[id] = fromZ(z[i] - 0.5 * mean, wobbleFor(i))));
+  return out;
+}
+
+/** The color band behind a number, cut so each band covers the same share of days as the copy was written for. */
 export function toneOfNumber(n: number): Tone {
-  if (n >= 90) return "flowing";
-  if (n >= 82) return "steady";
-  if (n >= 71) return "mixed";
+  if (n >= 91) return "flowing";
+  if (n >= 83) return "steady";
+  if (n >= 74) return "mixed";
   return "gentle";
 }
 
@@ -326,7 +361,7 @@ type Scored = {
  * Score any stem-and-branch pair (a day, a month, or a year) against the chart.
  * Each life area reads a different part of the pair against a different pillar.
  */
-function score(profile: Profile, stemIdx: number, branchIdx: number, seasonEl: ElementName): Scored {
+export function score(profile: Profile, stemIdx: number, branchIdx: number, seasonEl: ElementName): Scored {
   const { chart: natal, keys, ease } = profile;
   const dm = natal.dayMasterIdx;
   const stemEl = STEMS[stemIdx].element;
@@ -498,7 +533,8 @@ export function readDay(profile: Profile, date: string): DailyReading {
   const load: LoadState = s.stemEl === profile.least || s.stemEl === ranked[3] ? "scarce" : s.stemEl === profile.most ? "saturated" : "present";
   const slip = SLIP[`${s.stemEnergy}.${load}`][variant];
 
-  const overallScore = toNumber(s.scores.overall, wobble(n, salt, 0));
+  const overallScore = toNumber(s.scores.overall, "overall", wobble(n, salt, 0));
+  const areaNums = areaNumbers(s.scores, (i) => wobble(n, salt, i + 1));
   const overallTone = toneOfNumber(overallScore);
   const askKey = s.best.pillar ? `${s.best.relation}.${s.best.pillar}` : `none.${branchFam}`;
 
@@ -526,7 +562,7 @@ export function readDay(profile: Profile, date: string): DailyReading {
     const pool = STEPS[id][fam].filter((st) => stepFits(st, person));
     const occ = byStem ? countBefore(n, 10, (k) => stemFamOf(k) === fam) : countBefore(n, 12, (k) => branchFamOf(k) === fam);
     const step = stepText(pool[mod(occ + salt + i * 7, pool.length)], person);
-    const areaScore = toNumber(s.scores[id], wobble(n, salt, i + 1));
+    const areaScore = areaNums[id];
     const tone = toneOfNumber(areaScore);
     const home: PillarKey = id === "growth" ? "hour" : id === "career" ? "month" : id === "love" ? "day" : familyHome;
     return {
@@ -704,7 +740,8 @@ export function readMatch(me: Profile, other: Profile, name: string): MatchReadi
   const BOND_PTS: Record<Bond, number> = { harmony: 11, trine: 8, echo: 3, none: 0, clash: -9 };
   const fills = other.most === me.helpful.element ? 6 : 0;
   const raw = 60 + FAM_PTS[fam] + BOND_PTS[day] + 0.8 * BOND_PTS[year] + fills + (me.core.yang !== other.core.yang ? 3 : 0);
-  const score = Math.round(clamp(raw + 23, 55, 99));
+  // Same scale as everything else: raw match points average about 70 with a spread of about 8.
+  const score = fromZ((raw - 70) / 8);
   const tone = toneOfNumber(score);
   const nick = CORE_NICK[`${theirEl}.${yy(other.core.yang)}`];
   return {
@@ -764,7 +801,7 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     if (noon >= end.getTime()) break;
     if (noon >= start.getTime()) {
       const n = dayNumber(y, m, d);
-      const sc = toNumber(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall, wobble(n, salt, 0));
+      const sc = toNumber(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall, "overall", wobble(n, salt, 0));
       days.push({ date: ymd, tone: toneOfNumber(sc), score: sc });
     }
     const next = new Date(Date.UTC(y, m - 1, d + 1));
@@ -772,6 +809,7 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   }
 
   const ms = score(profile, here.month.stemIdx, here.month.branchIdx, seasonEl);
+  const monthAreas = areaNumbers(ms.scores);
   const fam = familyOf(dmEl, seasonEl);
   return {
     element: seasonEl,
@@ -784,7 +822,7 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     days,
     smoother: days.filter((x) => x.tone === "flowing").map((x) => x.date),
     areas: AREAS.map((id) => {
-      const sc = toNumber(ms.scores[id]);
+      const sc = monthAreas[id];
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], score: sc };
     }),
@@ -835,6 +873,7 @@ export function readYear(profile: Profile, date: string): YearReading {
   });
 
   const ys = score(profile, yp.stemIdx, yp.branchIdx, here.month.branch.element);
+  const yearAreas = areaNumbers(ys.scores);
   let link: string | null = null;
   if (ys.best.pillar) {
     const k = ys.best.pillar;
@@ -858,7 +897,7 @@ export function readYear(profile: Profile, date: string): YearReading {
     score: toNumber(ys.scores.overall),
     months,
     areas: AREAS.map((id) => {
-      const sc = toNumber(ys.scores[id]);
+      const sc = yearAreas[id];
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam], score: sc };
     }),
@@ -907,6 +946,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
   });
   const rows = scored.map(({ year, stem, branch, sc }) => {
     const sco = toNumber(sc.scores.overall);
+    const rowAreas = areaNumbers(sc.scores);
     const tone = toneOfNumber(sco);
     return {
       year,
@@ -919,7 +959,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
       current: year === cy,
       score: sco,
       areas: AREAS.map((id) => {
-        const n = toNumber(sc.scores[id]);
+        const n = rowAreas[id];
         return { id, tone: toneOfNumber(n), score: n };
       }),
     };
@@ -933,7 +973,7 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     to: cy + count - 1,
     rows,
     smoothest: count > 1 ? lbl(byOverall[0]) : null,
-    gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 82 ? lbl(byOverall[byOverall.length - 1]) : null,
+    gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 83 ? lbl(byOverall[byOverall.length - 1]) : null,
     bestFor: AREAS.map((id) => {
       const area = (x: (typeof scored)[number]) => x.sc.scores[id];
       const best = [...scored].sort((a, b) => area(b) - area(a))[0];
