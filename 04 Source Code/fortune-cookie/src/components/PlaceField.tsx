@@ -50,7 +50,7 @@ export function PlaceField({ value, onChange, autoFocus }: { value: Place | null
           aria-autocomplete="list"
           autoComplete="off"
           autoFocus={autoFocus}
-          placeholder={ready ? "Town or city, e.g. Boise or Leeds" : "Loading places…"}
+          placeholder={ready ? "Town or city, e.g. Los Angeles" : "Loading places…"}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

@@ -17,11 +17,12 @@ npm run build:single  # build, then fold dist/ into one self-contained HTML file
 | `src/engine/pillars.ts` | Four Pillars calculation: sun position (VSOP87), time zones, sun time, the four pillars, solar months, element balance. Sources are cited on each rule. |
 | `src/engine/reading.ts` | Turns a chart, the person's answers, and a date into the day (with 0 to 100 scores and small tweaks), month, year, lifetime, and match readings. Pure functions. |
 | `src/engine/copy.ts` | Hand-written core copy: fortunes, area lines, questions, month themes. |
-| `src/engine/copy-more.ts` | Hand-written personal layer: 200 tiny steps, small tweaks, "your element today", "For you" lines, year, lifetime, and match lines. |
+| `src/engine/copy-more.ts` | Hand-written personal layer: small tweaks and their BaZi notes, 200 tiny steps (kept in the engine, no longer shown), "your element today", "For you" lines, year, lifetime, and match lines. |
 | `src/engine/copy-guide.ts` | The welcome cards, splash facts, "What it means" guide, and pop-up definitions |
-| `src/engine/cities.ts` | Birthplace search over about 49,000 places with time zones, loaded on first use |
-| `scripts/build-cities.mjs` | Rebuilds `cities.json` from GeoNames (`npm run build:cities`) |
-| `src/components/Intro.tsx` | First-visit welcome and the opening splash |
+| `src/engine/cities.ts` | Birthplace search over 63,032 places with time zones, loaded on first use |
+| `scripts/build-cities.mjs` | Rebuilds `cities.json` from the 15,000+ GeoNames list in `scripts/` plus smaller towns (`npm run build:cities`) |
+| `src/components/Intro.tsx` | Two-page welcome (BaZi, then the app) and the opening splash |
+| `src/components/Tour.tsx` | The ten-second tour after onboarding (`?tour=1` replays it in link demos) |
 | `src/components/Onboarding.tsx` | Six-step onboarding with the progressively cracking cookie |
 | `src/components/PlaceField.tsx`, `MapPicker.tsx` | Birthplace search and the offline world map |
 | `src/components/Today.tsx` | Sealed cookie, fortune, score, focus area, other areas, small tweaks, streak, tomorrow |

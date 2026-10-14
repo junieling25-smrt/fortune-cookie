@@ -50,15 +50,38 @@ function Moon({ s }: { s: number }) {
 
 const ART: Record<Kind, (p: { s: number }) => ReactNode> = { slip: Slip, spark: Spark, moon: Moon };
 
-export function Floaties({ dense = true }: { dense?: boolean }) {
-  const spots = dense ? SPOTS : SPOTS.filter((_, i) => i % 2 === 0);
+/** Extra spots for the whole-page layer, which also covers the middle on wide screens. */
+const PAGE_SPOTS: typeof SPOTS = [
+  ...SPOTS.filter((f) => f.x < 10 || f.x > 90),
+  { k: "moon", x: 6, y: 24, s: 18, r: -10 },
+  { k: "slip", x: 94, y: 18, s: 24, r: 12 },
+  { k: "spark", x: 3, y: 46, s: 12 },
+  { k: "slip", x: 8, y: 66, s: 22, r: -18 },
+  { k: "moon", x: 96, y: 56, s: 20, r: 25 },
+  { k: "spark", x: 97, y: 38, s: 14 },
+  { k: "spark", x: 2, y: 84, s: 11 },
+  { k: "slip", x: 95, y: 76, s: 20, r: 8 },
+];
+
+/**
+ * `page` draws a fixed layer behind the whole app, where every piece also
+ * drifts slowly across a few dozen pixels on its own clock.
+ */
+export function Floaties({ dense = true, page = false }: { dense?: boolean; page?: boolean }) {
+  const spots = page ? PAGE_SPOTS : dense ? SPOTS : SPOTS.filter((_, i) => i % 2 === 0);
   return (
-    <div className="floaties" aria-hidden="true">
+    <div className={`floaties ${page ? "floaties-page" : ""}`} aria-hidden="true">
       {spots.map((f, i) => {
         const Art = ART[f.k];
         return (
-          <span key={i} className={`fl fl-${f.k}`} style={{ left: `${f.x}%`, top: `${f.y}%`, rotate: `${f.r ?? 0}deg`, animationDelay: `${(i % 6) * -1.3}s` }}>
-            <Art s={f.s} />
+          <span
+            key={i}
+            className={`fl-drift ${f.x > 12 && f.x < 88 && f.y > 8 && f.y < 92 ? "fl-mid" : ""}`}
+            style={{ left: `${f.x}%`, top: `${f.y}%`, animationDuration: `${18 + (i % 5) * 4}s`, animationDelay: `${(i % 7) * -3.1}s` }}
+          >
+            <span className={`fl fl-${f.k}`} style={{ rotate: `${f.r ?? 0}deg`, animationDelay: `${(i % 6) * -1.3}s` }}>
+              <Art s={f.s} />
+            </span>
           </span>
         );
       })}

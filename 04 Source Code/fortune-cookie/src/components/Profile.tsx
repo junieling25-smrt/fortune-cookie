@@ -385,7 +385,7 @@ export function ProfilePage({
         </div>
         <div className="about-qs">
           <Chips<CareerCtx> label="Work life" options={CAREER_CTX} value={person.career} onChange={(v) => setPerson({ career: v })} />
-          <Chips<LoveCtx> label="Love life" options={LOVE_CTX} value={person.love} onChange={(v) => setPerson({ love: v })} />
+          <Chips<LoveCtx> label="Love life" options={LOVE_CTX} value={person.love} onChange={(v) => setPerson({ love: v })} single />
           <Chips<HomeCtx> label="Who's at home" options={HOME_CTX} value={person.home} onChange={(v) => setPerson({ home: v })} />
           <Chips<GrowthCtx> label="Working on" options={GROWTH_CTX} value={person.growth} onChange={(v) => setPerson({ growth: v })} />
         </div>

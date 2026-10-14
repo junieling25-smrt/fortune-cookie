@@ -81,6 +81,7 @@ import {
   STEPS,
   TOMORROW,
   TWEAK,
+  TWEAK_NOTE,
   TWEAK_WHY,
   YEAR,
   YEAR_AREA,
@@ -571,7 +572,7 @@ export function readDay(profile: Profile, date: string): DailyReading {
       deep: OVERALL_DEEP[stemFam],
       ask: ASK[askKey],
     },
-    tweaks: readTweaks(profile, n, stemFam, day.day.branchIdx, salt),
+    tweaks: readTweaks(profile, n, stemFam, s.stemEl, day.day.branchIdx, salt),
     season: {
       text: SEASON[`${familyOf(dmEl, seasonEl)}.${profile.band}`],
       element: seasonEl,
@@ -607,7 +608,8 @@ export type Tweaks = {
   wear: { color: string; hex: string };
   eat: string;
   do: string;
-  time: { label: string; animal: string };
+  time: { label: string; animal: string; element: ElementName; note: string };
+  notes: { wear: string; eat: string; do: string };
 };
 
 /** The element a family points at, seen from your core element. */
@@ -621,7 +623,7 @@ function elementOfFamily(core: ElementName, fam: Family): ElementName {
  * support, money and tasks by backup, and a crowd of your own element by an
  * outlet. Which color, food, and action within that element rotates daily.
  */
-function readTweaks(profile: Profile, n: number, todayFam: Family, dayBranch: number, salt: number): Tweaks {
+function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: ElementName, dayBranch: number, salt: number): Tweaks {
   const core = profile.core.element;
   const light = profile.band === "light";
   const ease: Record<Family, Family> = {
@@ -657,11 +659,17 @@ function readTweaks(profile: Profile, n: number, todayFam: Family, dayBranch: nu
 
   return {
     element: el,
-    why: fill(TWEAK_WHY[todayFam], { el, core }),
+    why: fill(TWEAK_WHY[(todayFam === "company" || todayFam === "nurture") && light ? (`${todayFam}.light` as const) : todayFam], { el, core, today: todayEl }),
+    notes: TWEAK_NOTE[el],
     wear: color,
     eat: set.eat[mod(n * 3 + salt, set.eat.length)],
     do: set.do[mod(n * 5 + salt * 2, set.do.length)],
-    time: { label, animal: BRANCHES[best].animal },
+    time: {
+      label,
+      animal: BRANCHES[best].animal,
+      element: BRANCHES[best].element,
+      note: `Each two-hour block of the day has an animal. ${BRANCHES[best].animal} hours carry ${BRANCHES[best].element}, which suits your chart and gets along with today's ${BRANCHES[dayBranch].animal}.`,
+    },
   };
 }
 
@@ -718,6 +726,55 @@ export function readMatch(me: Profile, other: Profile, name: string): MatchReadi
   };
 }
 
+
+// ------------------------------------------------------------ long-term numbers
+
+type Tally = { overall: number; areas: Record<AreaId, number> };
+const saltOf = (natal: Chart) => natal.day.branchIdx * 3 + natal.hour.branchIdx;
+
+/** The mean of the daily numbers for day numbers from..to (inclusive), read in one season. */
+function tallyDays(profile: Profile, from: number, to: number, seasonEl: ElementName): Tally & { count: number } {
+  const salt = saltOf(profile.chart);
+  const t: Tally = { overall: 0, areas: { growth: 0, career: 0, love: 0, family: 0 } };
+  let count = 0;
+  for (let n = from; n <= to; n++) {
+    const sc = score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores;
+    t.overall += toNumber(sc.overall, wobble(n, salt, 0));
+    AREAS.forEach((id, i) => (t.areas[id] += toNumber(sc[id], wobble(n, salt, i + 1))));
+    count++;
+  }
+  const k = Math.max(1, count);
+  return { overall: t.overall / k, areas: { growth: t.areas.growth / k, career: t.areas.career / k, love: t.areas.love / k, family: t.areas.family / k }, count };
+}
+
+/** Adds tallies, weighted by how many days each covers. */
+function mergeTallies(list: (Tally & { count: number })[]): Tally {
+  const total = list.reduce((a, b) => a + b.count, 0) || 1;
+  const w = (f: (t: Tally) => number) => list.reduce((a, b) => a + f(b) * b.count, 0) / total;
+  return { overall: w((t) => t.overall), areas: { growth: w((t) => t.areas.growth), career: w((t) => t.areas.career), love: w((t) => t.areas.love), family: w((t) => t.areas.family) } };
+}
+
+/**
+ * A month's or year's number: the average of its daily numbers, nudged by how
+ * that month's or year's own pillar meets the chart. Long-term numbers stay in
+ * step with the days a reader actually sees.
+ */
+const blend = (avg: number, pillarRaw: number) => Math.round(clamp(avg + 0.35 * (toNumber(pillarRaw) - 64), 28, 99));
+
+/** Day numbers (integer JD at noon) whose noon falls in [startJD, endJD). */
+const dayRange = (startJD: number, endJD: number): [number, number] => [Math.ceil(startJD), Math.ceil(endJD) - 1];
+
+/** Daily tallies for each solar month of a chart year. */
+function yearTallies(profile: Profile, cy: number) {
+  const starts = Array.from({ length: 12 }, (_, i) => solarMonthStartJD(cy, i));
+  const nextSpring = springStartJD(cy + 1);
+  return starts.map((jd, i) => {
+    const b = mod(2 + i, 12);
+    const [from, to] = dayRange(jd, i < 11 ? starts[i + 1] : nextSpring);
+    return { jd, b, tally: tallyDays(profile, from, to, BRANCHES[b].element) };
+  });
+}
+
 // ------------------------------------------------------------ this month
 
 export type MonthReading = {
@@ -743,8 +800,10 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   const start = solarMonthStart(noonMs) ?? new Date(noonMs);
   const end = solarMonthEnd(noonMs) ?? new Date(noonMs + 30 * 86400000);
 
-  const salt = natal.day.branchIdx * 3 + natal.hour.branchIdx;
+  const salt = saltOf(natal);
   const days: { date: string; tone: Tone; score: number }[] = [];
+  let firstN = 0;
+  let lastN = 0;
   let [y, m, d] = parseYmd(ymdInZone(start, birth.tz));
   for (let guard = 0; guard < 34; guard++) {
     const ymd = `${y}-${pad(m)}-${pad(d)}`;
@@ -752,6 +811,8 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     if (noon >= end.getTime()) break;
     if (noon >= start.getTime()) {
       const n = dayNumber(y, m, d);
+      if (!firstN) firstN = n;
+      lastN = n;
       const sc = toNumber(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall, wobble(n, salt, 0));
       days.push({ date: ymd, tone: toneOfNumber(sc), score: sc });
     }
@@ -760,6 +821,7 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   }
 
   const ms = score(profile, here.month.stemIdx, here.month.branchIdx, seasonEl);
+  const avg = tallyDays(profile, firstN, lastN, seasonEl);
   const fam = familyOf(dmEl, seasonEl);
   return {
     element: seasonEl,
@@ -768,11 +830,11 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     deep: MONTH_DEEP[fam],
     start: days[0]?.date ?? date,
     range: days.length ? `${fmtShort(days[0].date)} to ${fmtShort(days[days.length - 1].date)}` : "",
-    score: toNumber(ms.scores.overall),
+    score: blend(avg.overall, ms.scores.overall),
     days,
     smoother: days.filter((x) => x.tone === "flowing").map((x) => x.date),
     areas: AREAS.map((id) => {
-      const sc = toNumber(ms.scores[id]);
+      const sc = blend(avg.areas[id], ms.scores[id]);
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], score: sc };
     }),
@@ -805,21 +867,22 @@ export function readYear(profile: Profile, date: string): YearReading {
   const fam = familyOf(dmEl, yp.stem.element);
   const nowJD = msToJD(noonMs);
 
-  const starts = Array.from({ length: 12 }, (_, i) => solarMonthStartJD(cy, i));
   const nextSpring = springStartJD(cy + 1);
   const base = FIVE_TIGERS_BASE(yp.stemIdx);
-  const months = starts.map((jd, i) => {
-    const b = mod(2 + i, 12);
+  const tallies = yearTallies(profile, cy);
+  const months = tallies.map(({ jd, b, tally }, i) => {
     const sc = score(profile, mod(base + i, 10), b, BRANCHES[b].element);
-    const endJD = i < 11 ? starts[i + 1] : nextSpring;
+    const endJD = i < 11 ? tallies[i + 1].jd : nextSpring;
+    const num = blend(tally.overall, sc.scores.overall);
     return {
       label: fmtDay(jdToDate(jd), birth.tz, { month: "short", day: "numeric" }),
       element: BRANCHES[b].element,
-      score: toNumber(sc.scores.overall),
-      tone: toneOf(sc.scores.overall),
+      score: num,
+      tone: toneOfNumber(num),
       current: nowJD >= jd && nowJD < endJD,
     };
   });
+  const yearAvg = mergeTallies(tallies.map((t) => t.tally));
 
   const ys = score(profile, yp.stemIdx, yp.branchIdx, here.month.branch.element);
   let link: string | null = null;
@@ -842,10 +905,10 @@ export function readYear(profile: Profile, date: string): YearReading {
     flavor: YEAR_ENERGY[energyOf(natal.dayMasterIdx, yp.stemIdx)],
     text: YEAR[`${fam}.${profile.band}`],
     link,
-    score: toNumber(ys.scores.overall),
+    score: blend(yearAvg.overall, ys.scores.overall),
     months,
     areas: AREAS.map((id) => {
-      const sc = toNumber(ys.scores[id]);
+      const sc = blend(yearAvg.areas[id], ys.scores[id]);
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam], score: sc };
     }),
@@ -890,10 +953,11 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     const stem = mod(cyc, 10);
     const branch = mod(cyc, 12);
     const sc = score(profile, stem, branch, BRANCHES[branch].element);
-    return { year, stem, branch, sc };
+    const avg = mergeTallies(yearTallies(profile, year).map((t) => t.tally));
+    return { year, stem, branch, sc, avg };
   });
-  const rows = scored.map(({ year, stem, branch, sc }) => {
-    const sco = toNumber(sc.scores.overall);
+  const rows = scored.map(({ year, stem, branch, sc, avg }) => {
+    const sco = blend(avg.overall, sc.scores.overall);
     const tone = toneOfNumber(sco);
     return {
       year,
@@ -905,10 +969,14 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
       flavor: YEAR_ENERGY[energyOf(natal.dayMasterIdx, stem)],
       current: year === cy,
       score: sco,
-      areas: AREAS.map((id) => ({ id, tone: toneOf(sc.scores[id]), score: toNumber(sc.scores[id]) })),
+      areas: AREAS.map((id) => {
+        const n = blend(avg.areas[id], sc.scores[id]);
+        return { id, tone: toneOfNumber(n), score: n };
+      }),
     };
   });
-  const byOverall = [...scored].sort((a, b) => b.sc.scores.overall - a.sc.scores.overall);
+  const num = (x: (typeof scored)[number]) => rows.find((r) => r.year === x.year)!.score;
+  const byOverall = [...scored].sort((a, b) => num(b) - num(a));
   const lbl = (x: (typeof scored)[number]) => ({ year: x.year, label: rows.find((r) => r.year === x.year)!.label });
   return {
     count,
@@ -916,9 +984,10 @@ export function readYears(profile: Profile, date: string, count: number): YearsR
     to: cy + count - 1,
     rows,
     smoothest: count > 1 ? lbl(byOverall[0]) : null,
-    gentlest: count > 1 && byOverall[byOverall.length - 1].sc.scores.overall < -0.25 ? lbl(byOverall[byOverall.length - 1]) : null,
+    gentlest: count > 1 && num(byOverall[byOverall.length - 1]) < 61 ? lbl(byOverall[byOverall.length - 1]) : null,
     bestFor: AREAS.map((id) => {
-      const best = [...scored].sort((a, b) => b.sc.scores[id] - a.sc.scores[id])[0];
+      const area = (x: (typeof scored)[number]) => blend(x.avg.areas[id], x.sc.scores[id]);
+      const best = [...scored].sort((a, b) => area(b) - area(a))[0];
       return { id, title: AREA_META[id].title, year: best.year };
     }),
   };

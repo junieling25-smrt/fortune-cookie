@@ -1,5 +1,5 @@
 /**
- * Birthplaces: about 49,000 places with 5,000+ people (GeoNames), each with an
+ * Birthplaces: about 63,000 places from GeoNames, each with an
  * IANA time zone. Built by scripts/build-cities.mjs. The list is large, so it
  * loads on first use instead of with the app.
  */

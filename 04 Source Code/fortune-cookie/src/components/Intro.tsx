@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { INTRO, SPLASH } from "../engine/copy-guide";
-import { Chevron } from "./Icons";
-import { CookieArt, Mark } from "./Mark";
+import { AnimalIcon } from "./Animals";
 import { Floaties } from "./Floaties";
+import { Chevron, Shirt, TabForecast } from "./Icons";
+import { CookieArt, Mark } from "./Mark";
 
-/** The first-visit welcome: four short cards, then onboarding. */
+/** The first-visit welcome: one page on BaZi, one on the app, then onboarding. */
 export function Intro({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
-  const card = INTRO[i];
-  const last = i === INTRO.length - 1;
+  const last = i === 1;
+  const { bazi, app } = INTRO;
+  const icons = [<Mark key="m" size={26} />, <Shirt key="s" size={22} />, <TabForecast key="f" size={22} />];
 
   return (
     <div className="intro">
@@ -23,29 +25,54 @@ export function Intro({ onDone }: { onDone: () => void }) {
         </button>
       </header>
 
-      <div className="intro-cookie">
-        <CookieArt progress={i / (INTRO.length - 1)} open={false} />
-      </div>
-
-      <article className="intro-card" key={i}>
-        <p className="eyebrow">{card.kicker}</p>
-        <h1>{card.title}</h1>
-        <p className="intro-body">{card.body}</p>
-      </article>
+      {i === 0 ? (
+        <article className="intro-card" key="bazi">
+          <div className="intro-pillars" aria-hidden="true">
+            {bazi.pillars.map((p) => (
+              <div key={p.label} className="intro-pillar" data-el={p.element}>
+                <span className="label">{p.label}</span>
+                <AnimalIcon animal={p.animal} size={46} />
+                <span className="intro-pillar-el">
+                  <i className="dot" /> {p.element}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="eyebrow">{bazi.kicker}</p>
+          <h1>{bazi.title}</h1>
+          <p className="intro-body">{bazi.body}</p>
+        </article>
+      ) : (
+        <article className="intro-card" key="app">
+          <div className="intro-cookie">
+            <CookieArt progress={0.5} open={false} />
+          </div>
+          <p className="eyebrow">{app.kicker}</p>
+          <h1>{app.title}</h1>
+          <ol className="intro-steps">
+            {app.steps.map((t, k) => (
+              <li key={t}>
+                <span className="intro-step-ic">{icons[k]}</span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ol>
+        </article>
+      )}
 
       <div className="intro-nav">
-        <div className="intro-dots" role="tablist" aria-label="Welcome cards">
-          {INTRO.map((c, k) => (
-            <button key={c.kicker} type="button" role="tab" aria-selected={k === i} aria-label={c.kicker} className={k === i ? "is-on" : ""} onClick={() => setI(k)} />
+        <div className="intro-dots" role="tablist" aria-label="Welcome pages">
+          {[0, 1].map((k) => (
+            <button key={k} type="button" role="tab" aria-selected={k === i} aria-label={k ? app.kicker : bazi.kicker} className={k === i ? "is-on" : ""} onClick={() => setI(k)} />
           ))}
         </div>
         <div className="intro-actions">
           {i > 0 ? (
-            <button type="button" className="btn btn-quiet" onClick={() => setI(i - 1)}>
+            <button type="button" className="btn btn-quiet" onClick={() => setI(0)}>
               <Chevron dir="left" size={16} /> Back
             </button>
           ) : null}
-          <button type="button" className="btn btn-cookie" onClick={() => (last ? onDone() : setI(i + 1))}>
+          <button type="button" className="btn btn-cookie" onClick={() => (last ? onDone() : setI(1))}>
             {last ? "Make my cookie" : "Next"}
           </button>
         </div>

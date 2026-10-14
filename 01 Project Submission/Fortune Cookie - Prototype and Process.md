@@ -51,6 +51,18 @@ The rebuild was done in Claude Code (Anthropic's AI coding agent) in one convers
 
 The same message passed on an outside tester's notes: who the product is for, app versus web, a compatibility feature like The Pattern's, hover definitions for unfamiliar terms, a Tzolkin-style wheel, and a "What it means" page.
 
+**Prompt 4: round five feedback** (written in Chinese, summarized here in English)
+
+> 1. The intro isn't good enough and the big text is too general. Add the short BaZi introduction I asked for. Keep it to two pages: one on BaZi (how we predict), one on how the app works.
+> 2. Why are there fewer cities than before? Shaoyang can't be found. Change the example to LA only, and explain in the small text that we use latitude and longitude for the fortune.
+> 3. Love life must be single choice.
+> 4. This one sentence is too hard to read.
+> 5. With small tweaks, the tiny steps can go.
+> 6. What color to wear on which day should have BaZi support, and so should eat and do. Add an (i) with a short note on why it helps.
+> 7. The web version looks like a phone app. And where did the slowly floating background go? It should cover the whole background. Don't make it worse.
+> 8. The forecast scores are too low. My score today is 96 but every long-term score is under 50. Check it.
+> 9. After onboarding, add a simple tutorial (within 10 seconds), one sentence per feature.
+
 The earlier MING project had its own prompts, recorded in `../../01 Project Submission/MING_Vibe_Coding_Project_Memo.docx`.
 
 ## 3. Code developed
@@ -120,3 +132,4 @@ rule("no “missing element” framing", /\bmissing\b|\bbroken\b|\benemy\b/i);
 6. **Brand boards.** The mark system board was checked visually. Two layout issues were fixed: size labels wrapping, and the wordmark breaking onto two lines.
 7. **Documentation.** The product brief, worked example, research notes, brand system, and screenshots were written last, from the working product, so they describe what actually exists.
 8. **Round four.** This round was first built on an older copy, then merged with round three so its logo, date and time fields, editable steps, animal faces, multi-year views, and "Read more" text all carried over, while the floating cookies were replaced. The daily page was rebuilt as one column, with each area cut to two lines and a step. The four labels became a 0 to 100 score, calibrated so the median day lands near 65. The city list grew to about 49,000 places, built from GeoNames with a script. Region names were checked against where each region's towns actually sit, which caught a wrong province name in Algeria. The map draws the world from bundled data, so it works offline and inside the one-file build. Screenshots then caught a pop-up running off the screen edge, map labels overlapping, and dim score colors in dark mode, and each was fixed and rechecked.
+9. **Round five.** The missing cities came from the second source listing a population of 0 for many large places, so they fell under the 5,000-person cutoff. The list now starts from the 34,149-city list and adds smaller towns and seats of government. The long-term scores came only from the month's or year's own pillar, which ran much lower than daily scores; they now average the daily scores and add a small nudge from the pillar, landing between about 48 and 77. The tour, desktop layout, and tweak notes were checked in screenshots at phone and laptop sizes.

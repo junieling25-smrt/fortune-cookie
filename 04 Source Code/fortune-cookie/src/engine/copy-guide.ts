@@ -6,28 +6,28 @@ import type { ElementName } from "./pillars";
 
 // ------------------------------------------------------------ welcome
 
-export const INTRO: { kicker: string; title: string; body: string }[] = [
-  {
-    kicker: "Welcome",
-    title: "A small fortune, every day.",
-    body: "Crack one cookie each morning. Inside: one line for your day, a score, and one tiny thing to try.",
+export const INTRO = {
+  bazi: {
+    kicker: "How we read your fortune",
+    title: "BaZi: eight signs from the moment you were born.",
+    body: "BaZi, also called the Four Pillars, is a Chinese birth chart used for over a thousand years. Your birth year, month, day, and hour each get one of five elements and one of twelve animals: eight signs in all. Every day has signs of its own, and we compare them with yours.",
+    pillars: [
+      { label: "Year", element: "Wood", animal: "Dog" },
+      { label: "Month", element: "Fire", animal: "Rabbit" },
+      { label: "Day", element: "Water", animal: "Tiger" },
+      { label: "Hour", element: "Wood", animal: "Dragon" },
+    ] as const,
   },
-  {
-    kicker: "Why a fortune cookie",
-    title: "A plain shell with a note inside.",
-    body: "We keep the outside simple and tuck the old wisdom inside, in plain words. You open it when you're ready.",
+  app: {
+    kicker: "How the app works",
+    title: "One cookie a day. About a minute.",
+    steps: [
+      "Crack today's cookie for your fortune and a score from 0 to 100.",
+      "Try a small tweak, like a color to wear, picked for your chart.",
+      "Look ahead at your month, your year, and the next ten.",
+    ],
   },
-  {
-    kicker: "What's inside",
-    title: "The Four Pillars, a Chinese birth chart.",
-    body: "Your birth year, month, day, and hour each carry an animal and an element. We read today's against yours.",
-  },
-  {
-    kicker: "Our idea",
-    title: "We describe the weather. You choose the route.",
-    body: "Nothing is set in stone. It's a nudge to notice your day and take one small step.",
-  },
-];
+};
 
 /** One short line under the logo while the app opens. */
 export const SPLASH: string[] = [

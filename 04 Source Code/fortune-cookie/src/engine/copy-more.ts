@@ -686,13 +686,27 @@ export const TWEAK: Record<ElementName, { wear: { color: string; hex: string }[]
   },
 };
 
-/** Why today's tweaks lean on one element. Keyed by today's main energy. */
-export const TWEAK_WHY: Record<Family, string> = {
-  structure: "Today puts some pressure on you. {el} turns pressure into support.",
-  expression: "Today asks a lot of your energy. {el} helps you refill.",
-  harvest: "Today is busy with tasks and money. {el} gives you backup.",
-  company: "Today is full of your own kind of energy. {el} keeps it in balance.",
-  nurture: "Today is soft and restful. {el} keeps it in balance.",
+/**
+ * Why today's tweaks lean on one element, in BaZi terms. Keyed by how today's
+ * main element meets the reader's core element ({today}, {core}, {el}).
+ */
+export const TWEAK_WHY: Record<"structure" | "expression" | "harvest" | "company" | "company.light" | "nurture" | "nurture.light", string> = {
+  structure: "Today's {today} presses on your {core}. {el} sits between them: {today} feeds {el}, and {el} feeds {core}, so the pressure turns into support.",
+  expression: "Today's {today} draws on your {core}. {el} feeds {core} back, so you don't run dry.",
+  harvest: "Today's {today} asks your {core} to do a lot of work. More {el}, the same element as your core, gives you backup.",
+  company: "Today brings more {today}, the same element as your {core}. {el} gives that extra energy somewhere useful to go.",
+  "company.light": "Today brings more {today}, the same element as your {core}. {el} feeds it further, which suits a chart with little backup.",
+  nurture: "Today's {today} feeds your {core} plenty. {el} keeps all that support moving instead of piling up.",
+  "nurture.light": "Today's {today} feeds your {core}, and your chart can use it. More {el} helps you take it all in.",
+};
+
+/** What ties each tweak to its element, in the five-element tradition. */
+export const TWEAK_NOTE: Record<ElementName, { wear: string; eat: string; do: string }> = {
+  Wood: { wear: "Green is Wood's color in the five elements.", eat: "Five-element food lore links sour tastes and fresh greens to Wood.", do: "Trees, plants, and stretching all carry Wood." },
+  Fire: { wear: "Reds, pinks, and purples are Fire's colors.", eat: "Bitter and warming foods belong to Fire.", do: "Sunlight, warmth, and good company all carry Fire." },
+  Earth: { wear: "Yellows and browns are Earth's colors.", eat: "Sweet, grounding foods like grains and squash belong to Earth.", do: "Cooking, routines, and tending your home all carry Earth." },
+  Metal: { wear: "White, gray, and gold are Metal's colors.", eat: "Pungent foods like ginger, garlic, and radish belong to Metal.", do: "Clearing, sorting, and slow breaths all carry Metal." },
+  Water: { wear: "Black and deep blues are Water's colors.", eat: "Salty, dark foods like seaweed and black beans belong to Water.", do: "Rest, quiet, and time near water all carry Water." },
 };
 
 // ------------------------------------------------------------ compatibility

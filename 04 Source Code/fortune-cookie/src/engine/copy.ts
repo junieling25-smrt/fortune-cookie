@@ -130,126 +130,36 @@ export const HELPFUL: Record<ElementName, { color: string; ideas: string }> = {
 
 /** Two variants per key, alternating each time the same day energy comes back. */
 export const SLIP: Record<`${Energy}.${LoadState}`, [string, string]> = {
-  "self.scarce": [
-    "Today asks you to stand on your own two feet. It may feel new, and that's how new strength starts.",
-    "Your own opinion matters more than usual today. Give it a little room to speak.",
-  ],
-  "self.present": [
-    "You know where you stand today. Say it out loud instead of waiting for someone to agree first.",
-    "Your footing is solid today. Trust the plan you already made.",
-  ],
-  "self.saturated": [
-    "You're extra sure of yourself today. Run your idea past one person who sees it differently.",
-    "Your mind is made up today. Leave one small door open for a better idea.",
-  ],
-  "rival.scarce": [
-    "Someone may want the same thing you want today. Wanting it out loud is allowed.",
-    "A little competition shows up today. Treat it like a game and it gets lighter.",
-  ],
-  "rival.present": [
-    "You may feel torn between sharing and keeping today. Only give what you can give without a grudge.",
-    "Sharing is on the menu today. Split things fairly, including the credit.",
-  ],
-  "rival.saturated": [
-    "Comparison is loud today. Other people's pace says nothing about the quality of yours.",
-    "You may feel like keeping score today. Put the scoreboard away for an hour.",
-  ],
-  "play.scarce": [
-    "You may feel like making something just for fun today. Follow that little itch.",
-    "A small creative urge may pop up today. It doesn't need a reason to be worth following.",
-  ],
-  "play.present": [
-    "Ideas come easily today. Finish one small thing before you start a big one.",
-    "Things you make today come out with ease. Enjoy the easy part.",
-  ],
-  "play.saturated": [
-    "You have more ideas than hours today. Pick one and let the rest wait their turn.",
-    "Fun is everywhere today. Make sure one useful thing also gets done.",
-  ],
-  "voice.scarce": [
-    "Something you usually keep quiet may want out today. Notice it before you say it.",
-    "Your honest side is close to the surface today. Let it speak gently.",
-  ],
-  "voice.present": [
-    "You can see exactly what's off about something today. Being right and picking the right moment are two separate choices.",
-    "You have a sharp eye today. Aim it at problems and go easy on people.",
-  ],
-  "voice.saturated": [
-    "Your critique is probably correct and probably early. Wait until people are ready to hear it.",
-    "Opinions come fast today. Let a few pass by without comment.",
-  ],
-  "windfall.scarce": [
-    "A chance may show up today in an unfamiliar shape. Unfamiliar can still be right for you.",
-    "Something new may knock today. Open the door a crack and take a look.",
-  ],
-  "windfall.present": [
-    "There's movement available today if you go toward it. You don't have to walk through every open door.",
-    "A small opening may appear today. Small and real beats big and vague.",
-  ],
-  "windfall.saturated": [
-    "Plenty of shiny options today. Holding one beats juggling five.",
-    "Offers and ideas pile up today. You're allowed to say “not now” to most of them.",
-  ],
-  "savings.scarce": [
-    "Today rewards small upkeep over big moves. Ten boring minutes now saves a messy hour later.",
-    "Today favors the practical stuff you usually skip. Future you says thanks.",
-  ],
-  "savings.present": [
-    "The steady version of your plan is the strong one today. Slow and solid counts.",
-    "Slow and steady is the smart play today. Protect what's already working.",
-  ],
-  "savings.saturated": [
-    "You may be holding on to more than you need. Ask which things you keep out of love and which out of habit.",
-    "You're guarding a lot today. Let go of one thing you no longer need.",
-  ],
-  "push.scarce": [
-    "Pressure may come from somewhere unexpected today. Name it before you react to it.",
-    "A challenge may land on your desk today. You're tougher than the first five minutes feel.",
-  ],
-  "push.present": [
-    "There's real demand on you today. You can meet it, move it, or pause it. Pick one on purpose.",
-    "Today asks something of you. Answer on your own timeline.",
-  ],
-  "push.saturated": [
-    "Urgency is loud today. Plenty of things that shout can actually wait.",
-    "Pressure is piling up today. Put one thing down before you pick up another.",
-  ],
-  "rules.scarce": [
-    "Rules and expectations feel extra visible today. Read the fine print before you push back.",
-    "Someone may hand you a rule today. Understand it first, then decide what to do.",
-  ],
-  "rules.present": [
-    "What people expect from you is clear today. That also makes clear what they don't expect.",
-    "Clear lines make things easier today. Follow them and save your energy.",
-  ],
-  "rules.saturated": [
-    "You're carrying a lot of “shoulds” today. Some are real duties and some are old habits. Sort them.",
-    "Duty feels heavy today. Check which duties you picked and which were handed to you.",
-  ],
-  "intuition.scarce": [
-    "Help may arrive today in a shape you don't recognize. Try not to turn it down on reflex.",
-    "An odd idea may make sense today. Write it down before logic talks you out of it.",
-  ],
-  "intuition.present": [
-    "There's room to step back and think today. Enjoy it, then come back out.",
-    "Your gut is a good guide today. Give it a quiet moment to talk.",
-  ],
-  "intuition.saturated": [
-    "Your head is a cozy place to hide today. Two laps of overthinking is plenty.",
-    "Thinking feels cozy today, maybe too cozy. Set a timer, then act.",
-  ],
-  "care.scarce": [
-    "You may need more backup today than you'd like to admit. Asking early is easier than asking late.",
-    "Kindness may come from someone unexpected today. Let it in.",
-  ],
-  "care.present": [
-    "Good support is close by today. Using it doesn't cost anyone anything.",
-    "Support flows both ways today. Give some, take some.",
-  ],
-  "care.saturated": [
-    "Comfort is easy to reach today. Take the kind you need and skip the kind you're just used to.",
-    "Rest is easy to find today. Take what refuels you, then get moving.",
-  ],
+  "self.scarce": ["Trust your own opinion today. It counts.", "Stand on your own two feet today. You can."],
+  "self.present": ["Say what you think today. You don't need a yes first.", "Stick to the plan you made. It's a good one."],
+  "self.saturated": ["You feel very sure today. Ask one friend what they think.", "Your mind is made up. Leave a little room for a better idea."],
+  "rival.scarce": ["It's okay to want something and say so.", "A little friendly competition today. Make it a game."],
+  "rival.present": ["Share what you can share happily. Keep the rest.", "Split things fairly today, including the credit."],
+  "rival.saturated": ["Don't compare today. Your pace is yours.", "Stop keeping score for an hour. You'll feel lighter."],
+  "play.scarce": ["Make something just for fun today.", "Follow a small creative idea. It doesn't need a reason."],
+  "play.present": ["Ideas come easily today. Finish one small thing first.", "What you make today comes out well. Enjoy it."],
+  "play.saturated": ["Too many ideas today. Pick one.", "Have fun today, and get one useful thing done too."],
+  "voice.scarce": ["Something you usually keep quiet wants out. Say it kindly.", "Be honest today, and be gentle about it."],
+  "voice.present": ["You see what's wrong today. Pick the right moment to say it.", "Point your sharp eye at problems, not at people."],
+  "voice.saturated": ["You're probably right. Wait until people are ready to hear it.", "Let a few opinions go unsaid today."],
+  "windfall.scarce": ["A chance may show up looking unfamiliar. Take a look.", "Something new may knock today. Open the door a crack."],
+  "windfall.present": ["Something opens up today if you go toward it.", "Small and real beats big and vague today."],
+  "windfall.saturated": ["Lots of shiny options today. Choose one.", "You can say “not now” to most offers today."],
+  "savings.scarce": ["Ten boring minutes today save you an hour later.", "Do the practical thing you keep skipping."],
+  "savings.present": ["Slow and steady works today.", "Look after what's already working."],
+  "savings.saturated": ["Let go of one thing you don't need anymore.", "Keep what you love. Clear what you keep from habit."],
+  "push.scarce": ["Pressure may come from somewhere new. Breathe before you react.", "Today tests you a little. You're tougher than you think."],
+  "push.present": ["Something big is asked of you. Do it, move it, or pause it.", "Answer today's demands on your own timeline."],
+  "push.saturated": ["Not everything urgent is important. Some of it can wait.", "Put one thing down before you pick up another."],
+  "rules.scarce": ["Read the fine print before you push back.", "Understand the rule first. Then decide."],
+  "rules.present": ["You know what's expected today. That makes it easier.", "Follow the clear path today and save your energy."],
+  "rules.saturated": ["Too many “shoulds” today. Keep only the ones you chose.", "Duty feels heavy. Drop one that isn't yours."],
+  "intuition.scarce": ["Help may come in a strange shape. Say yes.", "Write down the odd idea before you talk yourself out of it."],
+  "intuition.present": ["Take some quiet time today. Then come back out.", "Trust your gut today."],
+  "intuition.saturated": ["Don't overthink it. Set a timer, then act.", "You're thinking in circles. Take one small step instead."],
+  "care.scarce": ["Ask for help early today. It's easier than asking late.", "Kindness may come from someone unexpected. Let it in."],
+  "care.present": ["Help is close by today. It's okay to use it.", "Give some support today, and take some too."],
+  "care.saturated": ["Rest is easy to find today. Take what refuels you.", "Take the comfort you need, then get moving."],
 };
 
 export const OVERALL_TONE: Record<Tone, string> = {

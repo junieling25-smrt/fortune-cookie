@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiggerPicture } from "./components/BiggerPicture";
 import { HowPage } from "./components/HowPage";
+import { Floaties } from "./components/Floaties";
 import { Book, TabForecast, TabMatch, TabYou } from "./components/Icons";
 import { Intro, Splash } from "./components/Intro";
 import { Mark } from "./components/Mark";
@@ -9,6 +10,7 @@ import { MeaningPage } from "./components/Meaning";
 import { Onboarding } from "./components/Onboarding";
 import { Avatar, ProfilePage } from "./components/Profile";
 import { Today, type CheckIn } from "./components/Today";
+import { Tour } from "./components/Tour";
 import { describeCity, findCity, loadCities } from "./engine/cities";
 import { AREAS, DEFAULT_PERSON, readChart, readDay, tomorrowTeaser, validateBirth, type AreaId, type Person } from "./engine/reading";
 import {
@@ -19,7 +21,6 @@ import {
   load,
   loadAvatar,
   loadReminder,
-  loadPlans,
   loadSteps,
   localToday,
   markCracked,
@@ -27,7 +28,6 @@ import {
   normalizeSaved,
   save,
   saveAvatar,
-  savePlans,
   saveSteps,
   shiftDate,
   streakInfo,
@@ -36,6 +36,7 @@ import {
 
 const STORE_KEY = "fc.profile.v2";
 const DISMISS_KEY = "fc.checkin.dismissed";
+const TOUR_KEY = "fc.tour";
 
 type Link = { saved: Saved | null; day: string | null; sealed: boolean };
 
@@ -107,12 +108,13 @@ export function App() {
   const [date, setDate] = useState(localToday);
   const [cracked, setCracked] = useState(crackedDays);
   const [done, setDone] = useState<string[]>(() => loadSteps(localToday()));
-  const [plans, setPlans] = useState(() => loadPlans(localToday()));
   const [yDone, setYDone] = useState<string[]>(() => loadSteps(shiftDate(localToday(), -1)));
   const [dismissed, setDismissed] = useState(() => load(DISMISS_KEY, (v): v is string => typeof v === "string"));
   const [avatar, setAvatar] = useState(loadAvatar);
   const [reminder, setReminder] = useState(loadReminder);
   const [revealing, setRevealing] = useState(false);
+  const [touring, setTouring] = useState(false);
+  const [tourDemo, setTourDemo] = useState(true);
   const [forgetArmed, setForgetArmed] = useState(false);
 
   // Link demos need the city list before they can build a chart.
@@ -147,7 +149,6 @@ export function App() {
 
   useEffect(() => {
     setDone(loadSteps(date));
-    setPlans(loadPlans(date));
   }, [date]);
 
   const endSplash = useCallback(() => {
@@ -169,9 +170,9 @@ export function App() {
   const checkIn: CheckIn = useMemo(() => {
     if (!profile || date !== today || dismissed === today || !cracked.includes(yesterday)) return null;
     const y = readDay(profile, yesterday);
-    const yPlans = loadPlans(yesterday);
-    const items = y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: yPlans[a.id] ?? a.step }));
-    return items.length && yDone.length === 0 ? { date: yesterday, items: items.slice(0, 1) } : null;
+    // Ask about yesterday's "Do" tweak, unless any tweak was already ticked.
+    if (yDone.length) return null;
+    return { date: yesterday, items: [{ id: "do", label: "Do", text: y.tweaks.do }] };
   }, [profile, date, today, dismissed, cracked, yesterday, yDone]);
 
   const go = (p: Page) => {
@@ -193,7 +194,11 @@ export function App() {
     setDate(localToday());
     setRevealing(true);
     go("today");
-    window.setTimeout(() => setRevealing(false), 1200);
+    window.setTimeout(() => {
+      setRevealing(false);
+      // ?tour=1 replays the tour, for screenshots
+      if (!load(TOUR_KEY, (v): v is boolean => v === true)) setTouring(true);
+    }, 1300);
   };
 
   const toggleStep = (id: string) => {
@@ -244,6 +249,17 @@ export function App() {
 
   return (
     <div className={`app ${revealing ? "is-revealing" : ""}`}>
+      <Floaties page />
+      {touring || (demo && linkQuery().get("tour") === "1" && page === "today" && !sealed && tourDemo) ? (
+        <Tour
+          onDone={() => {
+            setTouring(false);
+            setTourDemo(false);
+            save(TOUR_KEY, true);
+            window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+          }}
+        />
+      ) : null}
       <header className="topbar">
         <button type="button" className="brand" onClick={() => (setDate(today), go("today"))} aria-label="Fortune Cookie, today">
           <Mark size={32} />
@@ -276,14 +292,6 @@ export function App() {
             onBackToToday={() => setDate(today)}
             done={done}
             onToggle={toggleStep}
-            plans={plans}
-            onPlan={(id, text) => {
-              const next = { ...plans };
-              if (text) next[id] = text;
-              else delete next[id];
-              setPlans(next);
-              savePlans(date, next);
-            }}
             checkIn={checkIn}
             onCheckIn={(id) => {
               const next = [...yDone, id];

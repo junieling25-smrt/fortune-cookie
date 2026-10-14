@@ -56,13 +56,13 @@ Carried over from the MING brief. It is still correct and still unvalidated.
 
 ## The daily page, top to bottom
 
-Updated in round three to be shorter and simpler:
+Updated in rounds four and five to be shorter and simpler:
 
 1. **Today's cookie.** It starts sealed and stays sealed until you tap it. Future days can't be opened. The fortune carries your name.
 2. **Today's score.** A number from 0 to 100, one plain line, and "Your [element]" written for your core element. Four thin bars show the score for each life area.
-3. **In focus today.** The area today's energy points at: two lines, a "For you" line when it fits, a "Read more" paragraph behind a tap, and a tiny step you can edit into your own plan.
+3. **In focus today.** The area today's energy points at: two lines, a "For you" line when it fits, and a "Read more" paragraph behind a tap.
 4. **Other areas.** The other three as one-line rows with their scores. Tap one to open it.
-5. **Small tweaks.** A color to wear, something to eat, something to do, and your best two hours.
+5. **Small tweaks.** A color to wear, something to eat, something to do, and your best two hours. Each can be ticked off, and each has an (i) with its BaZi reason. (Round five replaced tiny steps with these.)
 6. **Streak and tomorrow.** The streak, the last seven cookies (tap one to reread that day), and a sealed note about tomorrow.
 
 The long view (month, year, the next 3, 5, or 10 years, and lifetime), the profile with your four animal pictures, Match, and "What it means" each have their own tab.

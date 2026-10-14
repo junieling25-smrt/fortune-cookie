@@ -3,7 +3,7 @@ import { ANIMAL_INFO, ELEMENT_INFO, GLOSSARY } from "../engine/copy-guide";
 import type { AreaId, DailyReading, Profile, Tone } from "../engine/reading";
 import { fmtLongDate, fmtShortDate, greeting, type Streak } from "../lib";
 import { Floaties } from "./Floaties";
-import { AREA_ICON, Bowl, Check, Chevron, Clock, Copy, Hand, ImageIcon, Pencil, Shirt } from "./Icons";
+import { AREA_ICON, Bowl, Check, Chevron, Clock, Copy, Hand, ImageIcon, Info, Shirt } from "./Icons";
 import { CookieArt, Mark } from "./Mark";
 import { ReadMore } from "./ReadMore";
 import { ScoreBar, ScorePill, ScoreRing, SHORT } from "./Score";
@@ -11,8 +11,20 @@ import { ShareModal } from "./ShareCard";
 import { Term } from "./Term";
 
 export type CheckIn = { date: string; items: { id: string; label: string; text: string }[] } | null;
+export type TweakId = "wear" | "eat" | "do" | "time";
 
 const firstTrait = (el: keyof typeof ELEMENT_INFO) => ELEMENT_INFO[el].traits.split(",")[0].toLowerCase();
+
+/** A small (i) that explains why on hover or tap. */
+function Why({ tip }: { tip: string }) {
+  return (
+    <Term tip={tip} wide>
+      <span className="why-i" aria-label="Why it helps">
+        <Info size={15} />
+      </span>
+    </Term>
+  );
+}
 
 export function Today({
   profile,
@@ -23,8 +35,6 @@ export function Today({
   onBackToToday,
   done,
   onToggle,
-  plans,
-  onPlan,
   checkIn,
   onCheckIn,
   onDismissCheckIn,
@@ -39,9 +49,7 @@ export function Today({
   onCrack: () => void;
   onBackToToday: () => void;
   done: string[];
-  onToggle: (id: AreaId) => void;
-  plans: Partial<Record<AreaId, string>>;
-  onPlan: (id: AreaId, text: string | null) => void;
+  onToggle: (id: TweakId) => void;
   checkIn: CheckIn;
   onCheckIn: (id: string) => void;
   onDismissCheckIn: () => void;
@@ -62,7 +70,7 @@ export function Today({
   const ordered = [...reading.areas.filter((a) => a.interested), ...reading.areas.filter((a) => !a.interested)];
   const focus = reading.areas.find((a) => a.focus) ?? ordered[0];
   const others = ordered.filter((a) => a.id !== focus.id);
-  const stepsDone = reading.areas.filter((a) => done.includes(a.id)).length;
+  const tried = (["wear", "eat", "do", "time"] as TweakId[]).filter((t) => done.includes(t)).length;
 
   const crack = () => {
     setCracking(true);
@@ -85,8 +93,105 @@ export function Today({
 
   const dayTip = `${GLOSSARY["day energy"]} Today is ${today.yang ? "yang" : "yin"} ${today.element} (${firstTrait(today.element)}) with the ${today.animal} (${(ANIMAL_INFO[today.animal]?.trait ?? "").toLowerCase()}).`;
 
+  const tweakRows: { id: TweakId; label: string; Icon: (p: { size?: number }) => React.JSX.Element; value: React.ReactNode; tip: string }[] = [
+    {
+      id: "wear",
+      label: "Wear",
+      Icon: Shirt,
+      value: (
+        <>
+          <i className="swatch" style={{ background: tweaks.wear.hex }} /> {tweaks.wear.color}
+        </>
+      ),
+      tip: `${tweaks.notes.wear} ${tweaks.why}`,
+    },
+    { id: "eat", label: "Eat", Icon: Bowl, value: tweaks.eat, tip: `${tweaks.notes.eat} ${tweaks.why}` },
+    { id: "do", label: "Do", Icon: Hand, value: tweaks.do, tip: `${tweaks.notes.do} ${tweaks.why}` },
+    {
+      id: "time",
+      label: "Best time",
+      Icon: Clock,
+      value: (
+        <>
+          {tweaks.time.label} <span className="muted">· {tweaks.time.animal} hours</span>
+        </>
+      ),
+      tip: tweaks.time.note,
+    },
+  ];
+
+  const stage = (
+    <div className={`stage ${sealed ? "is-sealed" : ""}`}>
+      <Floaties dense={false} />
+      {sealed ? (
+        <div className="sealed">
+          <button type="button" className={`crack-me ${cracking ? "is-cracking" : ""}`} onClick={crack} disabled={cracking} aria-label="Crack today's cookie">
+            <CookieArt progress={cracking ? 1 : 0} open={cracking} />
+          </button>
+          <p className="sealed-title">Today's cookie is sealed.</p>
+          <button type="button" className="btn btn-cookie" onClick={crack} disabled={cracking}>
+            Crack it open
+          </button>
+          <p className="sealed-note">{streak.streak > 0 ? `Keep your ${streak.streak}-day streak going.` : "One cookie a day. Start a streak."}</p>
+        </div>
+      ) : (
+        <>
+          <div className="stage-cookie">
+            <CookieArt progress={1} open />
+          </div>
+          <article className="slip" key={reading.date}>
+            <span className="slip-tag">{name ? `${name}'s fortune` : "Your fortune"}</span>
+            <p className="slip-text" id="slip-text">
+              {reading.slip}
+            </p>
+            <p className="slip-foot">
+              <Term tip={dayTip} wide>
+                {today.yang ? "Yang" : "Yin"} {today.element} {today.animal} day
+              </Term>
+            </p>
+          </article>
+          <div className="stage-actions">
+            <button type="button" className="btn btn-night" onClick={() => setSharing(true)}>
+              <ImageIcon /> Share image
+            </button>
+            <button type="button" className="btn btn-night-quiet" onClick={copy}>
+              <Copy /> {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const scoreBlock = (
+    <section className="block score-block" aria-label="Today's score">
+      <ScoreRing score={overall.score} tone={overall.tone} label="Today's score" />
+      <div className="score-copy">
+        <p className="label">
+          <Term tip={GLOSSARY.score}>Today's score</Term>
+        </p>
+        <p className="score-line">{overall.toneLine}</p>
+        <p className="score-personal">
+          <Term tip={`Your core element is ${core}, ${profile.core.title.toLowerCase()}. ${GLOSSARY.core}`}>Your {personal.nick}</Term>: {personal.text}
+        </p>
+        <ReadMore text={overall.deep} label="Read more about today" resetKey={reading.date} />
+      </div>
+      <ul className="mini-scores">
+        {ordered.map((a) => (
+          <li key={a.id} data-area={a.id}>
+            <button type="button" onClick={() => setOpen(a.id === focus.id ? null : a.id)} aria-label={`${a.title}: ${a.score}`}>
+              <span className="mini-name">{SHORT[a.id]}</span>
+              <ScoreBar score={a.score} tone={a.tone} />
+              <span className="mini-num">{a.score}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+
   return (
-    <section className="today" aria-labelledby="today-title">
+    <section className={`today ${sealed ? "is-sealed" : ""}`} aria-labelledby="today-title">
       <header className="today-head">
         <p className="eyebrow">
           {isToday ? greeting() : "Looking back"}
@@ -103,7 +208,7 @@ export function Today({
       {checkIn && !sealed ? (
         <div className="checkin">
           <p>
-            <span className="label">Yesterday's step</span>
+            <span className="label">Yesterday's tweak</span>
             {checkIn.items[0].text}
           </p>
           <div className="checkin-actions">
@@ -117,285 +222,129 @@ export function Today({
         </div>
       ) : null}
 
-      <div className={`stage ${sealed ? "is-sealed" : ""}`}>
-        <Floaties dense={false} />
-        {sealed ? (
-          <div className="sealed">
-            <button type="button" className={`crack-me ${cracking ? "is-cracking" : ""}`} onClick={crack} disabled={cracking} aria-label="Crack today's cookie">
-              <CookieArt progress={cracking ? 1 : 0} open={cracking} />
-            </button>
-            <p className="sealed-title">Today's cookie is sealed.</p>
-            <button type="button" className="btn btn-cookie" onClick={crack} disabled={cracking}>
-              Crack it open
-            </button>
-            <p className="sealed-note">{streak.streak > 0 ? `Keep your ${streak.streak}-day streak going.` : "One cookie a day. Start a streak."}</p>
-          </div>
-        ) : (
-          <>
-            <div className="stage-cookie">
-              <CookieArt progress={1} open />
-            </div>
-            <article className="slip" key={reading.date}>
-              <span className="slip-tag">{name ? `${name}'s fortune` : "Your fortune"}</span>
-              <p className="slip-text" id="slip-text">
-                {reading.slip}
-              </p>
-              <p className="slip-foot">
-                <Term tip={dayTip} wide>
-                  {today.yang ? "Yang" : "Yin"} {today.element} {today.animal} day
-                </Term>
-              </p>
-            </article>
-            <div className="stage-actions">
-              <button type="button" className="btn btn-night" onClick={() => setSharing(true)}>
-                <ImageIcon /> Share image
-              </button>
-              <button type="button" className="btn btn-night-quiet" onClick={copy}>
-                <Copy /> {copied ? "Copied" : "Copy"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
+      <div className="today-grid">
+        <div className="today-main">
+          {stage}
+          {sealed ? null : scoreBlock}
+        </div>
 
-      {sealed ? null : (
-        <>
-          <section className="block score-block" aria-label="Today's score">
-            <ScoreRing score={overall.score} tone={overall.tone} label="Today's score" />
-            <div className="score-copy">
-              <p className="label">
-                <Term tip={GLOSSARY.score}>Today's score</Term>
-              </p>
-              <p className="score-line">{overall.toneLine}</p>
-              <p className="score-personal">
-                <Term tip={`Your core element is ${core}, ${profile.core.title.toLowerCase()}. ${GLOSSARY.core}`}>Your {personal.nick}</Term>: {personal.text}
-              </p>
-              <ReadMore text={overall.deep} label="Read more about today" resetKey={reading.date} />
-            </div>
-            <ul className="mini-scores">
-              {ordered.map((a) => (
-                <li key={a.id} data-area={a.id}>
-                  <button type="button" onClick={() => setOpen(a.id === focus.id ? null : a.id)} aria-label={`${a.title}: ${a.score}`}>
-                    <span className="mini-name">{SHORT[a.id]}</span>
-                    <ScoreBar score={a.score} tone={a.tone} />
-                    <span className="mini-num">{a.score}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+        <div className="today-side">
+          {sealed ? null : (
+            <>
+              <section className="block focus" data-area={focus.id} aria-labelledby="focus-title">
+                <header className="area-head">
+                  <span className="area-icon">{(() => {
+                    const I = AREA_ICON[focus.id];
+                    return <I size={22} />;
+                  })()}</span>
+                  <div>
+                    <p className="label">In focus today</p>
+                    <h2 id="focus-title">{focus.title}</h2>
+                  </div>
+                  <ScorePill score={focus.score} tone={focus.tone} />
+                </header>
+                <p className="area-text">{focus.text}</p>
+                {focus.forYou ? <p className="area-foryou">{focus.forYou}</p> : null}
+                <ReadMore text={focus.deep} resetKey={`${reading.date}-${focus.id}`} />
+              </section>
 
-          <section className="block focus" data-area={focus.id} aria-labelledby="focus-title">
-            <header className="area-head">
-              <span className="area-icon">{(() => {
-                const I = AREA_ICON[focus.id];
-                return <I size={22} />;
-              })()}</span>
-              <div>
-                <p className="label">In focus today</p>
-                <h2 id="focus-title">{focus.title}</h2>
-              </div>
-              <ScorePill score={focus.score} tone={focus.tone} />
-            </header>
-            <p className="area-text">{focus.text}</p>
-            {focus.forYou ? <p className="area-foryou">{focus.forYou}</p> : null}
-            <ReadMore text={focus.deep} resetKey={`${reading.date}-${focus.id}`} />
-            <StepButton id={focus.id} suggestion={focus.step} plan={plans[focus.id]} done={done.includes(focus.id)} onToggle={onToggle} onPlan={onPlan} />
-          </section>
-
-          <section className="block others" aria-label="Other areas">
-            <p className="label block-label">
-              Other areas <span className="muted">· {stepsDone} of {reading.areas.length} tiny steps done</span>
-            </p>
-            {others.map((a) => {
-              const I = AREA_ICON[a.id];
-              const isOpen = open === a.id;
-              return (
-                <div key={a.id} className={`other ${isOpen ? "is-open" : ""}`} data-area={a.id}>
-                  <button type="button" className="other-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : a.id)}>
-                    <span className="area-icon area-icon-sm">
-                      <I size={18} />
-                    </span>
-                    <span className="other-title">
-                      {a.title}
-                      {done.includes(a.id) ? <Check size={12} /> : null}
-                    </span>
-                    <ScorePill score={a.score} tone={a.tone} />
-                    <Chevron dir="down" size={16} />
-                  </button>
-                  {isOpen ? (
-                    <div className="other-body">
-                      <p className="area-text">{a.text}</p>
-                      {a.forYou ? <p className="area-foryou">{a.forYou}</p> : null}
-                      <ReadMore text={a.deep} resetKey={`${reading.date}-${a.id}`} />
-                      <StepButton id={a.id} suggestion={a.step} plan={plans[a.id]} done={done.includes(a.id)} onToggle={onToggle} onPlan={onPlan} />
+              <section className="block others" aria-label="Other areas">
+                <p className="label block-label">Other areas</p>
+                {others.map((a) => {
+                  const I = AREA_ICON[a.id];
+                  const isOpen = open === a.id;
+                  return (
+                    <div key={a.id} className={`other ${isOpen ? "is-open" : ""}`} data-area={a.id}>
+                      <button type="button" className="other-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : a.id)}>
+                        <span className="area-icon area-icon-sm">
+                          <I size={18} />
+                        </span>
+                        <span className="other-title">{a.title}</span>
+                        <ScorePill score={a.score} tone={a.tone} />
+                        <Chevron dir="down" size={16} />
+                      </button>
+                      {isOpen ? (
+                        <div className="other-body">
+                          <p className="area-text">{a.text}</p>
+                          {a.forYou ? <p className="area-foryou">{a.forYou}</p> : null}
+                          <ReadMore text={a.deep} resetKey={`${reading.date}-${a.id}`} />
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </section>
+                  );
+                })}
+              </section>
 
-          <section className="block tweaks" aria-labelledby="tweaks-title" data-el={tweaks.element}>
-            <header className="tweaks-head">
-              <h2 id="tweaks-title">Small tweaks</h2>
-              <Term tip={tweaks.why} wide>
-                <span className="chip" data-el={tweaks.element}>
-                  {tweaks.element} day for you
-                </span>
-              </Term>
-            </header>
-            <ul className="tweak-list">
-              <li>
-                <span className="tweak-ic">
-                  <Shirt />
-                </span>
-                <span className="label">Wear</span>
-                <span className="tweak-val">
-                  <i className="swatch" style={{ background: tweaks.wear.hex }} /> {tweaks.wear.color}
-                </span>
-              </li>
-              <li>
-                <span className="tweak-ic">
-                  <Bowl />
-                </span>
-                <span className="label">Eat</span>
-                <span className="tweak-val">{tweaks.eat}</span>
-              </li>
-              <li>
-                <span className="tweak-ic">
-                  <Hand />
-                </span>
-                <span className="label">Do</span>
-                <span className="tweak-val">{tweaks.do}</span>
-              </li>
-              <li>
-                <span className="tweak-ic">
-                  <Clock />
-                </span>
-                <span className="label">
-                  <Term tip={GLOSSARY["best time"]}>Best time</Term>
-                </span>
-                <span className="tweak-val">
-                  {tweaks.time.label} <span className="muted">· {tweaks.time.animal} hours</span>
-                </span>
-              </li>
-            </ul>
-          </section>
-        </>
-      )}
+              <section className="block tweaks" aria-labelledby="tweaks-title" data-el={tweaks.element}>
+                <header className="tweaks-head">
+                  <h2 id="tweaks-title">Small tweaks</h2>
+                  <span className="muted small">
+                    {tried} of 4 tried · a{" "}
+                    <Term tip={tweaks.why} wide>
+                      {tweaks.element}
+                    </Term>{" "}
+                    day for you
+                  </span>
+                </header>
+                <ul className="tweak-list">
+                  {tweakRows.map(({ id, label, Icon, value, tip }) => {
+                    const on = done.includes(id);
+                    return (
+                      <li key={id} className={on ? "is-done" : ""}>
+                        <button type="button" className="tweak-btn" aria-pressed={on} onClick={() => onToggle(id)}>
+                          <span className="tweak-ic">{on ? <Check size={16} /> : <Icon />}</span>
+                          <span className="label">{label}</span>
+                          <span className="tweak-val">{value}</span>
+                        </button>
+                        <Why tip={tip} />
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="hint">Tap one when you've tried it. Tap the (i) to see why it helps.</p>
+              </section>
+            </>
+          )}
 
-      <section className="block tomorrow" aria-label="Your streak and tomorrow">
-        <div className="streak-row">
-          <div>
-            <p className="streak-num">
-              <Mark size={22} /> {streak.streak} <span>day streak</span>
-            </p>
-            <p className="muted small">{streak.total} cookies cracked</p>
-          </div>
-          <ol className="week" aria-label="The last seven days">
-            {streak.week.map((d) => (
-              <li key={d.date}>
-                <button
-                  type="button"
-                  className={`${d.cracked ? "is-on" : ""} ${d.date === reading.date ? "is-viewing" : ""}`}
-                  disabled={!d.cracked}
-                  onClick={() => onPickDay(d.date)}
-                  aria-label={`${fmtShortDate(d.date)}${d.cracked ? ", cracked. Read it again" : ", not cracked"}`}
-                >
-                  <span className="week-cookie">{d.cracked ? <Mark size={20} /> : null}</span>
-                  <span className="week-letter">{d.letter}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
+          <section className="block tomorrow" aria-label="Your streak and tomorrow">
+            <div className="streak-row">
+              <div>
+                <p className="streak-num">
+                  <Mark size={22} /> {streak.streak} <span>day streak</span>
+                </p>
+                <p className="muted small">{streak.total} cookies cracked</p>
+              </div>
+              <ol className="week" aria-label="The last seven days">
+                {streak.week.map((d) => (
+                  <li key={d.date}>
+                    <button
+                      type="button"
+                      className={`${d.cracked ? "is-on" : ""} ${d.date === reading.date ? "is-viewing" : ""}`}
+                      disabled={!d.cracked}
+                      onClick={() => onPickDay(d.date)}
+                      aria-label={`${fmtShortDate(d.date)}${d.cracked ? ", cracked. Read it again" : ", not cracked"}`}
+                    >
+                      <span className="week-cookie">{d.cracked ? <Mark size={20} /> : null}</span>
+                      <span className="week-letter">{d.letter}</span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="tomorrow-row">
+              <span className="sealed-mini" aria-hidden="true">
+                <Mark size={30} />
+              </span>
+              <p>
+                <span className="label">Tomorrow's cookie</span>
+                {teaser.text} Opens after midnight.
+              </p>
+            </div>
+          </section>
         </div>
-        <div className="tomorrow-row">
-          <span className="sealed-mini" aria-hidden="true">
-            <Mark size={30} />
-          </span>
-          <p>
-            <span className="label">Tomorrow's cookie</span>
-            {teaser.text} Opens after midnight.
-          </p>
-        </div>
-      </section>
+      </div>
 
       {sharing ? <ShareModal reading={reading} name={name} onClose={closeShare} /> : null}
     </section>
-  );
-}
-
-/** The tiny step: tap to tick it off, or swap in your own step for the day. */
-function StepButton({
-  id,
-  suggestion,
-  plan,
-  done,
-  onToggle,
-  onPlan,
-}: {
-  id: AreaId;
-  suggestion: string;
-  plan: string | undefined;
-  done: boolean;
-  onToggle: (id: AreaId) => void;
-  onPlan: (id: AreaId, text: string | null) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
-  const text = plan ?? suggestion;
-  if (editing)
-    return (
-      <form
-        className="step-edit"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const t = draft.trim();
-          onPlan(id, t && t !== suggestion ? t.slice(0, 200) : null);
-          setEditing(false);
-        }}
-      >
-        <label className="label" htmlFor={`step-${id}`}>
-          Your own tiny step
-        </label>
-        <textarea id={`step-${id}`} className="field" rows={3} maxLength={200} value={draft} autoFocus onChange={(e) => setDraft(e.target.value)} />
-        <div className="step-edit-actions">
-          <button type="submit" className="btn btn-cookie btn-small">
-            Save my step
-          </button>
-          <button type="button" className="btn btn-quiet btn-small" onClick={() => setEditing(false)}>
-            Cancel
-          </button>
-        </div>
-      </form>
-    );
-  return (
-    <div className="step-wrap">
-      <button type="button" className={`step ${done ? "is-done" : ""}`} aria-pressed={done} onClick={() => onToggle(id)}>
-        <span className="step-box">{done ? <Check size={13} /> : null}</span>
-        <span className="step-copy">
-          <small>{plan ? "Your step" : "Tiny step"}</small>
-          {text}
-        </span>
-      </button>
-      <div className="step-tools">
-        <button
-          type="button"
-          className="link-btn"
-          onClick={() => {
-            setDraft(text);
-            setEditing(true);
-          }}
-        >
-          <Pencil size={13} /> Edit step
-        </button>
-        {plan ? (
-          <button type="button" className="link-btn" onClick={() => onPlan(id, null)}>
-            Use the suggestion
-          </button>
-        ) : null}
-      </div>
-    </div>
   );
 }

@@ -12,12 +12,24 @@ const STEPS = ["welcome", "name", "date", "time", "place", "about"] as const;
 type StepId = (typeof STEPS)[number];
 const CRACK_STEPS = STEPS.length - 1; // the welcome screen doesn't crack anything
 
-/** Multi-select chips, shared with the profile page. */
-export function Chips<T extends string>({ label, options, value, onChange }: { label: string; options: Record<T, string>; value: T[]; onChange: (v: T[]) => void }) {
+/** Answer chips, shared with the profile page. `single` allows one answer (love life can't be single and partnered at once). */
+export function Chips<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  single,
+}: {
+  label: string;
+  options: Record<T, string>;
+  value: T[];
+  onChange: (v: T[]) => void;
+  single?: boolean;
+}) {
   return (
-    <fieldset className="chips-q">
+    <fieldset className="chips-q" role={single ? "radiogroup" : undefined}>
       <legend>
-        {label} <span className="muted">· pick any that fit</span>
+        {label} <span className="muted">· {single ? "pick one" : "pick any that fit"}</span>
       </legend>
       <div className="chips">
         {(Object.keys(options) as T[]).map((k) => {
@@ -28,7 +40,7 @@ export function Chips<T extends string>({ label, options, value, onChange }: { l
               type="button"
               className={`chip-btn ${on ? "is-on" : ""}`}
               aria-pressed={on}
-              onClick={() => onChange(on ? value.filter((x) => x !== k) : [...value, k])}
+              onClick={() => onChange(on ? value.filter((x) => x !== k) : single ? [k] : [...value, k])}
             >
               {on ? <Check size={12} /> : null}
               {options[k]}
@@ -131,7 +143,7 @@ export function Onboarding({ initial, onDone, onCancel }: { initial: Saved | nul
     name: "Optional. Your name only lives on this device.",
     date: "Month, day, then year. Your year animal starts here.",
     time: "The time on your birth record. It sets your fourth animal.",
-    place: "Type your town, or find it on the map. We use it for sun time.",
+    place: "Type your town, or find it on the map.",
     about: "All optional. Pick as many answers as fit; each one makes your readings feel more like yours.",
   };
 
@@ -220,14 +232,19 @@ export function Onboarding({ initial, onDone, onCancel }: { initial: Saved | nul
           {id === "place" ? (
             <div className="stack">
               <PlaceField value={place} onChange={setPlace} />
-              <p className="hint">{place ? `Time zone: ${place.tz.replace(/_/g, " ")}` : "About 49,000 places. Try “Shaoyang, Hunan” or “Portland, Oregon”, or tap the map."}</p>
+              {place ? (
+                <p className="hint">
+                  {place.place} · {Math.abs(place.lat).toFixed(2)}° {place.lat >= 0 ? "N" : "S"}, {Math.abs(place.lon).toFixed(2)}° {place.lon >= 0 ? "E" : "W"} · {place.tz.replace(/_/g, " ")}
+                </p>
+              ) : null}
+              <p className="hint">We use your birthplace's latitude and longitude to turn clock time into the sun's real time there, which sets your chart.</p>
             </div>
           ) : null}
 
           {id === "about" ? (
             <div className="about-qs">
               <Chips label="Work life right now" options={CAREER_CTX} value={career} onChange={setCareer} />
-              <Chips label="Love life right now" options={LOVE_CTX} value={love} onChange={setLove} />
+              <Chips label="Love life right now" options={LOVE_CTX} value={love} onChange={setLove} single />
               <Chips label="Who's at home?" options={HOME_CTX} value={home} onChange={setHome} />
               <Chips label="What are you working on?" options={GROWTH_CTX} value={growth} onChange={setGrowth} />
             </div>
