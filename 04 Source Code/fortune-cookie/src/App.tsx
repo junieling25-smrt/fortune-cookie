@@ -19,12 +19,15 @@ import {
   load,
   loadAvatar,
   loadReminder,
+  loadPlans,
   loadSteps,
   localToday,
   markCracked,
   markIntroSeen,
+  normalizeSaved,
   save,
   saveAvatar,
+  savePlans,
   saveSteps,
   shiftDate,
   streakInfo,
@@ -64,10 +67,10 @@ function fromLink(): Link {
     ...DEFAULT_PERSON,
     name: q.get("name") ?? "",
     interests: areas.length ? areas : [...AREAS],
-    career: q.get("career") || null,
-    love: q.get("love") || null,
+    career: list("career"),
+    love: list("love"),
     home: list("home"),
-    growth: q.get("growth") || null,
+    growth: list("growth"),
   } as Person;
   return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
 }
@@ -96,7 +99,7 @@ const splashDone = () => {
 
 export function App() {
   const [link, setLink] = useState<Link | null>(() => (hasLink() ? null : { saved: null, day: null, sealed: false }));
-  const [saved, setSaved] = useState<Saved | null>(() => load(STORE_KEY, isSaved));
+  const [saved, setSaved] = useState<Saved | null>(() => normalizeSaved(load(STORE_KEY, isSaved)));
   const [splash, setSplash] = useState(() => !hasLink() && !splashDone() && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
   const [intro, setIntro] = useState(() => !introSeen());
   const [page, setPage] = useState<Page>(route);
@@ -104,6 +107,7 @@ export function App() {
   const [date, setDate] = useState(localToday);
   const [cracked, setCracked] = useState(crackedDays);
   const [done, setDone] = useState<string[]>(() => loadSteps(localToday()));
+  const [plans, setPlans] = useState(() => loadPlans(localToday()));
   const [yDone, setYDone] = useState<string[]>(() => loadSteps(shiftDate(localToday(), -1)));
   const [dismissed, setDismissed] = useState(() => load(DISMISS_KEY, (v): v is string => typeof v === "string"));
   const [avatar, setAvatar] = useState(loadAvatar);
@@ -141,7 +145,10 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => setDone(loadSteps(date)), [date]);
+  useEffect(() => {
+    setDone(loadSteps(date));
+    setPlans(loadPlans(date));
+  }, [date]);
 
   const endSplash = useCallback(() => {
     setSplash(false);
@@ -162,7 +169,8 @@ export function App() {
   const checkIn: CheckIn = useMemo(() => {
     if (!profile || date !== today || dismissed === today || !cracked.includes(yesterday)) return null;
     const y = readDay(profile, yesterday);
-    const items = y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: a.step }));
+    const yPlans = loadPlans(yesterday);
+    const items = y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: yPlans[a.id] ?? a.step }));
     return items.length && yDone.length === 0 ? { date: yesterday, items: items.slice(0, 1) } : null;
   }, [profile, date, today, dismissed, cracked, yesterday, yDone]);
 
@@ -268,6 +276,14 @@ export function App() {
             onBackToToday={() => setDate(today)}
             done={done}
             onToggle={toggleStep}
+            plans={plans}
+            onPlan={(id, text) => {
+              const next = { ...plans };
+              if (text) next[id] = text;
+              else delete next[id];
+              setPlans(next);
+              savePlans(date, next);
+            }}
             checkIn={checkIn}
             onCheckIn={(id) => {
               const next = [...yDone, id];

@@ -1,6 +1,7 @@
 import { ANIMAL_INFO, CHANGES, CYCLE_LINES, ELEMENT_INFO, PILLAR_INFO, SCORE_INFO, YIN_YANG } from "../engine/copy-guide";
 import { ELEMENTS } from "../engine/pillars";
 import type { Profile } from "../engine/reading";
+import { AnimalIcon } from "./Animals";
 import { ArrowRight } from "./Icons";
 
 /** The plain-words guide: pillars, elements, yin and yang, animals, the score, and what changes when. */
@@ -68,6 +69,7 @@ export function MeaningPage({ profile, onHow }: { profile: Profile; onHow: () =>
         <ul className="animal-grid">
           {Object.entries(ANIMAL_INFO).map(([a, info]) => (
             <li key={a} className={mine.has(a) ? "is-mine" : ""}>
+              <AnimalIcon animal={a} size={40} />
               <strong>{a}</strong>
               <span className="small">{info.trait}</span>
               <span className="muted small">{info.hours}</span>

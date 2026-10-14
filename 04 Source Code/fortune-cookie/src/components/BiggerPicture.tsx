@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
-import { readLife, readMonth, readYear, toneOfNumber, type Profile } from "../engine/reading";
+import { readLife, readMonth, readYear, readYears, toneOfNumber, type Profile } from "../engine/reading";
+import { AnimalIcon } from "./Animals";
+import { ReadMore } from "./ReadMore";
 import { fmtMonthDay, weekdayIndex } from "../lib";
 import { AREA_ICON } from "./Icons";
 import { Mark } from "./Mark";
 import { ScorePill, ScoreRing, SHORT } from "./Score";
 import { Term } from "./Term";
 
-type Tab = "month" | "year" | "life";
+type Tab = "month" | "year" | "years" | "life";
 
 function Month({ profile, date, today, cracked, onPick }: { profile: Profile; date: string; today: string; cracked: string[]; onPick: (d: string) => void }) {
   const m = useMemo(() => readMonth(profile, date), [profile, date]);
@@ -21,6 +23,7 @@ function Month({ profile, date, today, cracked, onPick }: { profile: Profile; da
             <Term tip={`Solar months follow the sun. This one is a ${m.element} month, which works as ${m.familyName} for you.`}>{m.element} month</Term> · {m.range}
           </p>
           <p className="fc-text">{m.text}</p>
+          <ReadMore text={m.deep} resetKey={m.start} />
         </div>
       </div>
       <ul className="fc-areas">
@@ -122,6 +125,52 @@ function Year({ profile, date }: { profile: Profile; date: string }) {
   );
 }
 
+/** The next 3, 5, or 10 chart years, one row each. */
+function Years({ profile, date }: { profile: Profile; date: string }) {
+  const [count, setCount] = useState(5);
+  const ys = useMemo(() => readYears(profile, date, count), [profile, date, count]);
+  return (
+    <div className="fc-body">
+      <div className="chips" role="group" aria-label="How many years">
+        {[3, 5, 10].map((n) => (
+          <button key={n} type="button" className={`chip-btn ${count === n ? "is-on" : ""}`} aria-pressed={count === n} onClick={() => setCount(n)}>
+            {n} years
+          </button>
+        ))}
+      </div>
+      <p className="fc-text">
+        {ys.smoothest ? `${ys.smoothest.year} looks like your smoothest year in this stretch.` : ""}
+        {ys.gentlest ? ` Go easier on yourself in ${ys.gentlest.year}.` : ""}
+      </p>
+      <p className="muted small">
+        Best years by area:{" "}
+        {ys.bestFor.map((b, i) => (
+          <span key={b.id}>
+            {i ? ", " : ""}
+            {SHORT[b.id]} <strong>{b.year}</strong>
+          </span>
+        ))}
+        . Each year starts in early February.
+      </p>
+      <ol className="yrows">
+        {ys.rows.map((r) => (
+          <li key={r.year} className={r.current ? "is-now" : ""}>
+            <AnimalIcon animal={r.animal} size={40} />
+            <div className="yrow-main">
+              <p className="yrow-year">
+                {r.year} {r.current ? <span className="yr-now">now</span> : null}
+              </p>
+              <p className="muted small">{r.label}</p>
+              {count < 10 ? <p className="small">{r.flavor}</p> : null}
+            </div>
+            <ScorePill score={r.score} tone={r.tone} />
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 function Life({ profile, onProfile }: { profile: Profile; onProfile: () => void }) {
   const life = useMemo(() => readLife(profile), [profile]);
   const core = `${profile.core.yang ? "Yang" : "Yin"} ${profile.core.element}`;
@@ -176,6 +225,7 @@ export function BiggerPicture({
   const tabs: [Tab, string][] = [
     ["month", "This month"],
     ["year", "This year"],
+    ["years", "Years ahead"],
     ["life", "Lifetime"],
   ];
   return (
@@ -197,6 +247,8 @@ export function BiggerPicture({
           <Month profile={profile} date={today} today={today} cracked={cracked} onPick={onPick} />
         ) : tab === "year" ? (
           <Year profile={profile} date={date} />
+        ) : tab === "years" ? (
+          <Years profile={profile} date={date} />
         ) : (
           <Life profile={profile} onProfile={onProfile} />
         )}

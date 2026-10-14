@@ -107,6 +107,25 @@ export function isSaved(v: unknown): v is Saved {
   );
 }
 
+const asList = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : typeof v === "string" ? [v] : []);
+
+/** Profiles saved by earlier versions stored one answer per question; newer ones store lists. */
+export function normalizeSaved(s: Saved | null): Saved | null {
+  if (!s) return null;
+  const p = s.person as unknown as Record<string, unknown>;
+  return {
+    birth: s.birth,
+    person: {
+      name: typeof p.name === "string" ? p.name : "",
+      interests: isStringArray(p.interests) && p.interests.length ? (p.interests.filter((a) => (AREAS as string[]).includes(a)) as Person["interests"]) : [...AREAS],
+      career: asList(p.career) as Person["career"],
+      love: asList(p.love) as Person["love"],
+      home: asList(p.home) as Person["home"],
+      growth: asList(p.growth) as Person["growth"],
+    },
+  };
+}
+
 // ------------------------------------------------------------ the daily habit
 
 const CRACKED = "fc.cracked";
@@ -141,6 +160,13 @@ export function streakInfo(days: string[], today: string): Streak {
   });
   return { streak, total: days.length, crackedToday, week };
 }
+
+const plansKey = (date: string) => `fc.plans.${date}`;
+const isPlans = (v: unknown): v is Record<string, string> =>
+  typeof v === "object" && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === "string");
+/** The reader's own tiny steps for a day, by area, replacing the suggestion. */
+export const loadPlans = (date: string): Partial<Record<(typeof AREAS)[number], string>> => load(plansKey(date), isPlans) ?? {};
+export const savePlans = (date: string, plans: Record<string, string>) => save(plansKey(date), Object.keys(plans).length ? plans : null);
 
 export const loadSteps = (date: string) => load(stepsKey(date), isStringArray) ?? [];
 export const saveSteps = (date: string, ids: string[]) => save(stepsKey(date), ids);

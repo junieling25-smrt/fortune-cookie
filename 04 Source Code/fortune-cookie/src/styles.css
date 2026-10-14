@@ -620,16 +620,7 @@ button {
   transition: transform 0.7s cubic-bezier(0.3, 1.45, 0.5, 1);
 }
 
-.ca-left {
-  transform-origin: 60px 92px;
-}
-
-.ca-right {
-  transform-origin: 62px 88px;
-}
-
 .ca-slip {
-  transform-origin: 72px 97px;
   transition-delay: 0.08s;
 }
 
@@ -3120,6 +3111,277 @@ select.field {
   grid-template-columns: minmax(0, 1fr);
 }
 
+/* ------------------------------------------------------------- from main's round 3: date fields, read more, own steps, animal faces, years */
+
+.date-fields,
+.time-fields {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.df {
+  display: grid;
+  gap: 4px;
+  width: 84px;
+}
+
+.df-year {
+  width: 116px;
+}
+
+.df span {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.df .field {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding-inline: 8px;
+}
+
+.df-slash {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink-3);
+  padding-bottom: 12px;
+}
+
+.ampm {
+  display: inline-flex;
+  background: var(--bg-band);
+  border-radius: 999px;
+  padding: 4px;
+  margin-left: 6px;
+  margin-bottom: 4px;
+}
+
+.ampm button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.ampm button.is-on {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.time-fields.is-disabled {
+  opacity: 0.45;
+}
+
+.chips-q legend .muted {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ---- read more */
+.read-more {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.read-more-text {
+  color: var(--ink-2);
+  line-height: 1.7;
+  background: var(--bg-band);
+  border-radius: 14px;
+  padding: 12px 14px;
+  animation: slip-in 0.35s ease both;
+}
+
+.read-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--pink-ink);
+}
+
+.read-more-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.read-more.is-open .read-more-btn svg {
+  transform: rotate(180deg);
+}
+
+/* ---- editable steps */
+.step-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding-left: 4px;
+}
+
+.step-tools .link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  color: var(--ink-2);
+}
+
+.step-tools .link-btn:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.step-tools .ap-side-note {
+  padding-left: 0;
+}
+
+.step-edit {
+  display: grid;
+  gap: 8px;
+  background: var(--bg);
+  border: 1.5px solid var(--lilac);
+  border-radius: 20px;
+  padding: 14px;
+}
+
+.step-edit textarea {
+  resize: vertical;
+  min-height: 84px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.step-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.animal-icon {
+  flex: none;
+  filter: drop-shadow(0 2px 0 rgba(36, 24, 61, 0.12));
+}
+
+.pillar:hover .animal-icon {
+  animation: wobble 0.6s ease;
+}
+
+.animal-unknown {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px dashed var(--line);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: var(--ink-3);
+}
+
+.years {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.yr-chip {
+  justify-self: start;
+}
+
+.years li {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  background: color-mix(in srgb, var(--tone) 45%, var(--card));
+  border-radius: 20px;
+  padding: 14px 16px;
+  border: 1.5px solid transparent;
+}
+
+.years li.is-now {
+  border-color: var(--ink);
+}
+
+.yr-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yr-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.yr-year {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 22px;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.yr-now {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.yr-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.yr-flavor {
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.yr-areas {
+  display: flex;
+  gap: 6px;
+}
+
+.yr-area {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--tone);
+  color: var(--tone-ink);
+}
+
+.years-compact {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.years-compact .yr-year {
+  font-size: 19px;
+}
+
 /* ------------------------------------------------------------- small screens: an app with a tab bar */
 
 @media (max-width: 760px) {
@@ -3185,6 +3447,14 @@ select.field {
     justify-items: center;
     text-align: center;
     row-gap: 14px;
+  }
+
+  .score-block .read-more {
+    justify-items: center;
+  }
+
+  .score-block .read-more-text {
+    text-align: left;
   }
 
   .mini-scores {
@@ -3283,5 +3553,83 @@ select.field {
 
   html {
     scroll-behavior: auto;
+  }
+}
+
+.step-wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.yrows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.yrows li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.yrows li.is-now .yrow-year {
+  color: var(--pink-ink);
+}
+
+.yrow-main {
+  display: grid;
+  gap: 2px;
+}
+
+.yrow-year {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seg {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.animal-year .animal-icon {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+}
+
+.animal-row .animal-icon,
+.animal-row .animal-unknown {
+  margin-bottom: 4px;
+}
+
+.animal-row .animal-unknown {
+  width: 40px;
+  height: 40px;
+}
+
+.field-label .date-fields .field,
+.field-label .time-fields .field {
+  min-height: 48px;
+  font-size: 17px;
+}
+
+.field-label .df span {
+  font-size: 10.5px;
+}
+
+@media (max-width: 520px) {
+  .seg button {
+    font-size: 13px;
+    padding: 9px 4px;
+    white-space: nowrap;
   }
 }

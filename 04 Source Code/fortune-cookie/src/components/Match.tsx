@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ANIMAL_INFO } from "../engine/copy-guide";
 import { readChart, readMatch, validateBirth, type BirthDetails, type Profile } from "../engine/reading";
 import { isBirthDetails, load, save } from "../lib";
+import { DateFields, TimeFields } from "./DateTimeFields";
 import { Close } from "./Icons";
 import { PlaceField, type Place } from "./PlaceField";
 import { ScoreRing } from "./Score";
@@ -19,7 +20,9 @@ export function MatchPage({ profile }: { profile: Profile }) {
   const [adding, setAdding] = useState(people.length === 0);
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
+  const [dateParts, setDateParts] = useState({ m: "", d: "", y: "" });
   const [time, setTime] = useState("");
+  const [timeParts, setTimeParts] = useState({ h: "", min: "", pm: false });
   const [place, setPlace] = useState<Place | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +50,9 @@ export function MatchPage({ profile }: { profile: Profile }) {
     setError(null);
     setName("");
     setDate("");
+    setDateParts({ m: "", d: "", y: "" });
     setTime("");
+    setTimeParts({ h: "", min: "", pm: false });
     setPlace(null);
   };
 
@@ -98,15 +103,25 @@ export function MatchPage({ profile }: { profile: Profile }) {
             Their name
             <input className="field" value={name} maxLength={30} placeholder="Or a nickname" onChange={(e) => setName(e.target.value)} />
           </label>
-          <div className="details-row">
-            <label className="field-label">
-              Birthday
-              <input className="field" type="date" min="1902-01-01" max="2099-12-31" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <label className="field-label">
-              Birth time <span className="muted">(optional)</span>
-              <input className="field" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </label>
+          <div className="field-label">
+            Their birthday
+            <DateFields
+              parts={dateParts}
+              onParts={(p, iso) => {
+                setDateParts(p);
+                setDate(iso);
+              }}
+            />
+          </div>
+          <div className="field-label">
+            Birth time <span className="muted">(optional)</span>
+            <TimeFields
+              parts={timeParts}
+              onParts={(p, hhmm) => {
+                setTimeParts(p);
+                setTime(hhmm);
+              }}
+            />
           </div>
           <div className="field-label">
             Birthplace <span className="muted">(optional, we'll assume yours)</span>

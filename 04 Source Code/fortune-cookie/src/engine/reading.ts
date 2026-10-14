@@ -85,6 +85,10 @@ import {
   YEAR,
   YEAR_AREA,
   YEAR_LINK,
+  YEAR_ENERGY,
+  OVERALL_DEEP,
+  MONTH_DEEP,
+  AREA_DEEP,
   type CareerCtx,
   type GrowthCtx,
   type HomeCtx,
@@ -113,13 +117,13 @@ export type BirthDetails = {
 export type Person = {
   name: string;
   interests: AreaId[];
-  career: CareerCtx | null;
-  love: LoveCtx | null;
+  career: CareerCtx[];
+  love: LoveCtx[];
   home: HomeCtx[];
-  growth: GrowthCtx | null;
+  growth: GrowthCtx[];
 };
 
-export const DEFAULT_PERSON: Person = { name: "", interests: [...AREAS], career: null, love: null, home: [], growth: null };
+export const DEFAULT_PERSON: Person = { name: "", interests: [...AREAS], career: [], love: [], home: [], growth: [] };
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^(\d{2}):(\d{2})$/;
@@ -382,9 +386,9 @@ function stepFits(step: Step, person: Person): boolean {
     case "kids":
       return person.home.includes("kids");
     case "partner":
-      return person.love === "dating" || person.love === "partnered";
+      return person.love.includes("dating") || person.love.includes("partnered");
     case "single":
-      return person.love === "single";
+      return person.love.includes("single");
   }
 }
 
@@ -416,6 +420,7 @@ export type AreaReading = {
   link: string | null;
   why: string;
   step: string;
+  deep: string;
 };
 
 export type DailyReading = {
@@ -425,7 +430,7 @@ export type DailyReading = {
   energy: { element: ElementName; family: Family; familyName: string; means: string };
   undercurrent: { element: ElementName; family: Family; familyName: string; means: string; animal: string };
   personal: { nick: string; text: string };
-  overall: { score: number; tone: Tone; toneLabel: string; toneLine: string; ask: string };
+  overall: { score: number; tone: Tone; toneLabel: string; toneLine: string; ask: string; deep: string };
   tweaks: Tweaks;
   season: { text: string; element: ElementName; familyName: string; until: string | null };
   areas: AreaReading[];
@@ -441,13 +446,20 @@ const SPOTLIGHT: Record<Family, AreaId> = {
   nurture: "family",
 };
 
-function forYou(person: Person, area: AreaId, fam: Family): string | null {
-  if (area === "career" && person.career) return CAREER_FOR[person.career][fam];
-  if (area === "love" && person.love) return LOVE_FOR[person.love][fam];
-  if (area === "growth" && person.growth) return GROWTH_FOR[person.growth][fam];
+/** With several answers for one question, the day rotates through them. */
+const pickFor = <T,>(list: T[], n: number): T | null => (list.length ? list[mod(n, list.length)] : null);
+
+function forYou(person: Person, area: AreaId, fam: Family, n: number): string | null {
+  const career = pickFor(person.career, n);
+  const love = pickFor(person.love, n);
+  const growth = pickFor(person.growth, n);
+  if (area === "career" && career) return CAREER_FOR[career][fam];
+  if (area === "love" && love) return LOVE_FOR[love][fam];
+  if (area === "growth" && growth) return GROWTH_FOR[growth][fam];
   if (area === "family" && person.home.length) {
     const order: HomeCtx[] = ["cat", "dog", "pet", "kids", "parents", "roommates", "solo"];
-    const first = order.find((h) => person.home.includes(h));
+    const present = order.filter((h) => person.home.includes(h));
+    const first = pickFor(present, n);
     return first ? HOME_FOR[first][fam] : null;
   }
   return null;
@@ -522,7 +534,8 @@ export function readDay(profile: Profile, date: string): DailyReading {
       focus: false,
       interested: person.interests.includes(id),
       text: AREA_TEXT[id][energy],
-      forYou: forYou(person, id, fam),
+      forYou: forYou(person, id, fam, n),
+      deep: AREA_DEEP[id][fam],
       toneLine: AREA_TONE[id][tone],
       link: linkFor(home),
       why: byStem ? stemWhy : branchWhy,
@@ -555,6 +568,7 @@ export function readDay(profile: Profile, date: string): DailyReading {
       tone: overallTone,
       toneLabel: TONE_LABEL[overallTone],
       toneLine: OVERALL_TONE[overallTone],
+      deep: OVERALL_DEEP[stemFam],
       ask: ASK[askKey],
     },
     tweaks: readTweaks(profile, n, stemFam, day.day.branchIdx, salt),
@@ -715,6 +729,7 @@ export type MonthReading = {
   score: number;
   days: { date: string; tone: Tone; score: number }[];
   smoother: string[];
+  deep: string;
   areas: { id: AreaId; title: string; tone: Tone; toneLabel: string; score: number }[];
 };
 
@@ -750,6 +765,7 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     element: seasonEl,
     familyName: FAMILY_NAME[fam],
     text: SEASON[`${fam}.${profile.band}`],
+    deep: MONTH_DEEP[fam],
     start: days[0]?.date ?? date,
     range: days.length ? `${fmtShort(days[0].date)} to ${fmtShort(days[days.length - 1].date)}` : "",
     score: toNumber(ms.scores.overall),
@@ -770,6 +786,7 @@ export type YearReading = {
   label: string;
   range: string;
   familyName: string;
+  flavor: string;
   text: string;
   link: string | null;
   score: number;
@@ -822,6 +839,7 @@ export function readYear(profile: Profile, date: string): YearReading {
     label: `${polarity(yp.stem.yang)} ${yp.stem.element} ${yp.branch.animal}`,
     range: `${fmtLong(springStartJD(cy))} to ${fmtLong(nextSpring - 1)}`,
     familyName: FAMILY_NAME[fam],
+    flavor: YEAR_ENERGY[energyOf(natal.dayMasterIdx, yp.stemIdx)],
     text: YEAR[`${fam}.${profile.band}`],
     link,
     score: toNumber(ys.scores.overall),
@@ -830,6 +848,78 @@ export function readYear(profile: Profile, date: string): YearReading {
       const sc = toNumber(ys.scores[id]);
       const tone = toneOfNumber(sc);
       return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam], score: sc };
+    }),
+  };
+}
+
+// ------------------------------------------------------------ the years ahead
+
+export type YearsReading = {
+  count: number;
+  from: number;
+  to: number;
+  rows: {
+    year: number;
+    label: string;
+    animal: string;
+    element: ElementName;
+    tone: Tone;
+    toneLabel: string;
+    flavor: string;
+    current: boolean;
+    score: number;
+    areas: { id: AreaId; tone: Tone; score: number }[];
+  }[];
+  smoothest: { year: number; label: string } | null;
+  gentlest: { year: number; label: string } | null;
+  bestFor: { id: AreaId; title: string; year: number }[];
+};
+
+/**
+ * The next few chart years, each read with the same method as a day but using
+ * that year's pillar. Chart years turn at the start of spring (early February).
+ */
+export function readYears(profile: Profile, date: string, count: number): YearsReading {
+  const { birth, chart: natal } = profile;
+  const [ty, tm, td] = parseYmd(date);
+  const here = computePillars(zonedWallClockToMs(ty, tm, td, 12, 0, birth.tz), birth.tz, 0, false);
+  const cy = here.meta.chartYear;
+  const scored = Array.from({ length: count }, (_, k) => {
+    const year = cy + k;
+    const cyc = mod(year - 1984, 60);
+    const stem = mod(cyc, 10);
+    const branch = mod(cyc, 12);
+    const sc = score(profile, stem, branch, BRANCHES[branch].element);
+    return { year, stem, branch, sc };
+  });
+  const rows = scored.map(({ year, stem, branch, sc }) => {
+    const sco = toNumber(sc.scores.overall);
+    const tone = toneOfNumber(sco);
+    return {
+      year,
+      label: `${polarity(STEMS[stem].yang)} ${STEMS[stem].element} ${BRANCHES[branch].animal}`,
+      animal: BRANCHES[branch].animal,
+      element: STEMS[stem].element,
+      tone,
+      toneLabel: TONE_LABEL[tone],
+      flavor: YEAR_ENERGY[energyOf(natal.dayMasterIdx, stem)],
+      current: year === cy,
+      score: sco,
+      areas: AREAS.map((id) => ({ id, tone: toneOf(sc.scores[id]), score: toNumber(sc.scores[id]) })),
+    };
+  });
+  const byOverall = [...scored].sort((a, b) => b.sc.scores.overall - a.sc.scores.overall);
+  const lbl = (x: (typeof scored)[number]) => ({ year: x.year, label: rows.find((r) => r.year === x.year)!.label });
+  return {
+    count,
+    from: cy,
+    to: cy + count - 1,
+    rows,
+    smoothest: count > 1 ? lbl(byOverall[0]) : null,
+    gentlest: count > 1 && byOverall[byOverall.length - 1].sc.scores.overall < -0.25 ? lbl(byOverall[byOverall.length - 1]) : null,
+    bestFor: AREAS.map((id) => {
+      const best = [...scored].sort((a, b) => b.sc.scores[id] - a.sc.scores[id])[0];
+      return { id, title: AREA_META[id].title, year: best.year };
     }),
   };
 }

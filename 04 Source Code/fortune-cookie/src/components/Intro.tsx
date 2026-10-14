@@ -70,7 +70,7 @@ export function Splash({ onDone }: { onDone: () => void }) {
     <button type="button" className={`splash ${leaving ? "is-leaving" : ""}`} onClick={onDone} aria-label="Open Fortune Cookie">
       <Floaties dense={false} />
       <span className="splash-mark">
-        <Mark size={84} detail />
+        <Mark size={84} />
       </span>
       <span className="wordmark splash-word">fortune cookie</span>
       <span className="splash-line">{line}</span>

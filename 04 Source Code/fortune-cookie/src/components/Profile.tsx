@@ -29,6 +29,8 @@ import {
   type Saved,
 } from "../lib";
 import { AREA_ICON, Bell, Camera, Check } from "./Icons";
+import { AnimalIcon } from "./Animals";
+import { DateFields, hhmmToParts, isoToParts, TimeFields } from "./DateTimeFields";
 import { Mark } from "./Mark";
 import { Chips } from "./Onboarding";
 import { PlaceField, type Place } from "./PlaceField";
@@ -49,6 +51,7 @@ export function Animals({ profile }: { profile: ProfileT }) {
   return (
     <div className="animals">
       <article className="animal animal-year" data-el={year.element}>
+        <AnimalIcon animal={year.animal} size={76} />
         <p className="label">Year animal · your zodiac sign</p>
         <p className="animal-name">{year.animal}</p>
         <p className="animal-el">
@@ -66,6 +69,7 @@ export function Animals({ profile }: { profile: ProfileT }) {
               {info(p.key)?.title}
               {p.key === "day" && p.known ? <span className="you-tag">You</span> : null}
             </p>
+            {p.known ? <AnimalIcon animal={p.animal} size={40} /> : <span className="animal-unknown">?</span>}
             <p className="animal-name">{p.known ? p.animal : "?"}</p>
             <p className="animal-el">{p.known ? `${p.yang ? "Yang" : "Yin"} ${p.element}` : "Add a birth time"}</p>
             <p className="muted small">{info(p.key)?.text}</p>
@@ -200,7 +204,9 @@ export function ProfilePage({
   const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(person.name);
   const [date, setDate] = useState(birth.date);
+  const [dateParts, setDateParts] = useState(() => isoToParts(birth.date));
   const [time, setTime] = useState(birth.timeKnown ? birth.time : "");
+  const [timeParts, setTimeParts] = useState(() => hhmmToParts(birth.timeKnown ? birth.time : ""));
   const [timeKnown, setTimeKnown] = useState(birth.timeKnown);
   const [place, setPlace] = useState<Place | null>({ place: birth.place, tz: birth.tz, lat: birth.lat, lon: birth.lon });
   const [error, setError] = useState<string | null>(null);
@@ -301,15 +307,26 @@ export function ProfilePage({
             Name
             <input className="field" value={name} maxLength={30} placeholder="Optional" onChange={(e) => setName(e.target.value)} />
           </label>
-          <div className="details-row">
-            <label className="field-label">
-              Birthday
-              <input className="field" type="date" min="1902-01-01" max="2099-12-31" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
-            <label className="field-label">
-              Birth time
-              <input className="field" type="time" value={time} disabled={!timeKnown} onChange={(e) => setTime(e.target.value)} />
-            </label>
+          <div className="field-label">
+            Birthday
+            <DateFields
+              parts={dateParts}
+              onParts={(p, iso) => {
+                setDateParts(p);
+                setDate(iso);
+              }}
+            />
+          </div>
+          <div className="field-label">
+            Birth time
+            <TimeFields
+              parts={timeParts}
+              disabled={!timeKnown}
+              onParts={(p, hhmm) => {
+                setTimeParts(p);
+                setTime(hhmm);
+              }}
+            />
           </div>
           <label className="check">
             <input type="checkbox" checked={!timeKnown} onChange={(e) => setTimeKnown(!e.target.checked)} />
@@ -367,10 +384,10 @@ export function ProfilePage({
           })}
         </div>
         <div className="about-qs">
-          <Chips<CareerCtx> label="Work life" options={CAREER_CTX} value={person.career ? [person.career] : []} onChange={(v) => setPerson({ career: v[0] ?? null })} />
-          <Chips<LoveCtx> label="Love life" options={LOVE_CTX} value={person.love ? [person.love] : []} onChange={(v) => setPerson({ love: v[0] ?? null })} />
-          <Chips<HomeCtx> label="Who's at home" options={HOME_CTX} value={person.home} multi onChange={(v) => setPerson({ home: v })} />
-          <Chips<GrowthCtx> label="Working on" options={GROWTH_CTX} value={person.growth ? [person.growth] : []} onChange={(v) => setPerson({ growth: v[0] ?? null })} />
+          <Chips<CareerCtx> label="Work life" options={CAREER_CTX} value={person.career} onChange={(v) => setPerson({ career: v })} />
+          <Chips<LoveCtx> label="Love life" options={LOVE_CTX} value={person.love} onChange={(v) => setPerson({ love: v })} />
+          <Chips<HomeCtx> label="Who's at home" options={HOME_CTX} value={person.home} onChange={(v) => setPerson({ home: v })} />
+          <Chips<GrowthCtx> label="Working on" options={GROWTH_CTX} value={person.growth} onChange={(v) => setPerson({ growth: v })} />
         </div>
       </section>
 

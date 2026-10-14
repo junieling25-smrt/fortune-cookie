@@ -3,8 +3,9 @@ import { ANIMAL_INFO, ELEMENT_INFO, GLOSSARY } from "../engine/copy-guide";
 import type { AreaId, DailyReading, Profile, Tone } from "../engine/reading";
 import { fmtLongDate, fmtShortDate, greeting, type Streak } from "../lib";
 import { Floaties } from "./Floaties";
-import { AREA_ICON, Bowl, Check, Chevron, Clock, Copy, Hand, ImageIcon, Shirt } from "./Icons";
+import { AREA_ICON, Bowl, Check, Chevron, Clock, Copy, Hand, ImageIcon, Pencil, Shirt } from "./Icons";
 import { CookieArt, Mark } from "./Mark";
+import { ReadMore } from "./ReadMore";
 import { ScoreBar, ScorePill, ScoreRing, SHORT } from "./Score";
 import { ShareModal } from "./ShareCard";
 import { Term } from "./Term";
@@ -22,6 +23,8 @@ export function Today({
   onBackToToday,
   done,
   onToggle,
+  plans,
+  onPlan,
   checkIn,
   onCheckIn,
   onDismissCheckIn,
@@ -37,6 +40,8 @@ export function Today({
   onBackToToday: () => void;
   done: string[];
   onToggle: (id: AreaId) => void;
+  plans: Partial<Record<AreaId, string>>;
+  onPlan: (id: AreaId, text: string | null) => void;
   checkIn: CheckIn;
   onCheckIn: (id: string) => void;
   onDismissCheckIn: () => void;
@@ -165,6 +170,7 @@ export function Today({
               <p className="score-personal">
                 <Term tip={`Your core element is ${core}, ${profile.core.title.toLowerCase()}. ${GLOSSARY.core}`}>Your {personal.nick}</Term>: {personal.text}
               </p>
+              <ReadMore text={overall.deep} label="Read more about today" resetKey={reading.date} />
             </div>
             <ul className="mini-scores">
               {ordered.map((a) => (
@@ -193,7 +199,8 @@ export function Today({
             </header>
             <p className="area-text">{focus.text}</p>
             {focus.forYou ? <p className="area-foryou">{focus.forYou}</p> : null}
-            <StepButton id={focus.id} text={focus.step} done={done.includes(focus.id)} onToggle={onToggle} />
+            <ReadMore text={focus.deep} resetKey={`${reading.date}-${focus.id}`} />
+            <StepButton id={focus.id} suggestion={focus.step} plan={plans[focus.id]} done={done.includes(focus.id)} onToggle={onToggle} onPlan={onPlan} />
           </section>
 
           <section className="block others" aria-label="Other areas">
@@ -220,7 +227,8 @@ export function Today({
                     <div className="other-body">
                       <p className="area-text">{a.text}</p>
                       {a.forYou ? <p className="area-foryou">{a.forYou}</p> : null}
-                      <StepButton id={a.id} text={a.step} done={done.includes(a.id)} onToggle={onToggle} />
+                      <ReadMore text={a.deep} resetKey={`${reading.date}-${a.id}`} />
+                      <StepButton id={a.id} suggestion={a.step} plan={plans[a.id]} done={done.includes(a.id)} onToggle={onToggle} onPlan={onPlan} />
                     </div>
                   ) : null}
                 </div>
@@ -318,14 +326,76 @@ export function Today({
   );
 }
 
-function StepButton({ id, text, done, onToggle }: { id: AreaId; text: string; done: boolean; onToggle: (id: AreaId) => void }) {
+/** The tiny step: tap to tick it off, or swap in your own step for the day. */
+function StepButton({
+  id,
+  suggestion,
+  plan,
+  done,
+  onToggle,
+  onPlan,
+}: {
+  id: AreaId;
+  suggestion: string;
+  plan: string | undefined;
+  done: boolean;
+  onToggle: (id: AreaId) => void;
+  onPlan: (id: AreaId, text: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const text = plan ?? suggestion;
+  if (editing)
+    return (
+      <form
+        className="step-edit"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const t = draft.trim();
+          onPlan(id, t && t !== suggestion ? t.slice(0, 200) : null);
+          setEditing(false);
+        }}
+      >
+        <label className="label" htmlFor={`step-${id}`}>
+          Your own tiny step
+        </label>
+        <textarea id={`step-${id}`} className="field" rows={3} maxLength={200} value={draft} autoFocus onChange={(e) => setDraft(e.target.value)} />
+        <div className="step-edit-actions">
+          <button type="submit" className="btn btn-cookie btn-small">
+            Save my step
+          </button>
+          <button type="button" className="btn btn-quiet btn-small" onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
   return (
-    <button type="button" className={`step ${done ? "is-done" : ""}`} aria-pressed={done} onClick={() => onToggle(id)}>
-      <span className="step-box">{done ? <Check size={13} /> : null}</span>
-      <span className="step-copy">
-        <small>Tiny step</small>
-        {text}
-      </span>
-    </button>
+    <div className="step-wrap">
+      <button type="button" className={`step ${done ? "is-done" : ""}`} aria-pressed={done} onClick={() => onToggle(id)}>
+        <span className="step-box">{done ? <Check size={13} /> : null}</span>
+        <span className="step-copy">
+          <small>{plan ? "Your step" : "Tiny step"}</small>
+          {text}
+        </span>
+      </button>
+      <div className="step-tools">
+        <button
+          type="button"
+          className="link-btn"
+          onClick={() => {
+            setDraft(text);
+            setEditing(true);
+          }}
+        >
+          <Pencil size={13} /> Edit step
+        </button>
+        {plan ? (
+          <button type="button" className="link-btn" onClick={() => onPlan(id, null)}>
+            Use the suggestion
+          </button>
+        ) : null}
+      </div>
+    </div>
   );
 }

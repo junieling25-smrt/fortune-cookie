@@ -32,6 +32,20 @@ Fortune Cookie is the rebuild of MING. The chart calculation underneath is MING'
 | 8. A reason to come back | The daily cookie arrives sealed: tap to crack it. Each crack grows a streak, shown in the header and a seven-day cookie row. A check-in asks "Yesterday's tiny steps: did you get to these?", and a teaser previews tomorrow ("Tomorrow looks Flowing for Personal growth"). "Add to my calendar" creates a daily reminder. |
 | 10. Shareable image | "Share image" draws a 1080 × 1350 fortune card with the night sky, the open cookie, the slip with your name and fortune, and the wordmark. You can download it or copy the text. |
 
+### Round 3: closer to the reference art, more room to breathe
+
+| Change requested | What we did |
+| --- | --- |
+| 1. Logo less round, like the reference cookies | Redrawn as a classic cartoon fortune cookie: a folded shell with a lighter left flap, the dark fold running up from the bottom-left corner, a warm brown outline, and the slip poking out at the bottom right with a pink spark. The page cookie, crack animation, favicon, and share card all use it. |
+| 2. Onboarding | It now opens on a welcome screen with just the cookie. Five steps follow (name, birthday, time, place, about you); the "what should it cover" step is gone, since all four sections are always included. Every "about you" question takes multiple answers, and the reading rotates through them day by day. The cookie cracks a little more with each step, then opens and reveals the page. |
+| 3. Edit each tiny step | "Edit step" swaps the suggestion for your own plan, saved for that day. "Use the suggestion" switches back, and the next day's check-in asks about your own version. |
+| 4. 12-hour time, MM/DD/YYYY | Birthday is three boxes (month, day, year), and time is hour : minute with an AM/PM switch. They no longer depend on the browser's regional format. |
+| 5. Complete city list | From 2,871 cities to 34,149 (every place over 15,000 people, from GeoNames), each with its time zone. Search understands "Shaoyang, Hunan" or "Portland Oregon". |
+| 6. Lifetime as its own section, with animal pictures | "Your lifetime" now sits below the long-term tabs. Each of the 12 animals has a small hand-drawn face in the same style as the cookie. |
+| 7. 3, 5, and 10 years | The long-term tabs are This month, This year, 3 years, 5 years, and 10 years. Each year gets its animal, a condition, a one-line theme, and a condition per life area, plus a summary of the smoothest year and the best year for each area. |
+| 8. More text, still readable | "Read more" under Overall, each life area, and the month opens a fuller paragraph (3 to 4 sentences) written to feel familiar, while the page stays short by default. |
+| 9. More art, with motion | Behind the whole page: drifting stars, sparks, and crumbs, a few floating fortune cookies trailing ribbon slips, and an occasional shooting star. They move at different speeds as you scroll, and switch off for people who prefer reduced motion. |
+
 ## Audience
 
 Carried over from the MING brief. It is still correct and still unvalidated.
@@ -46,12 +60,12 @@ Updated in round three to be shorter and simpler:
 
 1. **Today's cookie.** It starts sealed and stays sealed until you tap it. Future days can't be opened. The fortune carries your name.
 2. **Today's score.** A number from 0 to 100, one plain line, and "Your [element]" written for your core element. Four thin bars show the score for each life area.
-3. **In focus today.** The area today's energy points at: two lines, a "For you" line when it fits, and the tiny step.
+3. **In focus today.** The area today's energy points at: two lines, a "For you" line when it fits, a "Read more" paragraph behind a tap, and a tiny step you can edit into your own plan.
 4. **Other areas.** The other three as one-line rows with their scores. Tap one to open it.
 5. **Small tweaks.** A color to wear, something to eat, something to do, and your best two hours.
 6. **Streak and tomorrow.** The streak, the last seven cookies (tap one to reread that day), and a sealed note about tomorrow.
 
-The long view (month, year, lifetime), the profile, Match, and "What it means" each have their own tab.
+The long view (month, year, the next 3, 5, or 10 years, and lifetime), the profile with your four animal pictures, Match, and "What it means" each have their own tab.
 
 Everything is picked by chart math and written by hand. No language model runs when a reading is produced.
 
@@ -61,7 +75,7 @@ Everything is picked by chart math and written by hand. No language model runs w
 - No luck talk, no verdicts, no compatibility scores, no fear.
 - Plain English only on every surface a reader sees.
 - Every section shows where it came from, in one plain sentence.
-- Human-written. No em dashes and no "it's not X, it's Y" lines. A test enforces both across all 766 authored strings.
+- Human-written. No em dashes and no "it's not X, it's Y" lines. A test enforces both across all 806 authored strings.
 - The streak is gentle. Missing a day never shows a warning, and "Start a streak today" is the zero state.
 
 ## What the prototype is, and isn't

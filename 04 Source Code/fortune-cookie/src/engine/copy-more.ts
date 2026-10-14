@@ -3,7 +3,7 @@
  * long-term readings. Same house rules as copy.ts, enforced by the same test:
  * plain English, conditions not outcomes, no luck, no em dashes, cookie-sized.
  */
-import type { ElementName, Family } from "./pillars";
+import type { ElementName, Energy, Family } from "./pillars";
 import type { AreaId } from "./copy";
 
 // ------------------------------------------------------------ about you
@@ -831,4 +831,82 @@ export const TOMORROW: Record<"flowing" | "steady" | "mixed" | "gentle", string>
   steady: "There's a quiet note in there for {area}.",
   mixed: "There's a heads-up in there about {area}.",
   gentle: "There's a soft note in there about {area}.",
+};
+
+// ------------------------------------------------------------ read more
+
+/** The longer "read more" under Overall, keyed by the day's main energy family. */
+export const OVERALL_DEEP: Record<Family, string> = {
+  company:
+    "Days like this put people like you in your path: friends, peers, teammates, maybe a rival or two. You might notice you're comparing notes, or comparing yourself. Today works better for doing things alongside someone than for proving you can do it all alone. Stand on your own backbone and let good company carry some of the weight.",
+  expression:
+    "Today your energy wants a way out: words, ideas, cooking, a joke, a sketch, a strong opinion. When this kind of energy has nowhere to go it can come out as restlessness or sharpness, so give it a job. Make or share one thing on purpose, even something small, and notice how much lighter the rest of the day feels.",
+  harvest:
+    "Today is practical. Effort tends to show up as something you can hold: a finished task, a paid bill, a tidy result. It's a good day for errands and follow-ups and a less good one for grand plans. If you've been waiting for a moment to deal with money or logistics, this is a friendly one.",
+  structure:
+    "Today leans on you a little. Rules, deadlines, and other people's expectations may feel louder than usual. That pressure can feel heavy, and it can also make things clear: you find out what actually matters when the room gets tight. Pick what you'll carry today and put the rest down without guilt.",
+  nurture:
+    "Today is a refill day. Support, advice, rest, and learning come easier than usual, and it's fine to take them. You don't need to earn a quiet evening or a good conversation. Things you read or hear today may stay with you longer than usual, so feed yourself something good.",
+};
+
+/** The longer "read more" under This month, keyed by how the month's element relates to you. */
+export const MONTH_DEEP: Record<Family, string> = {
+  company:
+    "This month surrounds you with your own kind of energy. It can feel like confidence one week and crowdedness the next. Good for teamwork, friendships, and projects where you set the pace. Watch for spreading yourself thin by saying yes to every like-minded plan.",
+  expression:
+    "This month asks you to put things out into the world: work, ideas, feelings. It's a productive, visible stretch, and it uses up energy fast. Pace yourself by choosing one or two things to really show, and let the rest stay in drafts.",
+  harvest:
+    "This month is about results you can measure. Money, chores, and practical goals move at a fair rate if you keep showing up. It's a good month to finish things, tidy loose ends, and reward yourself for the unglamorous work.",
+  structure:
+    "This month brings responsibility and a bit of pressure. Deadlines and expectations are clearer, which can be tiring and useful at the same time. Protect your rest, say no early, and notice which obligations are actually yours.",
+  nurture:
+    "This month refills you. Learning, advice, home comforts, and rest come more easily, and taking them is the smart move. Use the extra support to recover and to learn something that pays off later.",
+};
+
+/** The longer "read more" for each life area, keyed by the energy family that area reads today. */
+export const AREA_DEEP: Record<AreaId, Record<Family, string>> = {
+  growth: {
+    company: "Your sense of self is sturdy today, which makes it a good day to keep the promises you make to yourself. You may feel less need for outside approval. If a comparison creeps in, flip it: what does that person's progress show you about what's possible for you?",
+    expression: "Growth today looks like play. Making something, even something silly, loosens up the parts of you that have been stiff. Pay attention to what you enjoy without being asked; those small pulls often point at what you actually want.",
+    harvest: "Today favors practical self-improvement: the small habits that add up. A tidy routine, a budget check, ten minutes of practice. It isn't glamorous, and it's the kind of progress you can feel by the end of the week.",
+    structure: "Growth today comes through a little friction. A deadline, a rule, or a tough conversation can show you what you're made of. Try treating structure as a trellis instead of a cage: something to climb, not something to escape.",
+    nurture: "Your mind is especially open today. Something you read, hear, or get told could stay with you for a while. Rest counts here too: a nap or a quiet hour is how new ideas settle in.",
+  },
+  career: {
+    company: "At work, today is about people who do what you do: peers, teammates, classmates, competitors. Collaboration moves faster than solo effort, and a quick chat can save you hours. If someone's going after the same goal, make your case clearly and let your work speak.",
+    expression: "Your ideas have momentum today. Drafts, pitches, and presentations come out more naturally than usual. The trap is saying the sharp thing before the helpful thing, so pair every criticism with a suggestion and pick your audience.",
+    harvest: "Today is good for work that shows up in numbers: tasks closed, invoices sent, grades checked, goals ticked. Steady effort converts well. If there's a money conversation you've been putting off, conditions support it.",
+    structure: "Work may bring clear expectations today, and some pressure with them. Bosses, clients, teachers, or deadlines set the pace. Meeting them well builds trust, so only take on what you can finish; reliable beats impressive.",
+    nurture: "Today is a good day to learn at work. Ask the question, read the docs, find the mentor. People are more willing to help than you might assume, and what you pick up now can pay off later.",
+  },
+  love: {
+    company: "Friendship energy runs through your relationships today. With a partner, you may feel more like teammates than romantic leads, and that's a good thing. With friends, a simple plan or a check-in goes a long way. Keep any competitiveness playful.",
+    expression: "You express yourself easily today, which is lovely for flirting, compliments, and honest talks. Words also land harder than usual, so say the true thing kindly. A voice note, a silly message, or a small gesture can say more than a long speech.",
+    harvest: "Love today shows up in practical care: plans made, chores shared, details remembered. It's a good day to turn “we should” into a date on the calendar. Small reliable gestures build more closeness than grand ones.",
+    structure: "Today brings commitment and fairness into focus. You may want clarity about where things stand, or feel other people's expectations more strongly. A calm, specific conversation works better than hints. Boundaries said kindly make relationships safer, and no colder.",
+    nurture: "Warmth is easy to give and receive today. Let someone look after you, or offer a little comfort to someone who needs it. Listening without fixing is the gift of the day. Feeling safe matters more than excitement right now.",
+  },
+  family: {
+    company: "Home life today is about sharing the load and the space. Siblings, housemates, cousins, or friends who feel like family may be around more. Fairness helps: split chores evenly and keep small squabbles light.",
+    expression: "Home has playful energy today. Kids, pets, and your own inner kid want fun more than order. A game, a new toy, a song while cooking, or a silly photo in the family chat can shift the whole mood of the house.",
+    harvest: "Today is good for the practical side of home: groceries, bills, repairs, and restocking. It's satisfying work, and it quietly makes everyone's week easier. Check on the supplies your pets or family always run out of.",
+    structure: "Routines hold home together today. Regular meals, walks, and bedtimes help everyone feel settled, pets especially. If family expectations feel heavy, listen first, then decide what's really yours to carry.",
+    nurture: "Home feels like a refuge today. It's a good day to call a parent, cook something warm, or spend a slow evening with the people and animals you love. Let yourself be looked after too.",
+  },
+};
+
+// ------------------------------------------------------------ the years ahead
+
+/** One flavor line per year, keyed by how that year's element meets your core element. */
+export const YEAR_ENERGY: Record<Energy, string> = {
+  self: "A year to stand on your own feet. Your opinions and choices carry more weight than usual.",
+  rival: "A year of shared stages. Collaborators and competitors often turn out to be the same people.",
+  play: "An easygoing, creative year. Things you make for fun can quietly turn into something bigger.",
+  voice: "A year that wants you to speak up. Honest ideas travel far, and tact decides how well they land.",
+  windfall: "A year of surprise openings: side projects, new places, people you didn't expect to meet.",
+  savings: "A steady, building year. Savings, skills, and routines pay back more than bold swings.",
+  push: "A stretching year with real pressure in it. Taken at your own pace, it tends to leave you stronger.",
+  rules: "A year of commitments and clear roles. Titles, agreements, and promises take shape.",
+  intuition: "A thoughtful, inward year. Unusual interests and time alone lead somewhere worth going.",
+  care: "A supported, learning year. Teachers, family, and rest give you more than usual.",
 };
