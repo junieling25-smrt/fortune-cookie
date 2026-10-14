@@ -27,7 +27,7 @@ Fortune Cookie is the rebuild of MING. The chart calculation underneath is MING'
 | 3. Shorter daily page, technical part moved | The order is now fortune, then Overall, then the "In focus today" area. The other areas are one tap away in a four-tab forecast strip with weather icons. The long-term view sits in tabs below. The technical explanation moved to its own "How it works" page, linked from the footer. |
 | 4. More interesting, more personal text | Each reading uses your name, your core element as an image ("Your Ocean today: Oceans don't love walls, though a riverbank turns a flood into a current"), and a "For you" line matched to your situation. For example: "Your cat may want company on their own terms today" or "Your manager's priorities set the weather today". |
 | 5. Tiny steps at the same position | Each area's tiny step now sits in a fixed right-hand column of the area panel, in the same place for every area. |
-| 6. 50 tiny steps per area | 200 hand-written steps, 10 per energy family per area, rotated so a step doesn't come back for at least 27 days. Steps that mention pets, kids, or a partner only reach people who have them. "Try this" went from 10 lines to 50. |
+| 6. 50 tiny steps per area | 200 hand-written steps, 10 per energy family per area, rotated so a step doesn't come back for at least 27 days. Steps that mention pets, kids, or a partner only reach people who have them. "Try this" went from 10 lines to 50, and was later replaced by small tweaks. |
 | 7. Long-term fortune | "The bigger picture" has three tabs. **This month** shows a colored calendar of every day's condition, a line on the month, and area outlooks. **This year** shows a theme for the chart year and a 12-month strip. **Your lifetime** shows your core element, four animals, element mix, and a lifelong theme for each area. The month changes about every 30 days, the year each spring, and the lifetime never. |
 | 8. A reason to come back | The daily cookie arrives sealed: tap to crack it. Each crack grows a streak, shown in the header and a seven-day cookie row. A check-in asks "Yesterday's tiny steps: did you get to these?", and a teaser previews tomorrow ("Tomorrow looks Flowing for Personal growth"). "Add to my calendar" creates a daily reminder. |
 | 10. Shareable image | "Share image" draws a 1080 × 1350 fortune card with the night sky, the open cookie, the slip with your name and fortune, and the wordmark. You can download it or copy the text. |
@@ -42,12 +42,16 @@ Carried over from the MING brief. It is still correct and still unvalidated.
 
 ## The daily page, top to bottom
 
-1. **Today's cookie.** It starts sealed. Tap to crack it and see a one- or two-sentence fortune with your name on the slip.
-2. **Overall.** A weather-style condition (Flowing, Steady, Mixed, or Go gently) and one plain line on today's energy. Below that: **Your [element] today**, "Try this" (tickable), and "Ask yourself".
-3. **Your day, area by area.** Four forecast tabs with weather icons; the "In focus" area opens first. Each area has a plain explanation, a "For you" line, how to work with the condition, a note when today's animal meets one of yours, and the tiny step.
-4. **Come back tomorrow.** The streak, the week of cookies, tomorrow's teaser, and a daily reminder.
-5. **The bigger picture.** This month, this year, and your lifetime.
-6. **Footer link** to "How it works": the calendar method, the four conditions, and the math behind your chart.
+Updated in round three to be shorter and simpler:
+
+1. **Today's cookie.** It starts sealed and stays sealed until you tap it. Future days can't be opened. The fortune carries your name.
+2. **Today's score.** A number from 0 to 100, one plain line, and "Your [element]" written for your core element. Four thin bars show the score for each life area.
+3. **In focus today.** The area today's energy points at: two lines, a "For you" line when it fits, and the tiny step.
+4. **Other areas.** The other three as one-line rows with their scores. Tap one to open it.
+5. **Small tweaks.** A color to wear, something to eat, something to do, and your best two hours.
+6. **Streak and tomorrow.** The streak, the last seven cookies (tap one to reread that day), and a sealed note about tomorrow.
+
+The long view (month, year, lifetime), the profile, Match, and "What it means" each have their own tab.
 
 Everything is picked by chart math and written by hand. No language model runs when a reading is produced.
 

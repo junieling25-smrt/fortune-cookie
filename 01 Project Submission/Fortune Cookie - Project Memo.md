@@ -30,19 +30,23 @@ MING proved the calculation could be accurate and transparent, but it read like 
 
 ## What the project does
 
-- **Onboarding that cracks a cookie:** name, birthday, birth time (or "I don't know"), birthplace from 2,871 cities, the areas you care about, and a little about your life (work, love, who's at home, what you're working on). The cookie cracks a little more with each step and opens at the end.
+- **A short welcome:** four cards on the first visit that explain the Four Pillars, why it's called Fortune Cookie, and the idea behind it ("We describe the weather. You choose the route.").
+- **Onboarding that cracks a cookie:** name, birthday, birth time (or "I don't know"), birthplace, the areas you care about, and a little about your life. Birthplace search covers about 49,000 towns and cities, and a world map lets you tap any spot on Earth. The cookie cracks a little more with each step.
 - **Real calculation:** clock time converted to sun time for the birthplace, using that day's historical time zone. The four pillars come from the sun's real position, with the year turning at the start of spring.
-- **A daily cookie:** sealed each morning and cracked with a tap. The fortune carries your name.
-- **Overall:** a weather-style condition (Flowing, Steady, Mixed, Go gently), a plain line on today's energy, "Your [element] today" written for your core element, one thing to try, and one question to carry.
-- **Four life areas in forecast tabs**, opening on the one "In focus today". Each has a plain explanation, a "For you" line matched to your situation, a relationship note when today's animal meets one of yours, and a tiny step in a fixed position.
-- **200 tiny steps (50 per area) and 50 "Try this" lines**, rotated so a step doesn't repeat for at least 27 days. Pet, kid, and partner steps only go to people who have them.
-- **Reasons to return:** a streak with a seven-day cookie row, a "yesterday's tiny steps" check-in, tomorrow's teaser, and a daily calendar reminder.
-- **The bigger picture:** a colored month calendar of daily conditions, a year theme with a 12-month strip, and a lifetime view (core element, four animals, element mix, lifelong themes per area).
-- **Sharing:** a designed 1080 × 1350 fortune card to download, or plain text to copy.
-- **How it works:** a separate page with the method, the four conditions, and the math behind your chart.
+- **A daily cookie that stays sealed until you open it:** no peeking at future days. Past days can be reread only if you cracked them.
+- **A daily score from 0 to 100** for the day and for each of the four life areas, in place of word labels.
+- **A short daily page:** the fortune, the score, the area in focus with its tiny step, the other three areas as one-tap rows, and four small tweaks (a color to wear, something to eat, something to do, and your best two hours).
+- **Pop-up definitions:** hover or tap any underlined term ("Yin Metal Rooster day", "Your Ocean") for a one-line explanation.
+- **Long-term forecast:** this month (with a calendar that fills in as you crack cookies), this year (a 12-month score strip), and your lifetime. These stay open at all times.
+- **Profile:** photo upload, your four animals (year animal on top, the other three below), your element mix, editable birth details, life areas, and a daily reminder that goes into Apple, Outlook, or Google Calendar at any quarter hour.
+- **Match:** add someone's birthday and get a compatibility score with four plain lines.
+- **What it means:** a plain guide to the pillars, the five elements, yin and yang, the twelve animals, the score, and what changes when.
+- **Reasons to return:** a streak, a seven-day cookie row, a "yesterday's step" check-in, and a sealed teaser for tomorrow.
+- **Sharing:** a designed 1080 × 1350 fortune card with today's score.
+- **Add to home screen:** the website installs like an app on a phone.
 - **Privacy:** runs entirely in the browser, with no account and no server. "Forget me" erases everything.
 
-## What changed from MING, in two rounds
+## What changed from MING, in three rounds
 
 | Direction given | Result |
 | --- | --- |
@@ -59,6 +63,25 @@ MING proved the calculation could be accurate and transparent, but it read like 
 | Reason to come back | Daily sealed cookie, streak, yesterday check-in, tomorrow's teaser, calendar reminder |
 | Share as an image | A designed fortune card |
 
+**Round 3** came from the team's notes and an outside tester:
+
+| Direction given | Result |
+| --- | --- |
+| Simpler UI, less and less repetitive text, Co-Star-level simplicity | One narrow column, hairline dividers instead of boxes, and each area cut from five paragraphs to two lines plus a step |
+| Daily score instead of four levels | A 0 to 100 score for the day and each area, with a ring and bars |
+| Short intro to the Four Pillars, the name, and the idea | A four-card welcome and a one-second opening splash with a small fact |
+| Users can't find their city; add a map | About 49,000 places (up from 2,871), search by "town state", and a draggable world map that works offline |
+| Fuller reminder times | Every quarter hour of the day, daily or weekdays or weekends, for Apple, Outlook, or Google Calendar |
+| Year animal on its own row | Year animal on top as "your zodiac sign", the other three below |
+| Keep the mystery: unlock daily, keep long-term | No future days. The calendar shows only days you cracked. Month, year, and lifetime stay open. |
+| A profile page with photo upload | New "You" page with photo, animals, elements, details, areas, reminder, and privacy |
+| More doable daily tips | "Small tweaks": a color to wear, something to eat, something to do, and your best two hours |
+| The floating cookies looked odd | Three new floating things: paper fortune slips, sparkles, and crescent moons |
+| Tester: hover for terms you don't know | Pop-up definitions on every chart term |
+| Tester: a "What it means" page | A plain guide, with the math kept on its own page |
+| Tester: compare with another person (like The Pattern) | A Match page |
+| Tester: app or web? | Installs to the home screen and has an app-style tab bar on phones |
+
 ## Validation performed
 
 - **Calculation:**
@@ -72,37 +95,43 @@ MING proved the calculation could be accurate and transparent, but it read like 
   - Two unrelated charts shared a question on 0 of 365 days.
   - Every one of the hand-written lines is reachable across 500 random charts and life situations.
   - Pet, kid, and partner steps never reached a single person living solo.
-- **Copy rules:** an automated check over all 766 authored strings finds no Chinese characters, em dashes, "will", luck talk, "missing" or "broken", or "it's not X, it's Y".
+- **Copy rules:** an automated check over all 969 authored strings finds no Chinese characters, em dashes, "will", luck talk, "missing" or "broken", or "it's not X, it's Y".
 - **Interface:**
   - Tested from 320 to 1440 px wide, in light and dark themes, with no horizontal scrolling.
-  - The full flow worked end to end: onboarding and reveal, daily crack, tabs, steps and check-ins, the month calendar, the year and lifetime tabs, the share card, and the "How it works" page.
+  - The full flow worked end to end: welcome, onboarding and reveal, map pick, daily crack, steps and check-ins, the month calendar, the year and lifetime tabs, profile edits, match, the share card, and the "What it means" and "How it works" pages.
+  - Daily scores across a year of readings for 504 charts: median 65, with most days between 45 and 82.
   - The single-file build runs from disk with no console errors.
 
 ## Product screenshots
 
 See `03 Product Screenshots`:
 
-1. Onboarding: Say hi
-2. Onboarding: Pick your areas
-3. Onboarding: About you
-4. Onboarding: the cookie cracks open
-5. Daily cookie, ready to crack
-6. Today's fortune
-7. Life areas
-8. Streak and this month
-9. This year
-10. Your lifetime
-11. How it works page
-12. Share image
-13. Mobile
-14. Mobile, dark
+1. Welcome
+2. Welcome: what's inside
+3. Onboarding: find your birthplace on a map
+4. Daily cookie, sealed
+5. Today: the fortune
+6. Today: score and focus area
+7. Today: other areas
+8. Today: small tweaks and streak
+9. Pop-up definitions
+10. Forecast: this month, with the calendar that fills in daily
+11. Forecast: this year
+12. Profile: photo and animals
+13. Profile: daily reminder
+14. Match
+15. Share image
+16. What it means
+17. Desktop
+18. Mobile, dark
 
 ## Vibe coding process
 
-The rebuild was done with Claude Code in two rounds of direction, starting from the MING folders (memo, research, source code, and brand assets).
+The rebuild was done with Claude Code in three rounds of direction, starting from the MING folders (memo, research, source code, and brand assets).
 
 - **Round 1** set the new name, brand, and plain-English, five-section reading.
 - **Round 2** came after reviewing the prototype as a user. It added onboarding, a real fortune-cookie logo, a shorter layout, personalization, 50 steps per area, long-term views, habit features, and share images. It used reference illustrations for the cookie and the lavender, starry style.
+- **Round 3** simplified the interface, swapped the four condition words for a daily score, added the welcome, profile, map, match, and "What it means" pages, and kept each day sealed until it's opened.
 
 The AI:
 
@@ -133,8 +162,8 @@ The AI:
 ## Potential next steps
 
 1. **Test with real readers.** Give 8 to 10 people the prototype for two weeks. Track daily cracks, streaks, and check-ins, and note when anything first feels repetitive.
-2. **Relationship comparison as an invite loop.** Two charts, questions both people answer, no compatibility score, and free when the other person joins.
-3. **Real notifications** built on the fortune slip, with a tone check so "Go gently" days stay kind.
+2. **Match as an invite loop.** Today's Match page works from a birthday. Next, the other person joins and answers questions too.
+3. **A native app with push notifications** built on the fortune slip, with a tone check so "Go gently" days stay kind.
 4. **Decade-long life chapters**, told in the same plain language.
 5. **Practitioner review** of the plain-English mapping and the life-area copy.
 6. **Accounts and sync**, so streaks survive a new phone. Then deploy from GitHub to Vercel with a custom domain.

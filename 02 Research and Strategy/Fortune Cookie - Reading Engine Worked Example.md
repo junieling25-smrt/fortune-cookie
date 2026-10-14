@@ -32,7 +32,7 @@ Sources are cited on each rule in `src/engine/pillars.ts`, carried over unchange
 | Life-area explanations (4 areas × 10 energies) | 40 |
 | Condition lines (4 areas × 4 conditions) | 16 |
 | Tiny steps (4 areas × 5 energy families × 10) | 200 |
-| Try this (10 energies × 5) | 50 |
+| Small tweaks (5 elements × 5 colors, 6 foods, 6 actions) | 85 |
 | Your element today (10 core elements × 5 families) | 50 |
 | For you, by situation (work, love, home, growth) | 105 |
 | This month (5 families × 3 backup levels) | 15 |
@@ -126,34 +126,34 @@ The worked example person is named Maya. She works a job, is in a relationship, 
 
 > **Maya's fortune:** Clear lines make things easier today. Follow them and save your energy.
 >
-> **Overall · Steady.** Overall, a balanced day. Nothing needs forcing. Today carries Earth. For a Yang Water like you, that works as Structure: rules, deadlines, bosses, and responsibility. Underneath, the Pig brings company.
-> *Your Ocean today:* Oceans don't love walls, though a riverbank turns a flood into a current. Today's structure can give you direction.
-> *Try this:* Start one sentence with "I think" and finish it.
-> *Ask yourself:* What gets easier the moment you stop treating it like a problem?
+> **Today's score · 68.** A balanced day. Nothing needs forcing.
+> *Your Ocean:* Oceans don't love walls, though a riverbank turns a flood into a current. Today's structure can give you direction.
 >
-> **Career & money · Mixed · In focus today.** Expectations at work are clear today. Follow the process, tidy your files, and let reliability speak.
+> **Small tweaks** (a Metal day for her, because today's Earth presses on Water and Metal turns that pressure into support): wear silver gray, drink peppermint tea, clean your glasses or your phone screen, and the best two hours are 5 to 7 PM (Rooster hours).
+>
+> **Career & money · 62 · In focus today.** Expectations at work are clear today. Follow the process, tidy your files, and let reliability speak.
 > *For you:* Your manager's priorities set the weather today. Check that you're working on what they need first.
 > Some friction around work. Double-check the details before you hit send.
 > *Tiny step:* Confirm one deadline with the person who set it.
 >
-> **Personal growth · Go gently.** Structure helps you today. A simple plan or checklist can feel surprisingly calming.
+> **Personal growth · 48.** Structure helps you today. A simple plan or checklist can feel surprisingly calming.
 > *For you:* Build a small buffer into your day: ten minutes between things instead of zero.
 > *Tiny step:* Plan tomorrow's meals in two minutes.
 >
-> **Love & friends · Flowing.** You know what you want from your relationships today. Say it kindly and clearly.
+> **Love & friends · 85.** You know what you want from your relationships today. Say it kindly and clearly.
 > *For you:* Be teammates today. Tackle one shared chore or plan side by side.
 > *Today's Pig gets along with your Day Tiger, the part of your chart linked to your closest relationships.*
 > *Tiny step:* Tell a friend what you value about them.
 >
-> **Family & pets · Steady.** At home, you may want things done your way. Leave room for everyone else's way too.
+> **Family & pets · 62.** At home, you may want things done your way. Leave room for everyone else's way too.
 > *For you:* Your cat may want company on their own terms today. Sit nearby and let them come to you.
 > *Tiny step:* Say a proper hello to a neighbor.
 
 ### The bigger picture for the same chart
 
-**This month** (Metal month, Sep 7 to Oct 7): "This month refills your tank. Taking the support is the job right now." Every day of the solar month is scored with the same method and shown as a colored calendar. Smoother days this month: Sep 13, Sep 14, Sep 23, Oct 4, Oct 5. The month pillar itself, scored the same way, gives the area outlook: Growth Steady, Career Go gently, Love Flowing, Family Flowing.
+**This month** (Metal month, Sep 7 to Oct 7): "This month refills your tank. Taking the support is the job right now." Every day of the solar month is scored with the same method. In the app, a day's score appears on the calendar only after that day's cookie is cracked. The month pillar itself, scored the same way, gives the month a 55 and the areas Growth 64, Career 48, Love 88, Family 80.
 
-**This year** (Yang Fire Horse year, Feb 3, 2026 to Feb 2, 2027): Fire is Harvest for Yang Water, and this chart's core element has light backup, so the theme is "A year with real openings and limited energy. Choose one or two goals and give them your best." The 12-month strip scores each solar month's pillar: Flowing in Feb, Mar, and Dec, and Go gently in Jul and Oct.
+**This year** (Yang Fire Horse year, Feb 3, 2026 to Feb 2, 2027): Fire is Harvest for Yang Water, and this chart's core element has light backup, so the theme is "A year with real openings and limited energy. Choose one or two goals and give them your best." The year scores 52. The 12-month strip scores each solar month's pillar, highest in Dec (83) and Mar (81), lowest in Oct (35).
 
 **Your lifetime** reads each area from the pillar traditionally linked to it:
 
@@ -191,6 +191,6 @@ Run `npm test` inside `04 Source Code/fortune-cookie`. Current result: **all che
 2. **Near a boundary.** If a birth time is within 15 minutes of a two-hour block edge, or within hours of a solar month change, the app warns that a pillar could shift.
 3. **The 60-day cycle.** Day pillars repeat every 60 days. Variants for slips, tries, and steps rotate on different cycles, so a full reading doesn't repeat within a year, but individual lines do come back. The slip returns after 20 days at the earliest, and a step after 27.
 4. **The scoring is ours.** The ease table and condition labels are an editorial method. They are consistent and testable, but not a classical rule, and the app says so.
-5. **Places.** The app knows 2,871 cities above 100,000 people. Smaller birthplaces should use the nearest listed city, which is well under a minute of sun-time error within a metro area.
+5. **Places.** The app knows about 49,000 places with 5,000 or more people, and a world map covers anywhere else: a tapped spot keeps its exact coordinates and gets its time zone from a bundled boundary lookup.
 6. **Years 1902 to 2099** only, the range with reliable time-zone history.
 7. **No real readers yet.** The copy has not been tested with users.

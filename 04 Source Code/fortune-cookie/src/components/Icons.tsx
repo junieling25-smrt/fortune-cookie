@@ -141,6 +141,116 @@ export function ArrowRight({ size = 16 }: IconProps) {
   );
 }
 
+export function MapIcon({ size = 16 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M9 4.5 3.5 6.5v13l5.5-2 6 2 5.5-2v-13l-5.5 2-6-2Z" />
+      <path d="M9 4.5v13M15 6.5v13" />
+    </svg>
+  );
+}
+
+export function Camera({ size = 16 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}
+
+export function Info({ size = 14 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5M12 7.6v.2" strokeWidth={2.4} />
+    </svg>
+  );
+}
+
+/** Tab bar: today (a cookie), forecast (a moon over a line), match (two circles), you (a person). */
+export function TabToday({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M3 15c0-5.5 4-9.5 9-9.5s9 4 9 9.5c-2.8-1.7-6-2-9-.3-3-1.7-6.2-1.4-9 .3Z" />
+      <path d="M12 5.5v9.2" />
+      <path d="M14.5 15.5l1.5 3.5" />
+    </svg>
+  );
+}
+
+export function TabForecast({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M16.5 12.5A6 6 0 0 1 9.5 5.5a6 6 0 1 0 7 7Z" />
+      <path d="M3.5 19.5h17" />
+      <path d="M18 3.5v3M16.5 5h3" />
+    </svg>
+  );
+}
+
+export function TabMatch({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <circle cx="9" cy="12" r="5.5" />
+      <circle cx="15" cy="12" r="5.5" />
+    </svg>
+  );
+}
+
+export function TabYou({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <circle cx="12" cy="8.5" r="3.8" />
+      <path d="M4.8 20c.8-3.7 3.7-5.8 7.2-5.8s6.4 2.1 7.2 5.8" />
+    </svg>
+  );
+}
+
+export function Book({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M4 5.5C6.5 4.3 9.3 4.3 12 6c2.7-1.7 5.5-1.7 8-.5v13c-2.5-1.2-5.3-1.2-8 .5-2.7-1.7-5.5-1.7-8-.5Z" />
+      <path d="M12 6v13" />
+    </svg>
+  );
+}
+
+/** Small tweaks: wear, eat, do, time. */
+export function Shirt({ size = 18 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M8.5 4 4 6.5l1.8 4 2.2-1V20h8V9.5l2.2 1 1.8-4L15.5 4c-.6 1.6-1.9 2.5-3.5 2.5S9.1 5.6 8.5 4Z" />
+    </svg>
+  );
+}
+
+export function Bowl({ size = 18 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0Z" />
+      <path d="M9 8c0-1.2 1-1.2 1-2.4M13 8c0-1.2 1-1.2 1-2.4" />
+    </svg>
+  );
+}
+
+export function Hand({ size = 18 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M12 3.5v7M12 3.5c1.2 0 2 .8 2 2v5M14 6c1.2 0 2 .8 2 2v3.5M16 9c1.2 0 2 .8 2 2v3a6 6 0 0 1-6 6h-.5a6 6 0 0 1-5-2.7L4 13.5c-.6-1 .9-2.4 2-1.5L8 14V6.5c0-1.2.8-2 2-2" />
+    </svg>
+  );
+}
+
+export function Clock({ size = 18 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  );
+}
+
 // ------------------------------------------------------------ weather, one per condition
 
 export function Sun({ size = 22 }: IconProps) {

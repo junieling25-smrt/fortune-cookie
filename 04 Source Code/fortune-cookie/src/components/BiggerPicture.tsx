@@ -1,62 +1,44 @@
 import { useMemo, useState } from "react";
-import { ELEMENTS } from "../engine/pillars";
-import { PILLAR_META, readLife, readMonth, readYear, type Profile, type Tone } from "../engine/reading";
-import { fmtMonthDay, localToday, weekdayIndex } from "../lib";
-import { AREA_ICON, Spark, ToneIcon } from "./Icons";
+import { readLife, readMonth, readYear, toneOfNumber, type Profile } from "../engine/reading";
+import { fmtMonthDay, weekdayIndex } from "../lib";
+import { AREA_ICON } from "./Icons";
+import { Mark } from "./Mark";
+import { ScorePill, ScoreRing, SHORT } from "./Score";
+import { Term } from "./Term";
 
 type Tab = "month" | "year" | "life";
-const TONES: [Tone, string][] = [
-  ["flowing", "Flowing"],
-  ["steady", "Steady"],
-  ["mixed", "Mixed"],
-  ["gentle", "Go gently"],
-];
 
-function Legend() {
-  return (
-    <ul className="legend" aria-label="Legend">
-      {TONES.map(([t, l]) => (
-        <li key={t}>
-          <i data-tone={t} />
-          {l}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function Month({ profile, date, onPick }: { profile: Profile; date: string; onPick: (d: string) => void }) {
+function Month({ profile, date, today, cracked, onPick }: { profile: Profile; date: string; today: string; cracked: string[]; onPick: (d: string) => void }) {
   const m = useMemo(() => readMonth(profile, date), [profile, date]);
-  const today = localToday();
   const lead = m.days.length ? weekdayIndex(m.days[0].date) : 0;
+  const opened = new Set(cracked);
   return (
-    <div className="bp-body">
-      <div className="bp-intro">
-        <p className="bp-kicker">
-          {m.element} month · {m.range}
-        </p>
-        <h3>{m.text}</h3>
-        <p className="muted">
-          {m.element} works as {m.familyName} for you. Solar months turn with the sun, so this one runs {m.range}.
-        </p>
-        <div className="bp-areas">
-          {m.areas.map((a) => {
-            const Icon = AREA_ICON[a.id];
-            return (
-              <span key={a.id} className="chip chip-area" data-tone={a.tone}>
-                <Icon size={15} /> {a.title}: {a.toneLabel}
-              </span>
-            );
-          })}
-        </div>
-        {m.smoother.length ? (
-          <p className="bp-smooth">
-            <Spark size={12} /> Smoother days this month: {m.smoother.slice(0, 6).map(fmtMonthDay).join(", ")}
+    <div className="fc-body">
+      <div className="fc-lead">
+        <ScoreRing score={m.score} tone={toneOfNumber(m.score)} size={104} label="This month" />
+        <div>
+          <p className="label">
+            <Term tip={`Solar months follow the sun. This one is a ${m.element} month, which works as ${m.familyName} for you.`}>{m.element} month</Term> · {m.range}
           </p>
-        ) : null}
+          <p className="fc-text">{m.text}</p>
+        </div>
       </div>
+      <ul className="fc-areas">
+        {m.areas.map((a) => {
+          const I = AREA_ICON[a.id];
+          return (
+            <li key={a.id} data-area={a.id}>
+              <span className="area-icon area-icon-sm">
+                <I size={16} />
+              </span>
+              {SHORT[a.id]}
+              <ScorePill score={a.score} tone={a.tone} />
+            </li>
+          );
+        })}
+      </ul>
       <div className="cal-wrap">
-        <div className="cal" role="grid" aria-label={`Daily conditions, ${m.range}`}>
+        <div className="cal" role="grid" aria-label={`Your days, ${m.range}`}>
           {"SMTWTFS".split("").map((d, i) => (
             <span key={`h${i}`} className="cal-h" aria-hidden="true">
               {d}
@@ -65,21 +47,26 @@ function Month({ profile, date, onPick }: { profile: Profile; date: string; onPi
           {Array.from({ length: lead }, (_, i) => (
             <span key={`b${i}`} />
           ))}
-          {m.days.map((d) => (
-            <button
-              key={d.date}
-              type="button"
-              className={`cal-day ${d.date === today ? "is-today" : ""} ${d.date === date ? "is-picked" : ""}`}
-              data-tone={d.tone}
-              onClick={() => onPick(d.date)}
-              aria-label={`${fmtMonthDay(d.date)}: ${TONES.find((t) => t[0] === d.tone)?.[1]}`}
-            >
-              {Number(d.date.slice(8))}
-            </button>
-          ))}
+          {m.days.map((d) => {
+            const isOpen = opened.has(d.date);
+            const future = d.date > today;
+            return (
+              <button
+                key={d.date}
+                type="button"
+                className={`cal-day ${isOpen ? "is-open" : future ? "is-future" : "is-missed"} ${d.date === today ? "is-today" : ""}`}
+                data-tone={isOpen ? d.tone : undefined}
+                disabled={!isOpen}
+                onClick={() => onPick(d.date)}
+                aria-label={`${fmtMonthDay(d.date)}: ${isOpen ? `score ${d.score}` : future ? "still sealed" : "not cracked"}`}
+              >
+                <span className="cal-date">{Number(d.date.slice(8))}</span>
+                {isOpen ? <span className="cal-score">{d.score}</span> : future ? <Mark size={12} /> : null}
+              </button>
+            );
+          })}
         </div>
-        <Legend />
-        <p className="hint">Tap a day to read it.</p>
+        <p className="hint">Each day's score unlocks when you crack that day's cookie. Tap an opened day to read it again.</p>
       </div>
     </div>
   );
@@ -88,47 +75,42 @@ function Month({ profile, date, onPick }: { profile: Profile; date: string; onPi
 function Year({ profile, date }: { profile: Profile; date: string }) {
   const y = useMemo(() => readYear(profile, date), [profile, date]);
   return (
-    <div className="bp-body bp-body-stack">
-      <div className="bp-intro">
-        <p className="bp-kicker">
-          Your {y.chartYear} · {y.label} year · {y.range}
-        </p>
-        <h3>{y.text}</h3>
-        {y.link ? (
-          <p className="ap-link">
-            <Spark size={12} />
-            <span>{y.link}</span>
+    <div className="fc-body">
+      <div className="fc-lead">
+        <ScoreRing score={y.score} tone={toneOfNumber(y.score)} size={104} label="This year" />
+        <div>
+          <p className="label">
+            {y.label} year · {y.range}
           </p>
-        ) : null}
+          <p className="fc-text">{y.text}</p>
+          {y.link ? <p className="muted small">{y.link}</p> : null}
+        </div>
       </div>
       <div>
-        <p className="label">Month by month</p>
+        <p className="label block-label">Month by month</p>
         <ol className="year-strip">
           {y.months.map((mo) => (
             <li key={mo.label} className={mo.current ? "is-now" : ""} data-tone={mo.tone}>
-              <ToneIcon tone={mo.tone} size={18} />
-              <span className="ys-el">{mo.element}</span>
+              <span className="ys-num">{mo.score}</span>
+              <span className="ys-bar">
+                <span style={{ height: `${mo.score}%` }} />
+              </span>
               <span className="ys-date">{mo.label}</span>
             </li>
           ))}
         </ol>
-        <Legend />
       </div>
       <ul className="outlook">
         {y.areas.map((a) => {
-          const Icon = AREA_ICON[a.id];
+          const I = AREA_ICON[a.id];
           return (
             <li key={a.id} data-area={a.id}>
-              <span className="area-icon">
-                <Icon size={20} />
+              <span className="area-icon area-icon-sm">
+                <I size={16} />
               </span>
               <div>
                 <p className="outlook-title">
-                  {a.title}
-                  <span className="chip" data-tone={a.tone}>
-                    <i className="dot" />
-                    {a.toneLabel}
-                  </span>
+                  {a.title} <ScorePill score={a.score} tone={a.tone} />
                 </p>
                 <p>{a.text}</p>
               </div>
@@ -140,118 +122,84 @@ function Year({ profile, date }: { profile: Profile; date: string }) {
   );
 }
 
-function Life({ profile }: { profile: Profile }) {
+function Life({ profile, onProfile }: { profile: Profile; onProfile: () => void }) {
   const life = useMemo(() => readLife(profile), [profile]);
-  const peak = Math.max(...ELEMENTS.map((e) => profile.share[e]));
   const core = `${profile.core.yang ? "Yang" : "Yin"} ${profile.core.element}`;
   return (
-    <div className="bp-body bp-body-stack">
-      <div className="life-top">
-        <article className="core-card" data-el={profile.core.element}>
-          <p className="label">Your core element</p>
-          <h3>
-            {core} <span className="core-title">· {profile.core.title}</span>
-          </h3>
-          <p>{profile.core.text}</p>
-          <p className="muted small">It comes from your Day pillar and is the lens every reading uses. A starting sketch, not a box.</p>
-        </article>
-        <article className="mix-card">
-          <p className="label">Your element mix</p>
-          <ul className="bars">
-            {ELEMENTS.map((e) => (
-              <li key={e} data-el={e}>
-                <span className="bar-name">{e}</span>
-                <span className="bar-track">
-                  <span className="bar-fill" style={{ width: `${Math.max(3, (profile.share[e] / peak) * 100)}%` }} />
-                </span>
-                <span className="bar-val">{Math.round(profile.share[e] * 100)}%</span>
-              </li>
-            ))}
-          </ul>
-          <p className="small">{profile.mostLine}</p>
-          <p className="small">{profile.leastLine}</p>
-          <div className="helpful" data-el={profile.helpful.element}>
-            <span className="swatch" aria-hidden="true" />
-            <p className="small">
-              <strong>Balancing element: {profile.helpful.element}</strong> ({profile.helpful.color.toLowerCase()}). {profile.helpful.ideas}
-            </p>
-          </div>
-        </article>
+    <div className="fc-body">
+      <div className="life-core" data-el={profile.core.element}>
+        <p className="label">Your core</p>
+        <h3>
+          {profile.core.title} <span className="muted">· {core}</span>
+        </h3>
+        <p>{profile.core.text}</p>
       </div>
-
-      <div>
-        <p className="label">You're more than your year animal</p>
-        <div className="pillars">
-          {profile.pillars.map((p) => {
-            const meta = PILLAR_META[p.key];
-            return (
-              <article key={p.key} className={`pillar ${p.known ? "" : "is-unknown"}`} data-el={p.known ? p.element : undefined}>
-                {p.key === "day" && p.known ? <span className="pillar-you">This one is you</span> : null}
-                <p className="pillar-label">
-                  {meta.label} <span>· {meta.theme}</span>
-                </p>
-                <p className="pillar-animal">{p.known ? p.animal : "Unknown"}</p>
-                <p className="pillar-el">
-                  {p.known ? (
-                    <>
-                      <i className="dot" /> {p.yang ? "Yang" : "Yin"} {p.element}
-                    </>
-                  ) : (
-                    "Add a birth time to see it"
-                  )}
-                </p>
-                <p className="pillar-means">{meta.means}</p>
-              </article>
-            );
-          })}
-        </div>
-      </div>
-
       <ul className="outlook">
         {life.areas.map((a) => {
-          const Icon = AREA_ICON[a.id];
+          const I = AREA_ICON[a.id];
           return (
             <li key={a.id} data-area={a.id}>
-              <span className="area-icon">
-                <Icon size={20} />
+              <span className="area-icon area-icon-sm">
+                <I size={16} />
               </span>
               <div>
                 <p className="outlook-title">{a.title}</p>
                 <p>{a.text}</p>
-                <p className="muted small">{a.source}.</p>
               </div>
             </li>
           );
         })}
       </ul>
+      <button type="button" className="link-btn" onClick={onProfile}>
+        See your four animals and element mix on your profile
+      </button>
     </div>
   );
 }
 
-export function BiggerPicture({ profile, date, onPick }: { profile: Profile; date: string; onPick: (d: string) => void }) {
+export function BiggerPicture({
+  profile,
+  date,
+  today,
+  cracked,
+  onPick,
+  onProfile,
+}: {
+  profile: Profile;
+  date: string;
+  today: string;
+  cracked: string[];
+  onPick: (d: string) => void;
+  onProfile: () => void;
+}) {
   const [tab, setTab] = useState<Tab>("month");
-  const tabs: [Tab, string, string][] = [
-    ["month", "This month", "Changes about every 30 days"],
-    ["year", "This year", "Changes each spring"],
-    ["life", "Your lifetime", "Never changes"],
+  const tabs: [Tab, string][] = [
+    ["month", "This month"],
+    ["year", "This year"],
+    ["life", "Lifetime"],
   ];
   return (
-    <section className="section" id="bigger" aria-labelledby="bigger-title">
-      <div className="section-head">
-        <p className="eyebrow">The bigger picture</p>
-        <h2 id="bigger-title">Zoom out from today</h2>
-        <p className="lede">Days change fast. These change slowly, so they're worth a look once in a while.</p>
-      </div>
+    <section className="page-body" aria-labelledby="fc-title">
+      <header className="page-head">
+        <p className="eyebrow">Forecast</p>
+        <h1 id="fc-title">The long view</h1>
+        <p className="lede">These change slowly. Days stay sealed until you crack them.</p>
+      </header>
       <div className="seg" role="tablist" aria-label="Time scale">
-        {tabs.map(([id, label, hint]) => (
+        {tabs.map(([id, label]) => (
           <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? "is-on" : ""} onClick={() => setTab(id)}>
-            <strong>{label}</strong>
-            <small>{hint}</small>
+            {label}
           </button>
         ))}
       </div>
-      <div className="bp-panel" role="tabpanel">
-        {tab === "month" ? <Month profile={profile} date={date} onPick={onPick} /> : tab === "year" ? <Year profile={profile} date={date} /> : <Life profile={profile} />}
+      <div role="tabpanel">
+        {tab === "month" ? (
+          <Month profile={profile} date={today} today={today} cracked={cracked} onPick={onPick} />
+        ) : tab === "year" ? (
+          <Year profile={profile} date={date} />
+        ) : (
+          <Life profile={profile} onProfile={onProfile} />
+        )}
       </div>
     </section>
   );

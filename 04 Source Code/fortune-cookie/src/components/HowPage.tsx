@@ -1,6 +1,7 @@
 import type { DailyReading, Profile } from "../engine/reading";
 import { fmtLongDate } from "../lib";
-import { Chevron, Spark, ToneIcon } from "./Icons";
+import { SCORE_INFO } from "../engine/copy-guide";
+import { Chevron, Spark } from "./Icons";
 
 const STEPS = [
   { title: "Your birth moment", body: "Date, time, and place. We turn the clock time into sun time for that spot, the way the old calendar does." },
@@ -15,12 +16,6 @@ const PROMISES = [
   { title: "Stays on your device", body: "No account and no server. Your details never leave this browser." },
 ];
 
-const LABELS = [
-  ["flowing", "Flowing", "Today's energy suits your chart. A good time to start or ask."],
-  ["steady", "Steady", "Balanced. Nothing needs forcing."],
-  ["mixed", "Mixed", "Some push, some pull. Smaller steps help."],
-  ["gentle", "Go gently", "A lower-energy day for that area. Rest counts."],
-] as const;
 
 export function HowPage({ profile, reading, onBack }: { profile: Profile; reading: DailyReading; onBack: () => void }) {
   const { how, birth } = profile;
@@ -29,9 +24,9 @@ export function HowPage({ profile, reading, onBack }: { profile: Profile; readin
   const t = reading.today;
 
   return (
-    <main className="subpage" id="top">
+    <div className="page-body subpage">
       <button type="button" className="back-link" onClick={onBack}>
-        <Chevron dir="left" size={16} /> Back to today
+        <Chevron dir="left" size={16} /> What it means
       </button>
 
       <section className="section" aria-labelledby="how-title">
@@ -69,22 +64,23 @@ export function HowPage({ profile, reading, onBack }: { profile: Profile; readin
 
       <section className="section" aria-labelledby="labels-title">
         <div className="section-head">
-          <p className="eyebrow">The four conditions</p>
-          <h2 id="labels-title">Weather words, never scores</h2>
+          <p className="eyebrow">The daily score</p>
+          <h2 id="labels-title">One number, 0 to 100</h2>
+          <p className="lede">{SCORE_INFO.what}</p>
         </div>
-        <ul className="label-list">
-          {LABELS.map(([tone, name, body]) => (
-            <li key={tone} data-tone={tone}>
-              <span className="tone-badge" data-tone={tone}>
-                <ToneIcon tone={tone} size={22} />
-              </span>
-              <div>
-                <strong>{name}</strong>
-                <p>{body}</p>
-              </div>
+        <ul className="bands">
+          {SCORE_INFO.bands.map((b) => (
+            <li key={b.tone} data-tone={b.tone}>
+              <i className="dot" />
+              <strong>{b.range}</strong>
+              <span>{b.text}</span>
             </li>
           ))}
         </ul>
+        <p className="small muted">
+          Each area reads a different part of the day against a different pillar: growth against your Hour, career against your Month, love against your
+          Day, family against your Year. A small fixed wobble keeps two similar days from printing the same number.
+        </p>
       </section>
 
       <section className="section" aria-labelledby="calc-title">
@@ -134,7 +130,7 @@ export function HowPage({ profile, reading, onBack }: { profile: Profile; readin
           <div>
             <dt>Our own method</dt>
             <dd>
-              The pillars follow the standard calendar rules. The element percentages, the four conditions, and which area is in focus are
+              The pillars follow the standard calendar rules. The element percentages, the daily score, the small tweaks, the match score, and which area is in focus are
               Fortune Cookie's own way of scoring, not a classical rule.
             </dd>
           </div>
@@ -152,6 +148,6 @@ export function HowPage({ profile, reading, onBack }: { profile: Profile; readin
           ) : null}
         </dl>
       </section>
-    </main>
+    </div>
   );
 }

@@ -73,9 +73,15 @@ import {
   HOME_FOR,
   LIFE_AREA,
   LOVE_FOR,
+  MATCH_DAY,
+  MATCH_FAM,
+  MATCH_HEADLINE,
+  MATCH_TIP,
+  MATCH_YEAR,
   STEPS,
   TOMORROW,
-  TRY,
+  TWEAK,
+  TWEAK_WHY,
   YEAR,
   YEAR_AREA,
   YEAR_LINK,
@@ -274,12 +280,29 @@ export function readChart(birth: BirthDetails, person: Person = DEFAULT_PERSON):
 const REL_MOD: Record<BranchRelation, number> = { clash: -1.25, harmony: 1, echo: 0.5, none: 0 };
 const REL_RANK: Record<BranchRelation, number> = { clash: 3, harmony: 2, echo: 1, none: 0 };
 
-export function toneOf(score: number): Tone {
-  if (score >= 1) return "flowing";
-  if (score >= -0.25) return "steady";
-  if (score >= -1.25) return "mixed";
+/**
+ * The daily number. The raw score (about -3 to +3) maps onto 0 to 100, with a
+ * small fixed wobble so two days with the same energy don't print the same
+ * number. Same details and same date always give the same number.
+ */
+export function toNumber(raw: number, wobble = 0): number {
+  return Math.round(clamp(64 + raw * 12 + wobble, 28, 99));
+}
+
+/** The color band behind a number. */
+export function toneOfNumber(n: number): Tone {
+  if (n >= 76) return "flowing";
+  if (n >= 61) return "steady";
+  if (n >= 49) return "mixed";
   return "gentle";
 }
+
+export function toneOf(score: number): Tone {
+  return toneOfNumber(toNumber(score));
+}
+
+/** A fixed wobble between -3 and +3 for a day, a chart, and a slot. */
+const wobble = (n: number, salt: number, slot: number) => (mod(n * 7 + salt * 13 + slot * 29 + Math.floor(n / 3) * 5, 7) - 3);
 
 type Scored = {
   stemEl: ElementName;
@@ -382,6 +405,7 @@ export type AreaReading = {
   id: AreaId;
   title: string;
   covers: string;
+  score: number;
   tone: Tone;
   toneLabel: string;
   focus: boolean;
@@ -401,7 +425,8 @@ export type DailyReading = {
   energy: { element: ElementName; family: Family; familyName: string; means: string };
   undercurrent: { element: ElementName; family: Family; familyName: string; means: string; animal: string };
   personal: { nick: string; text: string };
-  overall: { tone: Tone; toneLabel: string; toneLine: string; try: string; ask: string };
+  overall: { score: number; tone: Tone; toneLabel: string; toneLine: string; ask: string };
+  tweaks: Tweaks;
   season: { text: string; element: ElementName; familyName: string; until: string | null };
   areas: AreaReading[];
   focus: AreaId;
@@ -457,12 +482,9 @@ export function readDay(profile: Profile, date: string): DailyReading {
   const load: LoadState = s.stemEl === profile.least || s.stemEl === ranked[3] ? "scarce" : s.stemEl === profile.most ? "saturated" : "present";
   const slip = SLIP[`${s.stemEnergy}.${load}`][variant];
 
-  const overallTone = toneOf(s.scores.overall);
+  const overallScore = toNumber(s.scores.overall, wobble(n, salt, 0));
+  const overallTone = toneOfNumber(overallScore);
   const askKey = s.best.pillar ? `${s.best.relation}.${s.best.pillar}` : `none.${branchFam}`;
-
-  // "Try this": five per energy, rotated by how often that energy has come round
-  const branchEnergyOf = (k: number) => energyOf(dm, BRANCHES[branchOfDay(k)].hidden[0]);
-  const tryIdx = mod(countBefore(n, 12, (k) => branchEnergyOf(k) === s.branchEnergy) + salt, 5);
 
   const monthEnd = solarMonthEnd(noonMs);
   const until = monthEnd ? fmtDay(monthEnd, birth.tz, { month: "short", day: "numeric" }) : null;
@@ -488,11 +510,13 @@ export function readDay(profile: Profile, date: string): DailyReading {
     const pool = STEPS[id][fam].filter((st) => stepFits(st, person));
     const occ = byStem ? countBefore(n, 10, (k) => stemFamOf(k) === fam) : countBefore(n, 12, (k) => branchFamOf(k) === fam);
     const step = stepText(pool[mod(occ + salt + i * 7, pool.length)], person);
-    const tone = toneOf(s.scores[id]);
+    const areaScore = toNumber(s.scores[id], wobble(n, salt, i + 1));
+    const tone = toneOfNumber(areaScore);
     const home: PillarKey = id === "growth" ? "hour" : id === "career" ? "month" : id === "love" ? "day" : familyHome;
     return {
       id,
       ...AREA_META[id],
+      score: areaScore,
       tone,
       toneLabel: TONE_LABEL[tone],
       focus: false,
@@ -527,12 +551,13 @@ export function readDay(profile: Profile, date: string): DailyReading {
     undercurrent: { element: s.branchEl, family: branchFam, familyName: FAMILY_NAME[branchFam], means: FAMILY_MEANS[branchFam], animal: todayAnimal },
     personal: { nick: CORE_NICK[coreKey], text: CORE_TODAY[coreKey][stemFam] },
     overall: {
+      score: overallScore,
       tone: overallTone,
       toneLabel: TONE_LABEL[overallTone],
       toneLine: OVERALL_TONE[overallTone],
-      try: TRY[s.branchEnergy][tryIdx],
       ask: ASK[askKey],
     },
+    tweaks: readTweaks(profile, n, stemFam, day.day.branchIdx, salt),
     season: {
       text: SEASON[`${familyOf(dmEl, seasonEl)}.${profile.band}`],
       element: seasonEl,
@@ -543,7 +568,6 @@ export function readDay(profile: Profile, date: string): DailyReading {
     focus,
     keys: {
       slip: `${s.stemEnergy}.${load}.${variant}`,
-      try: `${s.branchEnergy}.${tryIdx}`,
       ask: askKey,
       season: `${familyOf(dmEl, seasonEl)}.${profile.band}`,
       tones: areas.map((a) => `${a.id}:${a.tone}`).join(","),
@@ -557,8 +581,127 @@ export function tomorrowTeaser(profile: Profile, tomorrow: string): { area: stri
   const r = readDay(profile, tomorrow);
   const order: Tone[] = ["flowing", "steady", "mixed", "gentle"];
   const chosen = r.areas.filter((a) => a.interested);
-  const pick = [...(chosen.length ? chosen : r.areas)].sort((a, b) => order.indexOf(a.tone) - order.indexOf(b.tone))[0];
+  const pick = [...(chosen.length ? chosen : r.areas)].sort((a, b) => order.indexOf(a.tone) - order.indexOf(b.tone) || b.score - a.score)[0];
   return { area: pick.title, tone: pick.tone, text: fill(TOMORROW[pick.tone], { area: pick.title }) };
+}
+
+// ------------------------------------------------------------ small tweaks
+
+export type Tweaks = {
+  element: ElementName;
+  why: string;
+  wear: { color: string; hex: string };
+  eat: string;
+  do: string;
+  time: { label: string; animal: string };
+};
+
+/** The element a family points at, seen from your core element. */
+function elementOfFamily(core: ElementName, fam: Family): ElementName {
+  return ELEMENTS.find((e) => familyOf(core, e) === fam) as ElementName;
+}
+
+/**
+ * Concrete, two-second changes for the day. The tweak element is the one that
+ * eases today's main energy for this chart: pressure and spending are eased by
+ * support, money and tasks by backup, and a crowd of your own element by an
+ * outlet. Which color, food, and action within that element rotates daily.
+ */
+function readTweaks(profile: Profile, n: number, todayFam: Family, dayBranch: number, salt: number): Tweaks {
+  const core = profile.core.element;
+  const light = profile.band === "light";
+  const ease: Record<Family, Family> = {
+    structure: "nurture",
+    expression: "nurture",
+    harvest: "company",
+    company: light ? "nurture" : "expression",
+    nurture: light ? "nurture" : "harvest",
+  };
+  const fam = ease[todayFam];
+  const el = elementOfFamily(core, fam);
+  const set = TWEAK[el];
+  const color = set.wear[mod(n + salt, set.wear.length)];
+
+  // Best two hours while awake (5 AM to 9 PM): an easy element that gets along with today and with you.
+  let best = 3;
+  let bestScore = -Infinity;
+  for (let b = 3; b <= 10; b++) {
+    const bEl = BRANCHES[b].element;
+    const v =
+      profile.ease[bEl] +
+      REL_MOD[branchRelation(b, dayBranch)] +
+      0.5 * REL_MOD[branchRelation(b, profile.chart.day.branchIdx)] +
+      (b >= 4 && b <= 9 ? 0.2 : 0) +
+      ((mod(n, 5) === b % 5 ? 0.15 : 0));
+    if (v > bestScore) [best, bestScore] = [b, v];
+  }
+  const start = mod(best * 2 - 1, 24);
+  const hr = (h: number) => `${h % 12 === 0 ? 12 : h % 12}`;
+  const ampm = (h: number) => (h < 12 ? "AM" : "PM");
+  const end = start + 2;
+  const label = ampm(start) === ampm(end) ? `${hr(start)} to ${hr(end)} ${ampm(end)}` : `${hr(start)} ${ampm(start)} to ${hr(end)} ${ampm(end)}`;
+
+  return {
+    element: el,
+    why: fill(TWEAK_WHY[todayFam], { el, core }),
+    wear: color,
+    eat: set.eat[mod(n * 3 + salt, set.eat.length)],
+    do: set.do[mod(n * 5 + salt * 2, set.do.length)],
+    time: { label, animal: BRANCHES[best].animal },
+  };
+}
+
+// ------------------------------------------------------------ compatibility
+
+export type MatchReading = {
+  score: number;
+  tone: Tone;
+  them: { name: string; core: ElementName; yang: boolean; nick: string; title: string; yearAnimal: string; dayAnimal: string };
+  headline: string;
+  rows: { label: string; text: string }[];
+};
+
+const TRINE = (a: number, b: number) => a !== b && mod(a - b, 4) === 0;
+type Bond = "harmony" | "trine" | "echo" | "clash" | "none";
+const bondOf = (a: number, b: number): Bond => {
+  const r = branchRelation(a, b);
+  return r !== "none" ? r : TRINE(a, b) ? "trine" : "none";
+};
+
+/** How two charts get along, read from core elements, day animals, and year animals. */
+export function readMatch(me: Profile, other: Profile, name: string): MatchReading {
+  const myEl = me.core.element;
+  const theirEl = other.core.element;
+  const fam = familyOf(myEl, theirEl);
+  const day = bondOf(me.chart.day.branchIdx, other.chart.day.branchIdx);
+  const year = bondOf(me.chart.year.branchIdx, other.chart.year.branchIdx);
+  const FAM_PTS: Record<Family, number> = { nurture: 10, company: 6, expression: 6, harvest: 3, structure: -3 };
+  const BOND_PTS: Record<Bond, number> = { harmony: 11, trine: 8, echo: 3, none: 0, clash: -9 };
+  const fills = other.most === me.helpful.element ? 6 : 0;
+  const raw = 60 + FAM_PTS[fam] + BOND_PTS[day] + 0.8 * BOND_PTS[year] + fills + (me.core.yang !== other.core.yang ? 3 : 0);
+  const score = Math.round(clamp(raw, 34, 98));
+  const tone = toneOfNumber(score);
+  const nick = CORE_NICK[`${theirEl}.${yy(other.core.yang)}`];
+  return {
+    score,
+    tone,
+    them: {
+      name,
+      core: theirEl,
+      yang: other.core.yang,
+      nick,
+      title: other.core.title,
+      yearAnimal: other.chart.year.branch.animal,
+      dayAnimal: other.chart.day.branch.animal,
+    },
+    headline: MATCH_HEADLINE[tone],
+    rows: [
+      { label: "How they feel to you", text: fill(MATCH_FAM[fam], { them: nick, you: me.core.nick }) },
+      { label: "Day to day", text: MATCH_DAY[day] },
+      { label: `${me.chart.year.branch.animal} and ${other.chart.year.branch.animal}`, text: MATCH_YEAR[year] },
+      { label: "One tip", text: fills ? MATCH_TIP.fills : MATCH_TIP[fam] },
+    ],
+  };
 }
 
 // ------------------------------------------------------------ this month
@@ -569,9 +712,10 @@ export type MonthReading = {
   text: string;
   start: string; // first day, YYYY-MM-DD
   range: string;
-  days: { date: string; tone: Tone }[];
+  score: number;
+  days: { date: string; tone: Tone; score: number }[];
   smoother: string[];
-  areas: { id: AreaId; title: string; tone: Tone; toneLabel: string }[];
+  areas: { id: AreaId; title: string; tone: Tone; toneLabel: string; score: number }[];
 };
 
 export function readMonth(profile: Profile, date: string): MonthReading {
@@ -584,7 +728,8 @@ export function readMonth(profile: Profile, date: string): MonthReading {
   const start = solarMonthStart(noonMs) ?? new Date(noonMs);
   const end = solarMonthEnd(noonMs) ?? new Date(noonMs + 30 * 86400000);
 
-  const days: { date: string; tone: Tone }[] = [];
+  const salt = natal.day.branchIdx * 3 + natal.hour.branchIdx;
+  const days: { date: string; tone: Tone; score: number }[] = [];
   let [y, m, d] = parseYmd(ymdInZone(start, birth.tz));
   for (let guard = 0; guard < 34; guard++) {
     const ymd = `${y}-${pad(m)}-${pad(d)}`;
@@ -592,7 +737,8 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     if (noon >= end.getTime()) break;
     if (noon >= start.getTime()) {
       const n = dayNumber(y, m, d);
-      days.push({ date: ymd, tone: toneOf(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall) });
+      const sc = toNumber(score(profile, stemOfDay(n), branchOfDay(n), seasonEl).scores.overall, wobble(n, salt, 0));
+      days.push({ date: ymd, tone: toneOfNumber(sc), score: sc });
     }
     const next = new Date(Date.UTC(y, m - 1, d + 1));
     [y, m, d] = [next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate()];
@@ -606,11 +752,13 @@ export function readMonth(profile: Profile, date: string): MonthReading {
     text: SEASON[`${fam}.${profile.band}`],
     start: days[0]?.date ?? date,
     range: days.length ? `${fmtShort(days[0].date)} to ${fmtShort(days[days.length - 1].date)}` : "",
+    score: toNumber(ms.scores.overall),
     days,
     smoother: days.filter((x) => x.tone === "flowing").map((x) => x.date),
     areas: AREAS.map((id) => {
-      const tone = toneOf(ms.scores[id]);
-      return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone] };
+      const sc = toNumber(ms.scores[id]);
+      const tone = toneOfNumber(sc);
+      return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], score: sc };
     }),
   };
 }
@@ -624,8 +772,9 @@ export type YearReading = {
   familyName: string;
   text: string;
   link: string | null;
-  months: { label: string; element: ElementName; tone: Tone; current: boolean }[];
-  areas: { id: AreaId; title: string; tone: Tone; toneLabel: string; text: string }[];
+  score: number;
+  months: { label: string; element: ElementName; tone: Tone; score: number; current: boolean }[];
+  areas: { id: AreaId; title: string; tone: Tone; toneLabel: string; text: string; score: number }[];
 };
 
 export function readYear(profile: Profile, date: string): YearReading {
@@ -649,6 +798,7 @@ export function readYear(profile: Profile, date: string): YearReading {
     return {
       label: fmtDay(jdToDate(jd), birth.tz, { month: "short", day: "numeric" }),
       element: BRANCHES[b].element,
+      score: toNumber(sc.scores.overall),
       tone: toneOf(sc.scores.overall),
       current: nowJD >= jd && nowJD < endJD,
     };
@@ -674,10 +824,12 @@ export function readYear(profile: Profile, date: string): YearReading {
     familyName: FAMILY_NAME[fam],
     text: YEAR[`${fam}.${profile.band}`],
     link,
+    score: toNumber(ys.scores.overall),
     months,
     areas: AREAS.map((id) => {
-      const tone = toneOf(ys.scores[id]);
-      return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam] };
+      const sc = toNumber(ys.scores[id]);
+      const tone = toneOfNumber(sc);
+      return { id, title: AREA_META[id].title, tone, toneLabel: TONE_LABEL[tone], text: YEAR_AREA[id][fam], score: sc };
     }),
   };
 }

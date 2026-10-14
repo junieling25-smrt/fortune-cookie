@@ -253,10 +253,10 @@ export const SLIP: Record<`${Energy}.${LoadState}`, [string, string]> = {
 };
 
 export const OVERALL_TONE: Record<Tone, string> = {
-  flowing: "Overall, the day leans your way. A good time to start something or ask for something.",
-  steady: "Overall, a balanced day. Nothing needs forcing.",
-  mixed: "Overall, a mixed day. Go step by step and leave some slack in your plans.",
-  gentle: "Overall, a day to go gently. Keep plans light and be kind to yourself.",
+  flowing: "The day leans your way. Good for starting or asking.",
+  steady: "A balanced day. Nothing needs forcing.",
+  mixed: "Some push, some pull. Leave slack in your plans.",
+  gentle: "A day to go gently. Keep plans light.",
 };
 
 /** One question to carry, keyed by today's animal meeting your chart. */

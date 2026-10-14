@@ -3,7 +3,7 @@
  * long-term readings. Same house rules as copy.ts, enforced by the same test:
  * plain English, conditions not outcomes, no luck, no em dashes, cookie-sized.
  */
-import type { ElementName, Energy, Family } from "./pillars";
+import type { ElementName, Family } from "./pillars";
 import type { AreaId } from "./copy";
 
 // ------------------------------------------------------------ about you
@@ -554,78 +554,188 @@ export const STEPS: Record<AreaId, Record<Family, Step[]>> = {
   },
 };
 
-/** "Try this" for Overall: five per energy underneath the day. */
-export const TRY: Record<Energy, string[]> = {
-  self: [
-    "Say what you actually think once, without turning it into a question.",
-    "Make one decision today without polling anyone.",
-    "Write your opinion down before a meeting, then compare it after.",
-    "Start one sentence with “I think” and finish it.",
-    "Do one thing today exactly the way you like it.",
-  ],
-  rival: [
-    "Name one thing you want that someone else wants too. Just name it.",
-    "Congratulate someone you feel competitive with.",
-    "Ask for your fair share of something, politely and clearly.",
-    "Turn one comparison into a question: what could I learn from them?",
-    "Split something evenly today: credit, chores, or dessert.",
-  ],
-  play: [
-    "Finish one small thing you already started. Don't open anything new.",
-    "Do one task today purely because it's fun.",
-    "Make something with your hands for ten minutes.",
-    "Take the scenic route somewhere.",
-    "Try a new snack, song, or shortcut.",
-  ],
-  voice: [
-    "Write the criticism down in full, then sleep on it before you send it.",
-    "Turn one complaint into one suggestion.",
-    "Say the honest thing, then add one kind sentence.",
-    "Pick the one problem worth raising today and let the rest go.",
-    "Edit one message until it's half as long.",
-  ],
-  windfall: [
-    "Say yes to the smallest option in front of you and no to the biggest.",
-    "Reply to the unexpected message or invite.",
-    "Take one small risk you'd normally talk yourself out of.",
-    "Look up one opportunity you've been curious about.",
-    "Talk to one person you don't usually talk to.",
-  ],
-  savings: [
-    "Do the ten-minute chore you keep pushing to tomorrow.",
-    "Check one account or balance and write the number down.",
-    "Close one open loop before starting anything new.",
-    "Clean or maintain one thing you rely on every day.",
-    "Stick to the plan you already made for today.",
-  ],
-  push: [
-    "Answer one demand with a clear time instead of a promised result.",
-    "Take one deep breath before replying to anything urgent.",
-    "Pick the hardest task and do just the first ten minutes.",
-    "Ask “by when, really?” about one deadline.",
-    "Put one thing down so you can carry the rest.",
-  ],
-  rules: [
-    "Pick one obligation and check whether anyone still expects it.",
-    "Follow one rule today exactly, and notice how it feels.",
-    "Read the instructions all the way through before you start.",
-    "Ask one clarifying question before you begin a task.",
-    "Tidy one shared space so it's easier for everyone.",
-  ],
-  intuition: [
-    "Take twenty quiet minutes with no phone, no music, and no talking.",
-    "Write down your first gut reaction before you overthink it.",
-    "Take a walk without a destination.",
-    "Notice one thing today that others seem to miss.",
-    "Sit somewhere new and just watch for five minutes.",
-  ],
-  care: [
-    "Ask one person for something small and specific.",
-    "Accept the next offer of help without saying “it's fine”.",
-    "Eat one proper meal sitting down.",
-    "Call someone who always makes you feel better.",
-    "Do one kind thing for your body: stretch, water, or sleep.",
-  ],
+/**
+ * Small tweaks: concrete, two-second changes. Grouped by the element that eases
+ * the day for this chart (see readTweaks in reading.ts).
+ */
+export const TWEAK: Record<ElementName, { wear: { color: string; hex: string }[]; eat: string[]; do: string[] }> = {
+  Wood: {
+    wear: [
+      { color: "Sage green", hex: "#9DBF9E" },
+      { color: "Leaf green", hex: "#5E9F62" },
+      { color: "Mint", hex: "#A8E0C4" },
+      { color: "Olive", hex: "#7C8B4A" },
+      { color: "Teal", hex: "#2E8A86" },
+    ],
+    eat: [
+      "Something green with lunch",
+      "A squeeze of lemon in your water",
+      "A handful of leafy greens",
+      "Green tea instead of one coffee",
+      "Something sour, like yogurt or a pickle",
+      "A crunchy salad",
+    ],
+    do: [
+      "Stand under a tree for one minute",
+      "Water a plant, or buy a small one",
+      "Take a ten-minute walk somewhere green",
+      "Stretch your arms up high, three times",
+      "Open a window first thing",
+      "Start one tiny new thing",
+    ],
+  },
+  Fire: {
+    wear: [
+      { color: "Coral", hex: "#FF8A7A" },
+      { color: "Tomato red", hex: "#E5533D" },
+      { color: "Rose pink", hex: "#F27BA0" },
+      { color: "Plum", hex: "#8E4A8C" },
+      { color: "Burnt orange", hex: "#D9682B" },
+    ],
+    eat: [
+      "Something warm and a little spicy",
+      "A square of dark chocolate",
+      "Tomatoes or red peppers",
+      "A bowl of berries or cherries",
+      "A hot tea, sipped slowly",
+      "Something grilled or toasted",
+    ],
+    do: [
+      "Sit in sunlight for five minutes",
+      "Light a candle at dinner",
+      "Play one upbeat song, loud",
+      "Send one warm compliment",
+      "Turn the lights up bright while you work",
+      "Call someone instead of texting",
+    ],
+  },
+  Earth: {
+    wear: [
+      { color: "Mustard", hex: "#D9A520" },
+      { color: "Sand beige", hex: "#DCC9A3" },
+      { color: "Camel", hex: "#B98A55" },
+      { color: "Terracotta", hex: "#C46A45" },
+      { color: "Honey yellow", hex: "#F2C14E" },
+    ],
+    eat: [
+      "Rice, oats, or another comfort grain",
+      "A roasted sweet potato or pumpkin",
+      "A spoon of honey in something warm",
+      "Corn, carrots, or squash",
+      "One home-cooked meal, sitting down",
+      "A banana and a few nuts",
+    ],
+    do: [
+      "Make your bed first thing",
+      "Cook one thing from scratch",
+      "Stand barefoot on grass or the floor for a minute",
+      "Clear one surface at home",
+      "Eat lunch away from your screen",
+      "Keep one routine exactly as usual",
+    ],
+  },
+  Metal: {
+    wear: [
+      { color: "Crisp white", hex: "#F6F4F0" },
+      { color: "Silver gray", hex: "#B9BCC6" },
+      { color: "Cream", hex: "#F3E9D2" },
+      { color: "Pale gold", hex: "#D8C27A" },
+      { color: "Light gray", hex: "#D7D9DE" },
+    ],
+    eat: [
+      "A crisp pear or apple",
+      "Something with ginger or garlic",
+      "Radish, cauliflower, or white beans",
+      "A plain bowl of rice",
+      "Peppermint tea",
+      "Something fresh and crunchy, like cucumber",
+    ],
+    do: [
+      "Clear your desk before you start",
+      "Delete ten old photos or emails",
+      "Write a three-item list and stop there",
+      "Wear a ring, a watch, or anything metal",
+      "Clean your glasses or your phone screen",
+      "Take three slow breaths by an open window",
+    ],
+  },
+  Water: {
+    wear: [
+      { color: "Navy", hex: "#23365E" },
+      { color: "Black", hex: "#1B1B22" },
+      { color: "Deep blue", hex: "#2D5DA8" },
+      { color: "Ink blue", hex: "#2B3A67" },
+      { color: "Slate", hex: "#4C5868" },
+    ],
+    eat: [
+      "A bowl of soup or broth",
+      "Black beans or black sesame",
+      "Blueberries or blackberries",
+      "Seaweed snacks or sushi",
+      "An extra big glass of water",
+      "Miso soup",
+    ],
+    do: [
+      "Take a long shower or bath",
+      "Drink a glass of water before each meal",
+      "Listen to rain sounds for five minutes",
+      "Walk near water if you can",
+      "Go to bed 20 minutes earlier",
+      "Sit for three minutes with no phone",
+    ],
+  },
+};
+
+/** Why today's tweaks lean on one element. Keyed by today's main energy. */
+export const TWEAK_WHY: Record<Family, string> = {
+  structure: "Today puts some pressure on you. {el} turns pressure into support.",
+  expression: "Today asks a lot of your energy. {el} helps you refill.",
+  harvest: "Today is busy with tasks and money. {el} gives you backup.",
+  company: "Today is full of your own kind of energy. {el} keeps it in balance.",
+  nurture: "Today is soft and restful. {el} keeps it in balance.",
+};
+
+// ------------------------------------------------------------ compatibility
+
+export const MATCH_HEADLINE: Record<"flowing" | "steady" | "mixed" | "gentle", string> = {
+  flowing: "An easy match. You tend to bring out each other's best.",
+  steady: "A solid match. Comfortable, with room to grow.",
+  mixed: "A match that takes a little work and teaches you both something.",
+  gentle: "Different rhythms. Patience makes this one work.",
+};
+
+/** Their core element, seen from yours. */
+export const MATCH_FAM: Record<Family, string> = {
+  nurture: "They feel like support. Around them, you can rest and refill.",
+  company: "They feel like a peer. Same wavelength, and sometimes the same stubborn streak.",
+  expression: "They bring out your playful side. You may give a lot, so keep it even.",
+  harvest: "They feel like someone to look after. You tend to show up for them.",
+  structure: "They keep you on your toes. A little pressure, a lot of growth.",
+};
+
+export const MATCH_DAY: Record<"harmony" | "trine" | "echo" | "clash" | "none", string> = {
+  harmony: "Your day animals are a natural pair. Everyday life together tends to feel easy.",
+  trine: "Your day animals are on the same team. You share a pace and a sense of humor.",
+  echo: "You share a day animal. Very familiar, sometimes too familiar.",
+  clash: "Your day animals sit opposite each other. Expect sparks, and give each other room.",
+  none: "Your day animals are neutral. You build the closeness yourselves, one habit at a time.",
+};
+
+export const MATCH_YEAR: Record<"harmony" | "trine" | "echo" | "clash" | "none", string> = {
+  harmony: "A classic zodiac pair. Friends and family often see you as a good fit.",
+  trine: "Zodiac allies. Your year animals share a group and a way of seeing the world.",
+  echo: "Same year animal. You get each other's roots.",
+  clash: "Opposite year animals. Your backgrounds may need a little translating.",
+  none: "A neutral zodiac pairing. Nothing to fix, nothing handed to you.",
+};
+
+export const MATCH_TIP: Record<Family | "fills", string> = {
+  nurture: "Say thanks out loud. Support feels better when it's noticed.",
+  company: "Take turns leading. Two captains need a schedule.",
+  expression: "Let them give back to you sometimes.",
+  harvest: "Ask what they need before you fix it.",
+  structure: "When they push, ask what they're aiming for.",
+  fills: "They carry the element that balances your chart. Shared routines suit you two.",
 };
 
 // ------------------------------------------------------------ the bigger picture
@@ -717,8 +827,8 @@ export const LIFE_AREA: Record<AreaId, Record<Family, string>> = {
 };
 
 export const TOMORROW: Record<"flowing" | "steady" | "mixed" | "gentle", string> = {
-  flowing: "Tomorrow looks Flowing for {area}. Come back and crack it.",
-  steady: "Tomorrow looks Steady for {area}. Come back and crack it.",
-  mixed: "Tomorrow looks Mixed for {area}. Come back for a tip on handling it.",
-  gentle: "Tomorrow asks you to go gently with {area}. Come back for a kind nudge.",
+  flowing: "Something easy is tucked inside for {area}.",
+  steady: "There's a quiet note in there for {area}.",
+  mixed: "There's a heads-up in there about {area}.",
+  gentle: "There's a soft note in there about {area}.",
 };

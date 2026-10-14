@@ -33,6 +33,9 @@ html = html.replace(/href="\.?\/?favicon\.svg"/, () => {
   return `href="data:image/svg+xml,${encodeURIComponent(svg)}"`;
 });
 
+// The one-file build has no neighbours to install from, so it skips the home-screen manifest.
+html = html.replace(/\s*<link rel="(manifest|apple-touch-icon)"[^>]*>/g, "");
+
 // Module scripts in <head> run after parsing, but move it to the end of <body> to be safe.
 const scripts = [];
 html = html.replace(/<script type="module">[\s\S]*?<\/script>/g, (m) => {

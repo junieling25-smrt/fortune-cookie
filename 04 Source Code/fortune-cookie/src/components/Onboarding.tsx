@@ -14,48 +14,15 @@ import {
   type Person,
 } from "../engine/reading";
 import type { Saved } from "../lib";
-import { AREA_ICON, Check, Chevron, Spark, Star5 } from "./Icons";
+import { Floaties } from "./Floaties";
+import { AREA_ICON, Check, Chevron } from "./Icons";
 import { CookieArt, Mark } from "./Mark";
 import { PlaceField, type Place } from "./PlaceField";
 
 const STEPS = ["name", "date", "time", "place", "areas", "about"] as const;
 type StepId = (typeof STEPS)[number];
 
-/** Scattered stars, sparks, and crumbs, hand-placed like the reference art. */
-const CONFETTI: { kind: "star" | "spark" | "dot" | "crumb"; x: number; y: number; s: number; r?: number }[] = [
-  { kind: "star", x: 8, y: 14, s: 18, r: -12 },
-  { kind: "spark", x: 20, y: 30, s: 12 },
-  { kind: "dot", x: 14, y: 52, s: 7 },
-  { kind: "crumb", x: 6, y: 72, s: 14, r: 30 },
-  { kind: "spark", x: 24, y: 86, s: 16 },
-  { kind: "star", x: 90, y: 10, s: 14, r: 18 },
-  { kind: "crumb", x: 80, y: 24, s: 12, r: -20 },
-  { kind: "dot", x: 94, y: 38, s: 8 },
-  { kind: "spark", x: 86, y: 58, s: 14 },
-  { kind: "star", x: 94, y: 78, s: 20, r: 8 },
-  { kind: "crumb", x: 74, y: 90, s: 10, r: 60 },
-  { kind: "dot", x: 40, y: 8, s: 6 },
-  { kind: "spark", x: 62, y: 6, s: 10 },
-  { kind: "dot", x: 66, y: 94, s: 7 },
-];
-
-export function Confetti() {
-  return (
-    <div className="confetti" aria-hidden="true">
-      {CONFETTI.map((c, i) => (
-        <span
-          key={i}
-          className={`cf cf-${c.kind}`}
-          style={{ left: `${c.x}%`, top: `${c.y}%`, width: c.s, height: c.s, rotate: `${c.r ?? 0}deg`, animationDelay: `${(i % 5) * 0.7}s` }}
-        >
-          {c.kind === "star" ? <Star5 size={c.s} /> : c.kind === "spark" ? <Spark size={c.s} /> : null}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function Chips<T extends string>({
+export function Chips<T extends string>({
   label,
   options,
   value,
@@ -198,14 +165,14 @@ export function Onboarding({
     name: "Optional. Your name only lives on this device.",
     date: "The full date, year included. Your year animal starts here.",
     time: "The time on your birth record. It sets your fourth animal.",
-    place: "Its time zone and longitude turn your clock time into sun time.",
+    place: "Type your town, or find it on the map. We use it for sun time.",
     areas: "Pick as many as you like. We'll put these first.",
     about: "All optional, and each answer makes your readings feel more like yours.",
   };
 
   return (
     <div className={`onboard ${opening ? "is-opening" : ""}`}>
-      <Confetti />
+      <Floaties />
       <header className="onboard-top">
         <span className="brand">
           <Mark size={30} />

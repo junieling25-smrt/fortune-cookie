@@ -1,0 +1,10 @@
+{
+  "name": "Fortune Cookie",
+  "short_name": "Fortune",
+  "description": "A daily fortune from your Four Pillars birth chart, in plain English.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1d1333",
+  "theme_color": "#1d1333",
+  "icons": [{ "src": "app-icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }]
+}

@@ -55,22 +55,16 @@ function spark(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, c
   ctx.restore();
 }
 
-function star5(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
+function moon(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.rotate(-0.4);
   ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const a = (Math.PI / 5) * i - Math.PI / 2;
-    const rr = i % 2 === 0 ? r : r * 0.45;
-    ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-  }
+  ctx.arc(0, 0, r, Math.PI * 0.25, Math.PI * 1.75, false);
+  ctx.arc(r * 0.55, -r * 0.1, r * 0.85, Math.PI * 1.6, Math.PI * 0.4, true);
   ctx.closePath();
   ctx.fillStyle = color;
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = color;
-  ctx.lineWidth = r * 0.25;
   ctx.fill();
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -187,7 +181,7 @@ export async function renderShareImage(reading: DailyReading, name: string): Pro
     [240, 180, 14],
     [850, 70, 11],
     [1010, 560, 13],
-  ].forEach(([x, y, r]) => star5(ctx, x, y, r, "rgba(187,167,244,0.55)"));
+  ].forEach(([x, y, r]) => moon(ctx, x, y, r * 1.6, "rgba(187,167,244,0.55)"));
 
   drawCookie(ctx, 540 - 60 * 3, 320 - 60 * 3, 3, true);
 
@@ -256,7 +250,7 @@ export async function renderShareImage(reading: DailyReading, name: string): Pro
   ctx.setLineDash([]);
   const t = reading.today;
   const w1 = chip(ctx, sx + 70, dy + 24, `${t.yang ? "Yang" : "Yin"} ${t.element} ${t.animal} day`, EL_FILL[t.element]);
-  chip(ctx, sx + 70 + w1 + 16, dy + 24, `• ${reading.overall.toneLabel}`, TONE_FILL[reading.overall.tone]);
+  chip(ctx, sx + 70 + w1 + 16, dy + 24, `Today ${reading.overall.score}`, TONE_FILL[reading.overall.tone]);
   ctx.restore();
 
   // footer

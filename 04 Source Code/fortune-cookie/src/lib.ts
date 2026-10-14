@@ -145,6 +145,41 @@ export function streakInfo(days: string[], today: string): Streak {
 export const loadSteps = (date: string) => load(stepsKey(date), isStringArray) ?? [];
 export const saveSteps = (date: string, ids: string[]) => save(stepsKey(date), ids);
 
+// ------------------------------------------------------------ avatar
+
+const AVATAR = "fc.avatar";
+export const loadAvatar = () => load(AVATAR, (v): v is string => typeof v === "string" && v.startsWith("data:image/"));
+export const saveAvatar = (url: string | null) => save(AVATAR, url);
+
+/** Center-crops an image file to a 256px square JPEG data URL. */
+export function squareImage(file: File, size = 256): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(img.width, img.height);
+      const c = document.createElement("canvas");
+      c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      if (!ctx) return reject(new Error("no canvas"));
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.86));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("not an image"));
+    };
+    img.src = url;
+  });
+}
+
+// ------------------------------------------------------------ first visit
+
+const INTRO_SEEN = "fc.intro";
+export const introSeen = () => load(INTRO_SEEN, (v): v is boolean => v === true) === true;
+export const markIntroSeen = () => save(INTRO_SEEN, true);
+
 // ------------------------------------------------------------ files
 
 /** True when the page runs inside another page (an embedded preview), where downloads are blocked. */
@@ -184,9 +219,66 @@ export async function hostDownloads(): Promise<Downloads | null> {
   }
 }
 
-/** A daily calendar event, so the reminder lives in the reader's own calendar app. */
-export function reminderIcs(hhmm: string): Blob {
-  const [h, m] = hhmm.split(":");
+// ------------------------------------------------------------ reminder
+
+export type RepeatOn = "daily" | "weekdays" | "weekends";
+export type Reminder = { time: string; repeat: RepeatOn };
+const REMINDER = "fc.reminder";
+
+export const isReminder = (v: unknown): v is Reminder =>
+  !!v && typeof v === "object" && /^\d{2}:\d{2}$/.test(String((v as Reminder).time)) && ["daily", "weekdays", "weekends"].includes(String((v as Reminder).repeat));
+export const loadReminder = () => load(REMINDER, isReminder);
+export const saveReminder = (r: Reminder | null) => save(REMINDER, r);
+
+const RRULE: Record<RepeatOn, string> = {
+  daily: "RRULE:FREQ=DAILY",
+  weekdays: "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+  weekends: "RRULE:FREQ=WEEKLY;BYDAY=SA,SU",
+};
+
+/** Every quarter hour of the day, grouped for a select. */
+export function reminderTimes(): { group: string; times: [string, string][] }[] {
+  const groups: { group: string; from: number; to: number }[] = [
+    { group: "Early morning", from: 4, to: 7 },
+    { group: "Morning", from: 7, to: 12 },
+    { group: "Afternoon", from: 12, to: 17 },
+    { group: "Evening", from: 17, to: 21 },
+    { group: "Night", from: 21, to: 28 },
+  ];
+  return groups.map(({ group, from, to }) => ({
+    group,
+    times: Array.from({ length: (to - from) * 4 }, (_, i) => {
+      const h = (from + Math.floor(i / 4)) % 24;
+      const m = (i % 4) * 15;
+      const v = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      return [v, fmtBirthTime(v)] as [string, string];
+    }),
+  }));
+}
+
+const endOf = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  const t = h * 60 + m + 5;
+  return `${String(Math.floor(t / 60) % 24).padStart(2, "0")}${String(t % 60).padStart(2, "0")}`;
+};
+
+/** Google Calendar "add event" link with the same repeat rule. */
+export function reminderGoogleUrl(r: Reminder): string {
+  const day = localToday().replace(/-/g, "");
+  const q = new URLSearchParams({
+    action: "TEMPLATE",
+    text: "Crack your fortune cookie",
+    details: "Two minutes: today's fortune, one tiny step, and your streak.",
+    dates: `${day}T${r.time.replace(":", "")}00/${day}T${endOf(r.time)}00`,
+    ctz: viewerTz(),
+    recur: RRULE[r.repeat],
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+
+/** A repeating calendar event, so the reminder lives in the reader's own calendar app. */
+export function reminderIcs(r: Reminder): Blob {
+  const [h, m] = r.time.split(":");
   const today = localToday().replace(/-/g, "");
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
   const ics = [
@@ -197,8 +289,8 @@ export function reminderIcs(hhmm: string): Blob {
     `UID:fortune-cookie-daily-${today}@fortunecookie`,
     `DTSTAMP:${stamp}`,
     `DTSTART:${today}T${h}${m}00`,
-    `DTEND:${today}T${h}${String(Number(m) + 5).padStart(2, "0")}00`,
-    "RRULE:FREQ=DAILY",
+    `DTEND:${today}T${endOf(r.time)}00`,
+    RRULE[r.repeat],
     "SUMMARY:Crack your fortune cookie",
     "DESCRIPTION:Two minutes: today's fortune\\, one tiny step\\, and your streak.",
     "BEGIN:VALARM",

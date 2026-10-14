@@ -15,21 +15,29 @@ npm run build:single  # build, then fold dist/ into one self-contained HTML file
 | Path | What it does |
 | --- | --- |
 | `src/engine/pillars.ts` | Four Pillars calculation: sun position (VSOP87), time zones, sun time, the four pillars, solar months, element balance. Sources are cited on each rule. |
-| `src/engine/reading.ts` | Turns a chart, the person's answers, and a date into the day, month, year, and lifetime readings. It also handles step rotation and tomorrow's teaser. Pure functions. |
-| `src/engine/copy.ts` | Hand-written core copy: fortunes, area lines, condition lines, questions, month themes. |
-| `src/engine/copy-more.ts` | Hand-written personal layer: 200 tiny steps, 50 "Try this", "your element today", "For you" lines, year and lifetime lines. |
-| `src/engine/cities.ts` | Birthplace search over 2,871 cities with time zones |
+| `src/engine/reading.ts` | Turns a chart, the person's answers, and a date into the day (with 0 to 100 scores and small tweaks), month, year, lifetime, and match readings. Pure functions. |
+| `src/engine/copy.ts` | Hand-written core copy: fortunes, area lines, questions, month themes. |
+| `src/engine/copy-more.ts` | Hand-written personal layer: 200 tiny steps, small tweaks, "your element today", "For you" lines, year, lifetime, and match lines. |
+| `src/engine/copy-guide.ts` | The welcome cards, splash facts, "What it means" guide, and pop-up definitions |
+| `src/engine/cities.ts` | Birthplace search over about 49,000 places with time zones, loaded on first use |
+| `scripts/build-cities.mjs` | Rebuilds `cities.json` from GeoNames (`npm run build:cities`) |
+| `src/components/Intro.tsx` | First-visit welcome and the opening splash |
 | `src/components/Onboarding.tsx` | Six-step onboarding with the progressively cracking cookie |
-| `src/components/Today.tsx` | Daily sealed cookie, fortune slip, Overall, "Try this", "Ask yourself", yesterday check-in |
-| `src/components/Areas.tsx` | Forecast tabs and the area panel with its fixed tiny-step column |
-| `src/components/ComeBack.tsx` | Streak, week of cookies, tomorrow's teaser, calendar reminder |
-| `src/components/BiggerPicture.tsx` | This month (calendar), this year (12-month strip), your lifetime |
-| `src/components/HowPage.tsx` | The "How it works" subpage (`#how`) |
+| `src/components/PlaceField.tsx`, `MapPicker.tsx` | Birthplace search and the offline world map |
+| `src/components/Today.tsx` | Sealed cookie, fortune, score, focus area, other areas, small tweaks, streak, tomorrow |
+| `src/components/BiggerPicture.tsx` | Forecast tab: this month (fills in as days are cracked), this year, lifetime |
+| `src/components/Profile.tsx` | Photo, animals, elements, editable details, areas, reminder, privacy |
+| `src/components/Match.tsx` | Compatibility with another person |
+| `src/components/Meaning.tsx`, `HowPage.tsx` | The plain guide and the math page |
+| `src/components/Term.tsx` | Pop-up definitions |
+| `src/components/Floaties.tsx` | The floating slips, sparkles, and moons |
 | `src/components/ShareCard.tsx` | Canvas-drawn 1080 × 1350 fortune card, and the share dialog |
 | `src/components/Mark.tsx` | The cookie paths: logo, favicon, and the crack animation |
 | `src/styles.css` | Brand tokens, light and dark themes, layout |
 | `scripts/verify.ts` | The test suite behind `npm test` |
 | `scripts/build-single-file.mjs` | Makes the one-file build (`--fragment` drops the html/head/body wrapper for embedding) |
+
+Pages are hash routes: `#forecast`, `#match`, `#me`, `#meaning`, `#how`.
 
 ## Link parameters
 
@@ -40,7 +48,7 @@ For demos and screenshots, a reading can be opened directly, skipping onboarding
  &areas=growth,career,love,family&career=job&love=partnered&home=cat,kids&growth=calm
 ```
 
-`t` is optional (leave it out for "time unknown"), `day` defaults to today, and `sealed=1` shows the daily cookie still sealed. The allowed values for `career`, `love`, `home`, and `growth` are the keys in `src/engine/copy-more.ts`.
+`t` is optional (leave it out for "time unknown"), `day` defaults to today, `sealed=1` shows the daily cookie still sealed, and `streak=6` pretends the last six days were cracked. The allowed values for `career`, `love`, `home`, and `growth` are the keys in `src/engine/copy-more.ts`.
 
 ## Rules for editing copy
 

@@ -1,23 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
-import { Areas } from "./components/Areas";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiggerPicture } from "./components/BiggerPicture";
-import { ComeBack } from "./components/ComeBack";
 import { HowPage } from "./components/HowPage";
-import { ArrowRight } from "./components/Icons";
+import { Book, TabForecast, TabMatch, TabYou } from "./components/Icons";
+import { Intro, Splash } from "./components/Intro";
 import { Mark } from "./components/Mark";
+import { MatchPage } from "./components/Match";
+import { MeaningPage } from "./components/Meaning";
 import { Onboarding } from "./components/Onboarding";
+import { Avatar, ProfilePage } from "./components/Profile";
 import { Today, type CheckIn } from "./components/Today";
-import { describeCity, findCity } from "./engine/cities";
+import { describeCity, findCity, loadCities } from "./engine/cities";
 import { AREAS, DEFAULT_PERSON, readChart, readDay, tomorrowTeaser, validateBirth, type AreaId, type Person } from "./engine/reading";
 import {
   crackedDays,
   forgetEverything,
+  introSeen,
   isSaved,
   load,
+  loadAvatar,
+  loadReminder,
   loadSteps,
   localToday,
   markCracked,
+  markIntroSeen,
   save,
+  saveAvatar,
   saveSteps,
   shiftDate,
   streakInfo,
@@ -27,59 +34,105 @@ import {
 const STORE_KEY = "fc.profile.v2";
 const DISMISS_KEY = "fc.checkin.dismissed";
 
+type Link = { saved: Saved | null; day: string | null; sealed: boolean };
+
 /**
  * Optional link parameters, for demos and screenshots:
  * ?d=1994-03-17&t=07:42&city=San%20Francisco&day=2026-09-24&name=Maya
  *  &areas=career,love&career=job&love=partnered&home=cat,kids&growth=calm&sealed=1
  */
-function fromLink(): { saved: Saved | null; day: string | null; sealed: boolean } {
+const linkQuery = () => {
   try {
-    const q = new URLSearchParams(window.location.search);
-    const day = /^\d{4}-\d{2}-\d{2}$/.test(q.get("day") ?? "") ? q.get("day") : null;
-    const city = q.get("city") ? findCity(q.get("city") as string) : undefined;
-    const sealed = q.get("sealed") === "1";
-    if (!q.get("d") || !city) return { saved: null, day, sealed };
-    const t = q.get("t") ?? "";
-    const birth = { date: q.get("d") as string, time: t, timeKnown: /^\d{2}:\d{2}$/.test(t), place: describeCity(city), tz: city.tz, lat: city.lat, lon: city.lon };
-    const list = (k: string) => (q.get(k) ?? "").split(",").filter(Boolean);
-    const areas = list("areas").filter((a): a is AreaId => (AREAS as string[]).includes(a));
-    const person = {
-      ...DEFAULT_PERSON,
-      name: q.get("name") ?? "",
-      interests: areas.length ? areas : [...AREAS],
-      career: q.get("career") || null,
-      love: q.get("love") || null,
-      home: list("home"),
-      growth: q.get("growth") || null,
-    } as Person;
-    return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
+    return new URLSearchParams(window.location.search);
   } catch {
-    return { saved: null, day: null, sealed: false };
+    return new URLSearchParams();
   }
+};
+const hasLink = () => !!linkQuery().get("d");
+
+function fromLink(): Link {
+  const q = linkQuery();
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(q.get("day") ?? "") ? q.get("day") : null;
+  const sealed = q.get("sealed") === "1";
+  const city = q.get("city") ? findCity(q.get("city") as string) : undefined;
+  if (!q.get("d") || !city) return { saved: null, day, sealed };
+  const t = q.get("t") ?? "";
+  const birth = { date: q.get("d") as string, time: t, timeKnown: /^\d{2}:\d{2}$/.test(t), place: describeCity(city), tz: city.tz, lat: city.lat, lon: city.lon };
+  const list = (k: string) => (q.get(k) ?? "").split(",").filter(Boolean);
+  const areas = list("areas").filter((a): a is AreaId => (AREAS as string[]).includes(a));
+  const person = {
+    ...DEFAULT_PERSON,
+    name: q.get("name") ?? "",
+    interests: areas.length ? areas : [...AREAS],
+    career: q.get("career") || null,
+    love: q.get("love") || null,
+    home: list("home"),
+    growth: q.get("growth") || null,
+  } as Person;
+  return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
 }
 
-const route = () => (window.location.hash === "#how" ? "how" : "main");
+type Page = "today" | "forecast" | "match" | "me" | "meaning" | "how";
+const PAGES: Page[] = ["today", "forecast", "match", "me", "meaning", "how"];
+const route = (): Page => {
+  const h = window.location.hash.replace(/^#\/?/, "") as Page;
+  return PAGES.includes(h) ? h : "today";
+};
+const TABS: { id: Page; label: string; Icon: (p: { size?: number }) => React.JSX.Element }[] = [
+  { id: "today", label: "Today", Icon: ({ size }) => <Mark size={size} /> },
+  { id: "forecast", label: "Forecast", Icon: TabForecast },
+  { id: "match", label: "Match", Icon: TabMatch },
+  { id: "meaning", label: "Meaning", Icon: Book },
+  { id: "me", label: "You", Icon: TabYou },
+];
+
+const splashDone = () => {
+  try {
+    return window.sessionStorage.getItem("fc.splash") === "1";
+  } catch {
+    return true;
+  }
+};
 
 export function App() {
-  const link = useMemo(fromLink, []);
-  const [saved, setSaved] = useState<Saved | null>(() => link.saved ?? load(STORE_KEY, isSaved));
-  const [editing, setEditing] = useState(false);
-  const [page, setPage] = useState(route);
+  const [link, setLink] = useState<Link | null>(() => (hasLink() ? null : { saved: null, day: null, sealed: false }));
+  const [saved, setSaved] = useState<Saved | null>(() => load(STORE_KEY, isSaved));
+  const [splash, setSplash] = useState(() => !hasLink() && !splashDone() && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  const [intro, setIntro] = useState(() => !introSeen());
+  const [page, setPage] = useState<Page>(route);
   const [today, setToday] = useState(localToday);
-  const [date, setDate] = useState(() => link.day ?? localToday());
+  const [date, setDate] = useState(localToday);
   const [cracked, setCracked] = useState(crackedDays);
-  const [done, setDone] = useState<string[]>(() => loadSteps(link.day ?? localToday()));
+  const [done, setDone] = useState<string[]>(() => loadSteps(localToday()));
   const [yDone, setYDone] = useState<string[]>(() => loadSteps(shiftDate(localToday(), -1)));
   const [dismissed, setDismissed] = useState(() => load(DISMISS_KEY, (v): v is string => typeof v === "string"));
+  const [avatar, setAvatar] = useState(loadAvatar);
+  const [reminder, setReminder] = useState(loadReminder);
   const [revealing, setRevealing] = useState(false);
   const [forgetArmed, setForgetArmed] = useState(false);
+
+  // Link demos need the city list before they can build a chart.
+  useEffect(() => {
+    if (link) return;
+    loadCities().then(() => {
+      const l = fromLink();
+      setLink(l);
+      if (l.saved) setSaved(l.saved);
+      const day = l.day ?? localToday();
+      setDate(day);
+      setToday(day);
+      // ?streak=6 pretends the last six days were cracked, for screenshots
+      const n = Math.min(60, Number(linkQuery().get("streak") ?? 0) || 0);
+      if (l.saved && n) setCracked(Array.from({ length: n }, (_, i) => shiftDate(day, i - n + (l.sealed ? 0 : 1))));
+    });
+  }, [link]);
 
   useEffect(() => {
     const onHash = () => {
       setPage(route());
       window.scrollTo(0, 0);
     };
-    const onFocus = () => setToday(localToday());
+    const onFocus = () => !hasLink() && setToday(localToday());
     window.addEventListener("hashchange", onHash);
     window.addEventListener("focus", onFocus);
     return () => {
@@ -90,30 +143,48 @@ export function App() {
 
   useEffect(() => setDone(loadSteps(date)), [date]);
 
+  const endSplash = useCallback(() => {
+    setSplash(false);
+    try {
+      window.sessionStorage.setItem("fc.splash", "1");
+    } catch {
+      /* fine */
+    }
+  }, []);
+
   const profile = useMemo(() => (saved ? readChart(saved.birth, saved.person) : null), [saved]);
   const reading = useMemo(() => (profile ? readDay(profile, date) : null), [profile, date]);
   const teaser = useMemo(() => (profile ? tomorrowTeaser(profile, shiftDate(today, 1)) : null), [profile, today]);
   const streak = streakInfo(cracked, today);
+  const demo = !!link?.saved;
 
   const yesterday = shiftDate(today, -1);
   const checkIn: CheckIn = useMemo(() => {
     if (!profile || date !== today || dismissed === today || !cracked.includes(yesterday)) return null;
     const y = readDay(profile, yesterday);
-    const items = [
-      ...y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: a.step })),
-      ...(yDone.includes("try") ? [] : [{ id: "try", label: "Try this", text: y.overall.try }]),
-    ].slice(0, 3);
-    return items.length ? { date: yesterday, items } : null;
+    const items = y.areas.filter((a) => a.interested && !yDone.includes(a.id)).map((a) => ({ id: a.id, label: a.title, text: a.step }));
+    return items.length && yDone.length === 0 ? { date: yesterday, items: items.slice(0, 1) } : null;
   }, [profile, date, today, dismissed, cracked, yesterday, yDone]);
 
-  const finishOnboarding = (s: Saved) => {
+  const go = (p: Page) => {
+    if (p === "today") {
+      history.pushState("", document.title, window.location.pathname + window.location.search);
+      setPage("today");
+      window.scrollTo(0, 0);
+    } else window.location.hash = p;
+  };
+
+  const persist = (s: Saved) => {
     setSaved(s);
-    if (!link.saved) save(STORE_KEY, s);
+    if (!demo) save(STORE_KEY, s);
+  };
+
+  const finishOnboarding = (s: Saved) => {
+    persist(s);
     setCracked(markCracked(localToday()));
     setDate(localToday());
-    setEditing(false);
     setRevealing(true);
-    window.scrollTo(0, 0);
+    go("today");
     window.setTimeout(() => setRevealing(false), 1200);
   };
 
@@ -133,57 +204,70 @@ export function App() {
     setSaved(null);
     setCracked([]);
     setDone([]);
+    setAvatar(null);
+    setReminder(null);
     setForgetArmed(false);
-    window.location.hash = "";
+    setIntro(true);
+    go("today");
   };
 
-  if (!saved || !profile || !reading || !teaser) return <Onboarding initial={null} onDone={finishOnboarding} />;
-  if (editing) return <Onboarding initial={saved} onDone={finishOnboarding} onCancel={() => setEditing(false)} />;
+  if (!link) return <Splash onDone={() => undefined} />;
+  if (splash) return <Splash onDone={endSplash} />;
+  if (!saved || !profile || !reading || !teaser) {
+    if (intro)
+      return (
+        <Intro
+          onDone={() => {
+            markIntroSeen();
+            setIntro(false);
+          }}
+        />
+      );
+    return <Onboarding initial={null} onDone={finishOnboarding} />;
+  }
 
-  const sealed = date === today && !cracked.includes(today) && !(link.saved && !link.sealed);
-  const goHow = () => {
-    window.location.hash = "how";
-  };
-  const goHome = () => {
-    history.pushState("", document.title, window.location.pathname + window.location.search);
-    setPage("main");
-    window.scrollTo(0, 0);
+  const isToday = date === today;
+  const sealed = isToday && !cracked.includes(today) && !(demo && !link.sealed);
+
+  const pickDay = (d: string) => {
+    setDate(d);
+    go("today");
   };
 
   return (
-    <div className={`page ${revealing ? "is-revealing" : ""}`}>
+    <div className={`app ${revealing ? "is-revealing" : ""}`}>
       <header className="topbar">
-        <button type="button" className="brand" onClick={goHome} aria-label="Fortune Cookie, today's reading">
-          <Mark size={36} />
+        <button type="button" className="brand" onClick={() => (setDate(today), go("today"))} aria-label="Fortune Cookie, today">
+          <Mark size={32} />
           <span className="wordmark">fortune cookie</span>
         </button>
         <nav className="topnav" aria-label="Main">
-          <span className="streak-chip" title={`${streak.total} cookies cracked`}>
-            <Mark size={18} />
-            <strong>{streak.streak}</strong>
-            <span>day streak</span>
-          </span>
-          <button type="button" className="topnav-link" onClick={() => setEditing(true)}>
-            Your details
-          </button>
-          <button type="button" className={`topnav-link nav-how ${page === "how" ? "is-on" : ""}`} onClick={goHow}>
-            How it works
-          </button>
+          {TABS.filter((t) => t.id !== "me").map((t) => (
+            <button key={t.id} type="button" className={`topnav-link ${page === t.id || (t.id === "meaning" && page === "how") ? "is-on" : ""}`} onClick={() => go(t.id)}>
+              {t.label}
+            </button>
+          ))}
         </nav>
+        <button type="button" className={`me-btn ${page === "me" ? "is-on" : ""}`} onClick={() => go("me")} aria-label="Your profile">
+          <span className="streak-mini" title={`${streak.streak}-day streak`}>
+            <Mark size={16} />
+            {streak.streak}
+          </span>
+          <Avatar url={avatar} name={saved.person.name} size={36} />
+        </button>
       </header>
 
-      {page === "how" ? (
-        <HowPage profile={profile} reading={reading} onBack={goHome} />
-      ) : (
-        <main id="top">
+      <main className="main" id="top">
+        {page === "today" ? (
           <Today
             profile={profile}
             reading={reading}
             sealed={sealed}
+            isToday={isToday}
             onCrack={() => setCracked(markCracked(today))}
-            onDateChange={setDate}
-            tryDone={done.includes("try")}
-            onToggleTry={() => toggleStep("try")}
+            onBackToToday={() => setDate(today)}
+            done={done}
+            onToggle={toggleStep}
             checkIn={checkIn}
             onCheckIn={(id) => {
               const next = [...yDone, id];
@@ -194,46 +278,60 @@ export function App() {
               setDismissed(today);
               save(DISMISS_KEY, today);
             }}
+            streak={streak}
+            teaser={teaser}
+            onPickDay={pickDay}
           />
-          <Areas reading={reading} done={done.filter((d) => d !== "try")} tryDone={done.includes("try")} onToggle={toggleStep} />
-          <ComeBack streak={streak} teaser={teaser} />
-          <BiggerPicture
+        ) : page === "forecast" ? (
+          <BiggerPicture profile={profile} date={today} today={today} cracked={cracked} onPick={pickDay} onProfile={() => go("me")} />
+        ) : page === "match" ? (
+          <MatchPage profile={profile} />
+        ) : page === "me" ? (
+          <ProfilePage
             profile={profile}
-            date={date}
-            onPick={(d) => {
-              setDate(d);
-              window.scrollTo({ top: 0, behavior: "smooth" });
+            saved={saved}
+            avatar={avatar}
+            reminder={reminder}
+            onAvatar={(url) => {
+              setAvatar(url);
+              saveAvatar(url);
             }}
+            onSave={persist}
+            onReminder={setReminder}
+            onForget={forget}
+            forgetArmed={forgetArmed}
           />
-        </main>
-      )}
+        ) : page === "meaning" ? (
+          <MeaningPage profile={profile} onHow={() => go("how")} />
+        ) : (
+          <HowPage profile={profile} reading={reading} onBack={() => go("meaning")} />
+        )}
+      </main>
 
       <footer className="closing">
-        <div className="closing-inner">
-          <Mark size={64} detail />
-          <p className="closing-line">
-            We describe the weather.
-            <br />
-            <em>You choose the route.</em>
-          </p>
-          {page === "how" ? (
-            <button type="button" className="btn btn-cookie" onClick={goHome}>
-              Back to today's fortune
-            </button>
-          ) : (
-            <button type="button" className="how-link" onClick={goHow}>
-              How Fortune Cookie works, and the math behind your chart <ArrowRight />
-            </button>
-          )}
-        </div>
+        <p className="closing-line">
+          We describe the weather. <em>You choose the route.</em>
+        </p>
         <p className="fineprint">
-          Fortune Cookie is a prototype for reflection and fun. It describes conditions, never outcomes, and it isn't advice for health, money, or
-          legal decisions.{" "}
-          <button type="button" className="link-btn link-btn-night" onClick={forget}>
-            {forgetArmed ? "Tap again to erase everything" : "Forget me"}
+          <button type="button" className="link-btn" onClick={() => go("meaning")}>
+            What it means
+          </button>
+          <span aria-hidden="true">·</span>
+          <button type="button" className="link-btn" onClick={() => go("how")}>
+            How it works
           </button>
         </p>
+        <p className="fineprint">A prototype for reflection and fun. It describes conditions, never outcomes, and isn't advice for health, money, or legal decisions.</p>
       </footer>
+
+      <nav className="tabbar" aria-label="Main">
+        {TABS.map(({ id, label, Icon }) => (
+          <button key={id} type="button" className={page === id || (id === "meaning" && page === "how") ? "is-on" : ""} onClick={() => (id === "today" && setDate(today), go(id))}>
+            <Icon size={22} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

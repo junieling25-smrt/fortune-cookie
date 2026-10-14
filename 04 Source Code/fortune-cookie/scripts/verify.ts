@@ -8,8 +8,9 @@
  */
 import * as copy from "../src/engine/copy";
 import * as more from "../src/engine/copy-more";
+import * as guide from "../src/engine/copy-guide";
 import { computePillars, dayPillarForCivilDate, jdToDate, springStartJD, zonedWallClockToMs } from "../src/engine/pillars";
-import { readChart, readDay, readLife, readMonth, readYear, type BirthDetails, type Person } from "../src/engine/reading";
+import { readChart, readDay, readLife, readMatch, readMonth, readYear, type BirthDetails, type Person } from "../src/engine/reading";
 // @ts-expect-error untyped test-only dependency
 import lunar from "lunar-javascript";
 
@@ -83,7 +84,7 @@ const people: BirthDetails[] = [
 ];
 const fullPerson: Person = { name: "Maya", interests: [...AREAS], career: "job", love: "partnered", home: ["cat", "kids"], growth: "calm" };
 const seen: Record<string, Set<string>> = {
-  slip: new Set(), try: new Set(), ask: new Set(), season: new Set(), areaText: new Set(), areaTone: new Set(),
+  slip: new Set(), wear: new Set(), eat: new Set(), act: new Set(), time: new Set(), ask: new Set(), season: new Set(), areaText: new Set(), areaTone: new Set(),
   step: new Set(), core: new Set(), forYou: new Set(), year: new Set(), yearArea: new Set(), life: new Set(),
 };
 const toneCount: Record<string, number> = { flowing: 0, steady: 0, mixed: 0, gentle: 0 };
@@ -92,6 +93,7 @@ const distinctPerChart: number[] = [];
 const shortestSlipRepeat: number[] = [];
 const shortestStepRepeat: number[] = [];
 const days = 365;
+const scores: number[] = [];
 const asks: string[][] = [];
 
 const extra = Array.from({ length: 500 }, () => ({
@@ -117,7 +119,11 @@ const dates = Array.from({ length: days }, (_, k) => new Date(Date.UTC(2026, 0, 
   sampleDates.forEach((date, k) => {
     const r = readDay(profile, date);
     seen.slip.add(r.keys.slip);
-    seen.try.add(r.overall.try);
+    seen.wear.add(r.tweaks.wear.color);
+    seen.eat.add(r.tweaks.eat);
+    seen.act.add(r.tweaks.do);
+    seen.time.add(r.tweaks.time.label);
+    scores.push(r.overall.score, ...r.areas.map((a) => a.score));
     seen.ask.add(r.keys.ask);
     seen.season.add(r.keys.season);
     seen.core.add(r.personal.text);
@@ -135,7 +141,7 @@ const dates = Array.from({ length: days }, (_, k) => new Date(Date.UTC(2026, 0, 
     });
     overallCount[r.overall.tone]++;
     if (main) {
-      full.add([r.slip, r.season.text, r.overall.try, r.overall.ask, r.personal.text, ...r.areas.map((a) => a.text + a.toneLine + a.step)].join("|"));
+      full.add([r.slip, r.season.text, r.tweaks.eat, r.overall.ask, r.personal.text, ...r.areas.map((a) => a.text + a.toneLine + a.step)].join("|"));
       const last = slipDays.get(r.slip);
       if (last !== undefined) shortest = Math.min(shortest, k - last);
       slipDays.set(r.slip, k);
@@ -165,7 +171,14 @@ assert("two unrelated charts rarely share a question", sharedAsk < days * 0.1, `
 
 const count = (o: object) => JSON.stringify(o).match(/"[^"]{12,}"/g)?.length ?? 0;
 check("slip lines reached", String(seen.slip.size), String(Object.keys(copy.SLIP).length * 2));
-check("try lines reached", String(seen.try.size), String(Object.values(more.TRY).flat().length));
+check("wear colors reached", String(seen.wear.size), String(Object.values(more.TWEAK).flatMap((t) => t.wear).length));
+check("eat tweaks reached", String(seen.eat.size), String(Object.values(more.TWEAK).flatMap((t) => t.eat).length));
+check("do tweaks reached", String(seen.act.size), String(Object.values(more.TWEAK).flatMap((t) => t.do).length));
+assert("best-time windows vary", seen.time.size >= 6, [...seen.time].join(", "));
+const sorted = [...scores].sort((a, b) => a - b);
+const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))];
+console.log(`      daily numbers: min ${sorted[0]}, 10% ${q(0.1)}, median ${q(0.5)}, 90% ${q(0.9)}, max ${sorted[sorted.length - 1]}`);
+assert("daily numbers spread between 30 and 99", sorted[0] >= 28 && sorted[sorted.length - 1] <= 99 && q(0.9) - q(0.1) >= 25);
 check("ask lines reached", String(seen.ask.size), String(Object.keys(copy.ASK).length));
 check("month-theme lines reached", String(seen.season.size), String(Object.keys(copy.SEASON).length));
 check("area lines reached", String(seen.areaText.size), "40");
@@ -194,6 +207,11 @@ assert("month view covers one solar month", m.days.length >= 29 && m.days.length
 const yr = readYear(readChart(people[0], fullPerson), "2026-09-22");
 assert("year view has 12 months, one current", yr.months.length === 12 && yr.months.filter((x) => x.current).length === 1, `${yr.label} ${yr.range}`);
 
+const pair = readMatch(readChart(people[0], fullPerson), readChart(people[1]), "Sam");
+assert("compatibility gives a score and four rows", pair.score >= 34 && pair.score <= 98 && pair.rows.length === 4, `${pair.score}: ${pair.headline}`);
+const selfMatch = readMatch(readChart(people[0]), readChart(people[0]), "Me");
+assert("compatibility is stable", selfMatch.score === readMatch(readChart(people[0]), readChart(people[0]), "Me").score);
+
 // ------------------------------------------------------------------ 4
 console.log("\n--- copy lint");
 const strings: string[] = [];
@@ -204,6 +222,7 @@ const walk = (v: unknown) => {
 };
 walk(copy);
 walk(more);
+walk(guide);
 const bad = (re: RegExp) => strings.filter((s) => re.test(s));
 const rule = (name: string, re: RegExp) => {
   const hits = bad(re);

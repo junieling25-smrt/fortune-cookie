@@ -36,6 +36,21 @@ The rebuild was done in Claude Code (Anthropic's AI coding agent) in one convers
 
 > give the following: Prototype – Provide a link to your prototype, or a short video/demo showing how it works, or another clear format (please explain). Process documentation – Share the prompts you used, any code you developed (snippets or files), and a brief summary of how you iterated to reach the final version.
 
+**Prompt 3: round three feedback** (written in Chinese, summarized here in English)
+
+> 1. Most important: simplify the UI and make the text easier to read. Users say there's too much text, it repeats, and it's hard to follow. Our style is simple but rich; look at how simple Co-Star is.
+> 2. Daily score: change the four levels into a daily number.
+> 3. When the app first loads, add a very short intro to the Four Pillars calculation, where the name comes from, and our idea.
+> 4. Improve the city list (users can't find their cities) and add map interaction.
+> 5. Improve the daily reminder time list.
+> 6. Put the year animal on its own row at the top, since that's the zodiac sign people know, and the other three below.
+> 7. Don't give away every day's fortune at once. Keep it mysterious: users unlock each day by logging in. Keep the long-term forecast.
+> 8. Move "change your details" into a new profile page where users can edit their information any time and upload a photo.
+> 10. Make the daily tip more doable, like small choices such as the color of your clothes.
+> 11. The floating cookies in the background look odd. Change them and add other elements, for three kinds of floating things.
+
+The same message passed on an outside tester's notes: who the product is for, app versus web, a compatibility feature like The Pattern's, hover definitions for unfamiliar terms, a Tzolkin-style wheel, and a "What it means" page.
+
 The earlier MING project had its own prompts, recorded in `../../01 Project Submission/MING_Vibe_Coding_Project_Memo.docx`.
 
 ## 3. Code developed
@@ -104,3 +119,4 @@ rule("no “missing element” framing", /\bmissing\b|\bbroken\b|\benemy\b/i);
 5. **Packaging.** The first single-file build dropped its script, and a second attempt copied the page 24 times. Both came from quirks in how the minified code was inserted. Once fixed, the file was confirmed to run from disk with no errors.
 6. **Brand boards.** The mark system board was checked visually. Two layout issues were fixed: size labels wrapping, and the wordmark breaking onto two lines.
 7. **Documentation.** The product brief, worked example, research notes, brand system, and screenshots were written last, from the working product, so they describe what actually exists.
+8. **Round three.** The daily page was rebuilt as one column, with each area cut to two lines and a step. The four labels became a 0 to 100 score, calibrated so the median day lands near 65. The city list grew from 2,871 to about 49,000 places, built from GeoNames with a script. Region names were checked against where each region's towns actually sit, which caught a wrong province name in Algeria. The map draws the world from bundled data, so it works offline and inside the one-file build. Screenshots then caught a pop-up running off the screen edge, map labels overlapping, and dim score colors in dark mode, and each was fixed and rechecked.
