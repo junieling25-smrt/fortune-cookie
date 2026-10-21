@@ -3753,7 +3753,7 @@ select.field {
   }
 
   .topbar {
-    padding-inline: max(var(--gutter), calc((100vw - 1040px) / 2));
+    padding-inline: max(var(--gutter), calc((100% - 860px) / 2 + var(--gutter)));
   }
 
   .stage.is-sealed {
