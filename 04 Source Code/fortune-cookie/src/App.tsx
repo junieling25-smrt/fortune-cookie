@@ -79,17 +79,18 @@ function fromLink(): Link {
   return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
 }
 
-type Page = "today" | "forecast" | "match" | "walk" | "me" | "meaning" | "how";
-const PAGES: Page[] = ["today", "forecast", "match", "walk", "me", "meaning", "how"];
+type Page = "today" | "forecast" | "match" | "explore" | "me" | "meaning" | "how";
+const PAGES: Page[] = ["today", "forecast", "match", "explore", "me", "meaning", "how"];
 const route = (): Page => {
-  const h = window.location.hash.replace(/^#\/?/, "") as Page;
+  const raw = window.location.hash.replace(/^#\/?/, "");
+  const h = (raw === "walk" ? "explore" : raw) as Page; // old links said walk
   return PAGES.includes(h) ? h : "today";
 };
 const TABS: { id: Page; label: string; Icon: (p: { size?: number }) => React.JSX.Element }[] = [
   { id: "today", label: "Today", Icon: ({ size }) => <Mark size={size} /> },
   { id: "forecast", label: "Forecast", Icon: TabForecast },
   { id: "match", label: "Match", Icon: TabMatch },
-  { id: "walk", label: "Walk", Icon: TabMap },
+  { id: "explore", label: "Explore", Icon: TabMap },
   { id: "meaning", label: "Meaning", Icon: Book },
   { id: "me", label: "You", Icon: TabYou },
 ];
@@ -343,7 +344,7 @@ export function App() {
           <BiggerPicture profile={profile} date={today} today={today} cracked={cracked} onPick={pickDay} onProfile={() => go("me")} />
         ) : page === "match" ? (
           <MatchPage profile={profile} incoming={invite} onIncoming={inviteUsed} />
-        ) : page === "walk" ? (
+        ) : page === "explore" ? (
           <WalkPage profile={profile} date={today} />
         ) : page === "me" ? (
           <ProfilePage

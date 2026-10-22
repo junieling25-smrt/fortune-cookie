@@ -25,7 +25,7 @@ export const INTRO = {
       "Crack today's cookie for your fortune and a score from 0 to 100. On a phone, pull it apart.",
       "Meet your year animal, the zodiac sign most people know. It sits by your score, dresses for the season, and cheers when you try a tweak.",
       "Try small tweaks picked for your chart: a color, a food, an action, and a kind of music.",
-      "Look ahead at your year, check a match with a friend, and take a walk in the day's direction.",
+      "Look ahead at your year, check a match with a friend, and explore places in the day's direction.",
     ],
   },
 };

@@ -8,7 +8,7 @@ const STEPS: { sel: string[]; text: string }[] = [
   { sel: [".tweaks"], text: "Small tweaks are quick ways to work with the day. Tap the (i) to see why." },
   { sel: [".tabbar button:nth-child(2)", ".topnav-link:nth-child(2)"], text: "Forecast shows your month, your year, and the years ahead." },
   { sel: [".tabbar button:nth-child(3)", ".topnav-link:nth-child(3)"], text: "Match compares your chart with someone you care about." },
-  { sel: [".tabbar button:nth-child(4)", ".topnav-link:nth-child(4)"], text: "Walk finds real places in the day's direction." },
+  { sel: [".tabbar button:nth-child(4)", ".topnav-link:nth-child(4)"], text: "Explore finds real places in the day's direction." },
   { sel: [".me-btn"], text: "Your profile holds your animals, your details, and a daily reminder." },
 ];
 const STEP_MS = 1800;

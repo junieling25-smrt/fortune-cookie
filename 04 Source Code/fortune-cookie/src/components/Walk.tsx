@@ -42,7 +42,7 @@ function project(lat: number, lon: number, z: number) {
 const minutes = (m: number) => Math.max(2, Math.round((m * 1.25) / 80)); // streets wind; about 80 m a minute
 const fmtDist = (m: number) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`);
 const walkLink = (from: Spot, to: Place) =>
-  `https://www.google.com/maps/dir/?api=1&origin=${from.lat.toFixed(5)},${from.lon.toFixed(5)}&destination=${to.lat.toFixed(5)},${to.lon.toFixed(5)}&travelmode=walking`;
+  `https://www.google.com/maps/dir/?api=1&origin=${from.lat.toFixed(5)},${from.lon.toFixed(5)}&destination=${to.lat.toFixed(5)},${to.lon.toFixed(5)}${to.dist <= 1500 ? "&travelmode=walking" : ""}`;
 
 type Raw = { name: string; kind: string; lat: number; lon: number };
 const RADIUS = 2000; // meters, about a 30-minute walk at most
@@ -230,7 +230,7 @@ function Compass({ deg: d, short }: { deg: number; short: string }) {
   );
 }
 
-/** Today's joy direction, and real places that lie that way. */
+/** Explore: today's joy direction, and real places that lie that way. */
 export function WalkPage({ profile, date }: { profile: Profile; date: string }) {
   const walk = useMemo(() => readWalk(profile, date), [profile, date]);
   const [spot, setSpot] = useState<Spot | null>(null);
@@ -276,7 +276,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
   return (
     <section className="page-body" aria-labelledby="walk-title">
       <header className="page-head">
-        <p className="eyebrow">Walk</p>
+        <p className="eyebrow">Explore</p>
         <h1 id="walk-title">Head {walk.dir.toLowerCase()} today</h1>
         <p className="lede">Real places in the day's direction, picked for your element.</p>
       </header>
@@ -303,7 +303,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
               </p>
             ) : null}
             {found?.status === "done" && !places.length ? (
-              <p className="muted">Nothing like that on the map {walk.dir.toLowerCase()} of you. A walk that way still counts.</p>
+              <p className="muted">Nothing like that on the map {walk.dir.toLowerCase()} of you. Heading that way still counts.</p>
             ) : null}
             <ol className="walk-list">
               {places.map((p, i) => (
@@ -313,12 +313,13 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
                     <span className="walk-name">
                       {p.name}
                       <span className="muted small">
-                        {p.kind} · {fmtDist(p.dist)} · about {minutes(p.dist)} min
+                        {p.kind} · {fmtDist(p.dist)}
+                        {p.dist <= 1500 ? ` · ${minutes(p.dist)} min on foot` : ""}
                       </span>
                     </span>
                   </button>
                   <a className="btn btn-soft btn-small" href={walkLink(spot, p)} target="_blank" rel="noreferrer">
-                    Walk there ↗
+                    Directions ↗
                   </a>
                 </li>
               ))}
