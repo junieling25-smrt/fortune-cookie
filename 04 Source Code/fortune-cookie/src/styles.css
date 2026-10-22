@@ -4628,7 +4628,7 @@ select.field {
   --sky-b: #f3eefa;
   --sky-glow: rgba(187, 167, 244, 0.22);
   --sky-glow-at: 80% -10%;
-  --cloud-line: rgba(196, 140, 52, 0.38);
+  --cloud-line: rgba(122, 90, 224, 0.26);
 }
 
 :root[data-sky="morning"] {
@@ -4651,7 +4651,7 @@ select.field {
     --sky-b: #1a1036;
     --sky-glow: rgba(120, 90, 220, 0.28);
     --sky-glow-at: 75% -10%;
-    --cloud-line: rgba(242, 176, 74, 0.24);
+    --cloud-line: rgba(203, 184, 255, 0.2);
   }
 }
 
@@ -4660,7 +4660,7 @@ select.field {
   --sky-b: #1a1036;
   --sky-glow: rgba(120, 90, 220, 0.28);
   --sky-glow-at: 75% -10%;
-  --cloud-line: rgba(242, 176, 74, 0.24);
+  --cloud-line: rgba(203, 184, 255, 0.2);
 }
 
 .sky {
@@ -4712,8 +4712,8 @@ select.field {
   }
 
   .sky-cloud-art {
-    width: 80px;
-    height: 45px;
+    width: 64px;
+    height: 36px;
   }
 }
 

@@ -88,11 +88,11 @@ function Cloud({ w, flip }: { w: number; flip?: boolean }) {
 
 /** Hand-placed in the gaps between the floating slips, moons, and sparkles. */
 const CLOUDS: { x: number; y: number; w: number; flip?: boolean; wide?: boolean }[] = [
-  { x: 1, y: 22, w: 118 },
-  { x: 88.5, y: 34, w: 110, flip: true },
-  { x: 1.5, y: 62, w: 100, wide: true },
-  { x: 89, y: 71, w: 116, flip: true, wide: true },
-  { x: 10.5, y: 86, w: 84, wide: true },
+  { x: 2, y: 23, w: 88 },
+  { x: 89.5, y: 35, w: 82, flip: true },
+  { x: 2.5, y: 63, w: 76, wide: true },
+  { x: 90, y: 72, w: 86, flip: true, wide: true },
+  { x: 11, y: 86, w: 68, wide: true },
 ];
 
 /**
