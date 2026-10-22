@@ -9,6 +9,7 @@
 import * as copy from "../src/engine/copy";
 import * as more from "../src/engine/copy-more";
 import * as guide from "../src/engine/copy-guide";
+import { readFileSync } from "node:fs";
 import { computePillars, dayPillarForCivilDate, jdToDate, springStartJD, zonedWallClockToMs } from "../src/engine/pillars";
 import { readChart, readDay, readLife, readMatch, readMonth, readYear, readYears, type BirthDetails, type Person } from "../src/engine/reading";
 // @ts-expect-error untyped test-only dependency
@@ -240,6 +241,13 @@ rule("no fortune-teller future tense", /\b(will|destined|fate|doomed)\b/i);
 rule("no luck talk", /\b(lucky|unlucky|bad luck|good luck)\b/i);
 rule("no “missing element” framing", /\bmissing\b|\bbroken\b|\benemy\b/i);
 rule("no “it's not X, it's Y”", /\b(it'?s|this is) not\b[^.]*\b(it'?s|but)\b/i);
+
+// ------------------------------------------------------------------ 5
+console.log("\n--- visual regression guards");
+const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+const slipRule = css.match(/\.slip\s*\{[\s\S]*?\n\}/)?.[0] ?? "";
+assert("fortune slip does not mask its tooltip", !/\b(?:-webkit-)?mask\s*:/.test(slipRule));
+assert("fortune slip keeps painted paper notches", /\.slip::before\s*,\s*\n\.slip::after\s*\{/.test(css));
 
 console.log(fail === 0 ? "\nALL CHECKS PASSED" : `\n${fail} CHECK(S) FAILED`);
 process.exit(fail === 0 ? 0 : 1);
