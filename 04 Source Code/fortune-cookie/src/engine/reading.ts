@@ -78,6 +78,10 @@ import {
   MATCH_HEADLINE,
   MATCH_TIP,
   MATCH_YEAR,
+  MATCH_REL_LINE,
+  BRIDGE_LINE,
+  BRIDGE_DO,
+  type MatchRel,
   STEPS,
   TOMORROW,
   TWEAK,
@@ -87,6 +91,8 @@ import {
   WALK_DIRS,
   WALK_NOTE,
   WALK_PLACES,
+  EAT_PLACES,
+  type ExploreItem,
   YEAR,
   YEAR_AREA,
   YEAR_LINK,
@@ -103,7 +109,9 @@ import {
 
 export type { AreaId, Tone } from "./copy";
 export { AREA_META, FAMILY_NAME, PILLAR_META, TONE_LABEL } from "./copy";
-export type { CareerCtx, GrowthCtx, HomeCtx, LoveCtx } from "./copy-more";
+export type { CareerCtx, GrowthCtx, HomeCtx, LoveCtx, MatchRel } from "./copy-more";
+export { MATCH_REL_LABEL, EXPLORE } from "./copy-more";
+export type { ExploreItem, ExploreCat } from "./copy-more";
 
 export const AREAS: AreaId[] = ["growth", "career", "love", "family"];
 
@@ -702,6 +710,8 @@ function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: Elem
 export type MatchReading = {
   score: number;
   tone: Tone;
+  rel: MatchRel;
+  bridge: { element: ElementName; score: number; text: string; ideas: string[] };
   them: { name: string; core: ElementName; yang: boolean; nick: string; title: string; yearAnimal: string; dayAnimal: string };
   headline: string;
   rows: { label: string; text: string }[];
@@ -714,24 +724,60 @@ const bondOf = (a: number, b: number): Bond => {
   return r !== "none" ? r : TRINE(a, b) ? "trine" : "none";
 };
 
-/** How two charts get along, read from core elements, day animals, and year animals. */
-export function readMatch(me: Profile, other: Profile, name: string): MatchReading {
+/**
+ * Each kind of bond leans on a different part of the chart: partners on the day
+ * pillar (the spouse palace), friends on the year pillar (your social circle),
+ * family on the year and month pillars (roots), coworkers on the month pillar
+ * (the career palace). The element relation is weighed for that bond too.
+ */
+const REL_WEIGHTS: Record<MatchRel, { fam: Record<Family, number>; day: number; year: number; month: number; yinYang: number }> = {
+  partner: { fam: { nurture: 10, company: 5, expression: 7, harvest: 4, structure: -2 }, day: 1.3, year: 0.5, month: 0.2, yinYang: 4 },
+  friend: { fam: { nurture: 7, company: 10, expression: 8, harvest: 2, structure: -3 }, day: 0.6, year: 1, month: 0.3, yinYang: 1 },
+  family: { fam: { nurture: 12, company: 6, expression: 5, harvest: 3, structure: 0 }, day: 0.4, year: 1, month: 0.8, yinYang: 1 },
+  work: { fam: { nurture: 5, company: 6, expression: 6, harvest: 8, structure: 5 }, day: 0.4, year: 0.3, month: 1.2, yinYang: 1 },
+};
+const BOND_PTS: Record<Bond, number> = { harmony: 11, trine: 8, echo: 3, none: 0, clash: -9 };
+/** Raw points over 2,000 random pairs, per bond, so every bond sits on the same scale. */
+const REL_STATS: Record<MatchRel, { mean: number; sd: number }> = {
+  partner: { mean: 71.1, sd: 9.1 },
+  friend: { mean: 69.4, sd: 8.2 },
+  family: { mean: 70.2, sd: 8.4 },
+  work: { mean: 70.6, sd: 7.2 },
+};
+
+export function matchRaw(me: Profile, other: Profile, rel: MatchRel): number {
+  const w = REL_WEIGHTS[rel];
+  const fam = familyOf(me.core.element, other.core.element);
+  const b = (k: "day" | "year" | "month") => BOND_PTS[bondOf(me.chart[k].branchIdx, other.chart[k].branchIdx)];
+  const fills = other.most === me.helpful.element ? 6 : 0;
+  return 60 + w.fam[fam] + w.day * b("day") + w.year * b("year") + w.month * b("month") + fills + (me.core.yang !== other.core.yang ? w.yinYang : 0);
+}
+
+/** No match is a bad one, so the floor sits a little higher than the daily scale's. */
+const matchScore = (raw: number, rel: MatchRel) => Math.max(65, fromZ((raw - REL_STATS[rel].mean) / REL_STATS[rel].sd));
+
+/** How two charts get along for one kind of bond, plus the element that brings them closer. */
+export function readMatch(me: Profile, other: Profile, name: string, rel: MatchRel = "friend"): MatchReading {
   const myEl = me.core.element;
   const theirEl = other.core.element;
   const fam = familyOf(myEl, theirEl);
   const day = bondOf(me.chart.day.branchIdx, other.chart.day.branchIdx);
   const year = bondOf(me.chart.year.branchIdx, other.chart.year.branchIdx);
-  const FAM_PTS: Record<Family, number> = { nurture: 10, company: 6, expression: 6, harvest: 3, structure: -3 };
-  const BOND_PTS: Record<Bond, number> = { harmony: 11, trine: 8, echo: 3, none: 0, clash: -9 };
-  const fills = other.most === me.helpful.element ? 6 : 0;
-  const raw = 60 + FAM_PTS[fam] + BOND_PTS[day] + 0.8 * BOND_PTS[year] + fills + (me.core.yang !== other.core.yang ? 3 : 0);
-  // Same scale as everything else: raw match points average about 70 with a spread of about 8.
-  const score = fromZ((raw - 70) / 8);
+  const raw = matchRaw(me, other, rel);
+  const score = matchScore(raw, rel);
   const tone = toneOfNumber(score);
   const nick = CORE_NICK[`${theirEl}.${yy(other.core.yang)}`];
+  // Bridging element: when one element checks the other, the one in between
+  // (fed by the first, feeding the second) eases it. Otherwise, your helper.
+  const between = fam === "structure" ? elementOfFamily(theirEl, "expression") : fam === "harvest" ? elementOfFamily(myEl, "expression") : null;
+  const bridgeEl = between ?? me.helpful.element;
+  const lift = (between ? 9 : 5) + (day === "clash" ? 3 : 0);
+  const bridgeScore = Math.max(score + 3, Math.min(97, matchScore(raw + lift, rel)));
+  const fills = other.most === me.helpful.element;
   return {
     score,
     tone,
+    rel,
     them: {
       name,
       core: theirEl,
@@ -742,7 +788,9 @@ export function readMatch(me: Profile, other: Profile, name: string): MatchReadi
       dayAnimal: other.chart.day.branch.animal,
     },
     headline: MATCH_HEADLINE[tone],
+    bridge: { element: bridgeEl, score: bridgeScore, text: fill(between ? BRIDGE_LINE.between : BRIDGE_LINE.shared, { bridge: bridgeEl }), ideas: BRIDGE_DO[bridgeEl] },
     rows: [
+      { label: "For this bond", text: MATCH_REL_LINE[rel][tone] },
       { label: "How they feel to you", text: fill(MATCH_FAM[fam], { them: nick, you: me.core.nick }) },
       { label: "Day to day", text: MATCH_DAY[day] },
       { label: `${me.chart.year.branch.animal} and ${other.chart.year.branch.animal}`, text: MATCH_YEAR[year] },
@@ -1000,7 +1048,18 @@ export function readLife(profile: Profile): LifeReading {
 
 // ------------------------------------------------------------ a walk
 
-export type Walk = { dir: string; short: string; deg: number; element: ElementName; note: string; places: { label: string; phrase: string; tags: string[] }[] };
+export type Walk = {
+  dir: string;
+  short: string;
+  deg: number;
+  element: ElementName;
+  note: string;
+  places: { label: string; phrase: string; tags: string[] }[];
+  /** Today's "Eat" tweak, and the kinds of kitchens that serve it. */
+  eat: { text: string; items: ExploreItem[] };
+  /** Places that carry the day's helpful element. */
+  mine: ExploreItem[];
+};
 
 /**
  * The almanac's joy direction for the day, from the day's stem (Jia and Ji
@@ -1011,5 +1070,13 @@ export function readWalk(profile: Profile, date: string): Walk {
   const r = readDay(profile, date);
   const d = WALK_DIRS[r.today.stemIdx % 5];
   const el = r.tweaks.element;
-  return { ...d, element: el, note: fill(WALK_NOTE, { dir: d.dir.toLowerCase(), el }), places: WALK_PLACES[el] };
+  const mine = WALK_PLACES[el].map((p) => ({ label: p.label, phrase: p.phrase, el, osm: p.tags.map((t) => `["${t.split("=")[0]}"="${t.split("=")[1]}"]`) }));
+  return {
+    ...d,
+    element: el,
+    note: fill(WALK_NOTE, { dir: d.dir.toLowerCase(), el }),
+    places: WALK_PLACES[el],
+    eat: { text: r.tweaks.eat, items: EAT_PLACES[r.tweaks.eat] ?? [] },
+    mine,
+  };
 }

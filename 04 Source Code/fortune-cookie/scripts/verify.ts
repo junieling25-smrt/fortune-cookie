@@ -214,8 +214,10 @@ for (const n of [3, 5, 10]) {
 assert("year view has 12 months, one current", yr.months.length === 12 && yr.months.filter((x) => x.current).length === 1, `${yr.label} ${yr.range}`);
 
 const pair = readMatch(readChart(people[0], fullPerson), readChart(people[1]), "Sam");
-assert("compatibility gives a score and four rows", pair.score >= 50 && pair.score <= 99 && pair.rows.length === 4, `${pair.score}: ${pair.headline}`);
+assert("compatibility gives a score and four rows", pair.score >= 50 && pair.score <= 99 && pair.rows.length === 5, `${pair.score}: ${pair.headline}`);
 const selfMatch = readMatch(readChart(people[0]), readChart(people[0]), "Me");
+const bonds = (["partner", "friend", "family", "work"] as const).map((r) => readMatch(readChart(people[0], fullPerson), readChart(people[1]), "Sam", r));
+assert("each bond reads its own way, never below 65, and the bridge only lifts", bonds.every((m) => m.score >= 65 && m.bridge.score > m.score) && new Set(bonds.map((m) => m.rows[0].text)).size === 4, bonds.map((m) => `${m.rel} ${m.score}->${m.bridge.score}`).join(", "));
 assert("compatibility is stable", selfMatch.score === readMatch(readChart(people[0]), readChart(people[0]), "Me").score);
 
 // ------------------------------------------------------------------ 4

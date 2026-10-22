@@ -4811,3 +4811,90 @@ select.field {
   background: var(--lilac-soft);
   color: var(--ink);
 }
+
+/* match: the kind of bond, and the element that brings two charts closer */
+.match-bond {
+  display: grid;
+  gap: 6px;
+  margin-block: 4px 8px;
+}
+
+.bridge {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--el, var(--lilac)) 22%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--el, var(--lilac)) 45%, transparent);
+}
+
+.bridge[data-el="Wood"] { --el: var(--wood); }
+.bridge[data-el="Fire"] { --el: var(--fire); }
+.bridge[data-el="Earth"] { --el: var(--earth); }
+.bridge[data-el="Metal"] { --el: var(--metal); }
+.bridge[data-el="Water"] { --el: var(--water); }
+
+.bridge-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 17px;
+}
+
+.bridge-score > span:first-child {
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.bridge-score strong {
+  font-size: 20px;
+}
+
+.bridge-ideas {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 4px;
+}
+
+/* explore: kinds of places, a refresh, and the suits-today tag */
+.explore-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0 6px;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .explore-cats {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.explore-cats .chip-btn {
+  flex: none;
+}
+
+.walk-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.suits {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--flowing);
+  color: var(--flowing-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.7;
+  white-space: nowrap;
+}

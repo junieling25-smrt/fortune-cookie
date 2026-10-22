@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ANIMAL_INFO } from "../engine/copy-guide";
-import { readChart, readMatch, validateBirth, type BirthDetails, type Profile } from "../engine/reading";
+import { MATCH_REL_LABEL, readChart, readMatch, validateBirth, type BirthDetails, type MatchRel, type Profile } from "../engine/reading";
 import { inviteLink, isBirthDetails, load, save, type Invite } from "../lib";
 import { DateFields, TimeFields } from "./DateTimeFields";
 import { Close, Copy } from "./Icons";
@@ -8,7 +8,8 @@ import { PlaceField, type Place } from "./PlaceField";
 import { ScoreRing } from "./Score";
 import { Term } from "./Term";
 
-type Person = { name: string; birth: BirthDetails };
+type Person = { name: string; birth: BirthDetails; rel?: MatchRel };
+const RELS: MatchRel[] = ["partner", "friend", "family", "work"];
 const KEY = "fc.people";
 const isPeople = (v: unknown): v is Person[] =>
   Array.isArray(v) && v.every((p) => p && typeof p === "object" && typeof (p as Person).name === "string" && isBirthDetails((p as Person).birth));
@@ -66,7 +67,28 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
     onIncoming();
   }, [incoming, onIncoming]);
 
-  const result = useMemo(() => (current ? readMatch(profile, readChart(current.birth), current.name) : null), [profile, current]);
+  const [rel, setRel] = useState<MatchRel>("friend");
+  const result = useMemo(() => (current ? readMatch(profile, readChart(current.birth), current.name, current.rel ?? "friend") : null), [profile, current]);
+
+  /** Change what someone is to you; the match is read again for that bond. */
+  const setBond = (r: MatchRel) => {
+    if (!current) return;
+    const p = { ...current, rel: r };
+    const next = people.map((x) => (x === current ? p : x));
+    setPeople(next);
+    save(KEY, next);
+    setCurrent(p);
+  };
+
+  const relChips = (value: MatchRel, onPick: (r: MatchRel) => void) => (
+    <div className="chips" role="radiogroup" aria-label="What they are to you">
+      {RELS.map((r) => (
+        <button key={r} type="button" role="radio" aria-checked={value === r} className={`chip-btn ${value === r ? "is-on" : ""}`} onClick={() => onPick(r)}>
+          {MATCH_REL_LABEL[r]}
+        </button>
+      ))}
+    </div>
+  );
 
   const add = () => {
     const mine = profile.birth;
@@ -81,7 +103,7 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
     };
     const e = validateBirth(birth);
     if (e) return setError(e.replace("your", "their").replace("Your", "Their"));
-    const p = { name: name.trim().slice(0, 30) || "Them", birth };
+    const p = { name: name.trim().slice(0, 30) || "Them", birth, rel };
     const next = [p, ...people.filter((x) => x.name !== p.name)].slice(0, 8);
     setPeople(next);
     save(KEY, next);
@@ -149,6 +171,10 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
           }}
           noValidate
         >
+          <div className="field-label">
+            They are your
+            {relChips(rel, setRel)}
+          </div>
           <label className="field-label">
             Their name
             <input className="field" value={name} maxLength={30} placeholder="Or a nickname" onChange={(e) => setName(e.target.value)} />
@@ -207,6 +233,10 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
               </p>
             </div>
           </div>
+          <div className="match-bond">
+            <span className="label">They are your</span>
+            {relChips(result.rel, setBond)}
+          </div>
           <dl className="match-rows">
             {result.rows.map((r) => (
               <div key={r.label}>
@@ -215,6 +245,22 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
               </div>
             ))}
           </dl>
+          <section className="bridge" data-el={result.bridge.element}>
+            <p className="label">Bring it closer</p>
+            <p className="bridge-score">
+              <span>Now {result.score}</span>
+              <span aria-hidden="true">→</span>
+              <strong>
+                {result.bridge.score} with more <Term tip={result.bridge.text}>{result.bridge.element}</Term>
+              </strong>
+            </p>
+            <p className="muted small">{result.bridge.text}</p>
+            <ul className="bridge-ideas">
+              {result.bridge.ideas.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
+          </section>
           <div className="invite-row">
             <span className="muted small">Want {result.them.name} to see this too?</span>
             <InviteButton profile={profile} label={`Send ${result.them.name} my link`} />

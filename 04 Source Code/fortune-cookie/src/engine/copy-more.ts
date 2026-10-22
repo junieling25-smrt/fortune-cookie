@@ -728,7 +728,7 @@ export const WALK_DIRS: { dir: string; short: string; deg: number }[] = [
 ];
 
 export const WALK_NOTE =
-  "Old Chinese almanacs name a joy direction for every day, set by the day's stem. Today it points {dir}. {el} is your helpful element today, so we look for places that carry it.";
+  "Old Chinese almanacs name a joy direction for every day, set by the day's stem. Today it points {dir}, and {el} is your helpful element.";
 
 /** Places to look for, by element: the OpenStreetMap tags that find them, and a plain search phrase as a backup. */
 export const WALK_PLACES: Record<ElementName, { label: string; phrase: string; tags: string[] }[]> = {
@@ -762,6 +762,112 @@ export const WALK_PLACES: Record<ElementName, { label: string; phrase: string; t
     { label: "Aquarium", phrase: "aquarium", tags: ["tourism=aquarium"] },
     { label: "Swimming pool", phrase: "swimming pool", tags: ["leisure=swimming_pool", "leisure=water_park"] },
   ],
+};
+
+/**
+ * Explore: kinds of places, sorted by what you feel like doing. Each place
+ * carries an element, so the ones that suit today can be marked. osm holds
+ * OpenStreetMap tag filters; phrase is a plain search as a backup.
+ */
+export type ExploreItem = { label: string; osm: string[]; phrase: string; el: ElementName };
+export type ExploreCat = { id: string; label: string; items: ExploreItem[] };
+
+const FOOD = '["amenity"~"^(restaurant|fast_food|cafe|food_court)$"]';
+const dish = (label: string, cuisine: string, phrase: string, el: ElementName): ExploreItem => ({ label, osm: [`${FOOD}["cuisine"~"${cuisine}"]`], phrase, el });
+
+export const EXPLORE: ExploreCat[] = [
+  {
+    id: "coffee",
+    label: "Coffee & tea",
+    items: [
+      { label: "Cafe", osm: ['["amenity"="cafe"]'], phrase: "cafe", el: "Fire" },
+      { label: "Tea house", osm: ['["shop"="tea"]', '["cuisine"~"tea|bubble_tea"]'], phrase: "tea", el: "Wood" },
+      { label: "Dessert", osm: ['["shop"~"^(pastry|confectionery|chocolate)$"]', '["amenity"="ice_cream"]'], phrase: "dessert", el: "Earth" },
+    ],
+  },
+  {
+    id: "fitness",
+    label: "Fitness",
+    items: [
+      { label: "Gym", osm: ['["leisure"="fitness_centre"]'], phrase: "gym", el: "Fire" },
+      { label: "Yoga", osm: ['["sport"="yoga"]'], phrase: "yoga", el: "Water" },
+      { label: "Climbing", osm: ['["sport"="climbing"]'], phrase: "climbing gym", el: "Wood" },
+      { label: "Pool", osm: ['["leisure"="swimming_pool"]["access"!="private"]', '["leisure"="sports_centre"]["sport"="swimming"]'], phrase: "swimming pool", el: "Water" },
+    ],
+  },
+  {
+    id: "culture",
+    label: "Culture",
+    items: [
+      { label: "Museum", osm: ['["tourism"="museum"]'], phrase: "museum", el: "Metal" },
+      { label: "Gallery", osm: ['["tourism"="gallery"]', '["shop"="art"]'], phrase: "art gallery", el: "Metal" },
+      { label: "Bookstore", osm: ['["shop"="books"]'], phrase: "bookshop", el: "Wood" },
+      { label: "Library", osm: ['["amenity"="library"]'], phrase: "library", el: "Water" },
+    ],
+  },
+  {
+    id: "nature",
+    label: "Nature",
+    items: [
+      { label: "Park", osm: ['["leisure"="park"]'], phrase: "park", el: "Wood" },
+      { label: "Garden", osm: ['["leisure"="garden"]'], phrase: "garden", el: "Wood" },
+      { label: "Waterfront", osm: ['["natural"="water"]', '["leisure"="marina"]', '["amenity"="fountain"]'], phrase: "fountain", el: "Water" },
+      { label: "Viewpoint", osm: ['["tourism"="viewpoint"]'], phrase: "viewpoint", el: "Earth" },
+    ],
+  },
+  {
+    id: "care",
+    label: "Self care",
+    items: [
+      { label: "Hair salon", osm: ['["shop"="hairdresser"]'], phrase: "hairdresser", el: "Metal" },
+      { label: "Nails and beauty", osm: ['["shop"="beauty"]'], phrase: "nail salon", el: "Fire" },
+      { label: "Massage and spa", osm: ['["shop"="massage"]', '["leisure"~"^(sauna|spa)$"]'], phrase: "massage", el: "Water" },
+    ],
+  },
+  {
+    id: "night",
+    label: "Night out",
+    items: [
+      { label: "Bar", osm: ['["amenity"~"^(bar|pub)$"]'], phrase: "bar", el: "Water" },
+      { label: "Cinema", osm: ['["amenity"="cinema"]'], phrase: "cinema", el: "Fire" },
+      { label: "Theater", osm: ['["amenity"="theatre"]'], phrase: "theatre", el: "Fire" },
+      { label: "Live music", osm: ['["amenity"~"^(nightclub|music_venue)$"]'], phrase: "live music", el: "Fire" },
+    ],
+  },
+];
+
+/** Where to find each "Eat" tweak: the kinds of kitchens that serve it. */
+export const EAT_PLACES: Record<string, ExploreItem[]> = {
+  "Something green with lunch": [dish("Salad bar", "salad|vegetarian|vegan", "salad", "Wood")],
+  "A squeeze of lemon in your water": [dish("Juice bar", "juice|smoothie", "juice bar", "Wood")],
+  "A handful of leafy greens": [dish("Salad bar", "salad|vegetarian|vegan", "salad", "Wood")],
+  "Green tea instead of one coffee": [{ label: "Tea house", osm: ['["shop"="tea"]', '["cuisine"~"tea|bubble_tea"]'], phrase: "tea", el: "Wood" }],
+  "Something sour, like yogurt or a pickle": [dish("Frozen yogurt", "frozen_yogurt", "frozen yogurt", "Wood"), dish("Korean", "korean", "korean restaurant", "Wood")],
+  "A crunchy salad": [dish("Salad bar", "salad|vegetarian|vegan", "salad", "Wood")],
+  "Something warm and a little spicy": [dish("Thai", "thai", "thai restaurant", "Fire"), dish("Sichuan", "sichuan|szechuan|hunan", "sichuan restaurant", "Fire"), dish("Indian", "indian", "indian restaurant", "Fire"), dish("Mexican", "mexican", "mexican restaurant", "Fire")],
+  "A square of dark chocolate": [{ label: "Chocolate shop", osm: ['["shop"~"^(chocolate|confectionery)$"]'], phrase: "chocolate", el: "Fire" }],
+  "Tomatoes or red peppers": [dish("Italian", "italian|pizza", "italian restaurant", "Fire")],
+  "A bowl of berries or cherries": [dish("Smoothie bar", "juice|smoothie|acai", "smoothie", "Fire")],
+  "A hot tea, sipped slowly": [{ label: "Tea house", osm: ['["shop"="tea"]', '["cuisine"~"tea|bubble_tea"]'], phrase: "tea", el: "Fire" }],
+  "Something grilled or toasted": [dish("Barbecue", "barbecue|bbq|korean|steak_house|grill", "barbecue", "Fire"), dish("Burgers", "burger", "burger", "Fire")],
+  "Rice, oats, or another comfort grain": [dish("Chinese", "chinese|cantonese|dim_sum", "chinese restaurant", "Earth"), dish("Japanese", "japanese|donburi", "japanese restaurant", "Earth")],
+  "A roasted sweet potato or pumpkin": [dish("Brunch", "breakfast|brunch", "brunch", "Earth")],
+  "A spoon of honey in something warm": [{ label: "Cafe", osm: ['["amenity"="cafe"]'], phrase: "cafe", el: "Earth" }],
+  "Corn, carrots, or squash": [dish("Mexican", "mexican|tex-mex", "mexican restaurant", "Earth")],
+  "One home-cooked meal, sitting down": [{ label: "Grocery", osm: ['["shop"~"^(supermarket|greengrocer)$"]'], phrase: "grocery", el: "Earth" }],
+  "A banana and a few nuts": [{ label: "Grocery", osm: ['["shop"~"^(supermarket|greengrocer)$"]'], phrase: "grocery", el: "Earth" }],
+  "A crisp pear or apple": [{ label: "Fruit market", osm: ['["shop"="greengrocer"]', '["amenity"="marketplace"]'], phrase: "greengrocer", el: "Metal" }],
+  "Something with ginger or garlic": [dish("Chinese", "chinese|cantonese|sichuan", "chinese restaurant", "Metal"), dish("Korean", "korean", "korean restaurant", "Metal"), dish("Vietnamese", "vietnamese", "vietnamese restaurant", "Metal")],
+  "Radish, cauliflower, or white beans": [dish("Mediterranean", "mediterranean|middle_eastern|lebanese|greek|turkish", "mediterranean restaurant", "Metal")],
+  "A plain bowl of rice": [dish("Japanese", "japanese|donburi", "japanese restaurant", "Metal"), dish("Chinese", "chinese|cantonese", "chinese restaurant", "Metal")],
+  "Peppermint tea": [{ label: "Tea house", osm: ['["shop"="tea"]', '["cuisine"~"tea|bubble_tea"]'], phrase: "tea", el: "Metal" }],
+  "Something fresh and crunchy, like cucumber": [dish("Vietnamese", "vietnamese", "vietnamese restaurant", "Metal"), dish("Salad bar", "salad|vegetarian", "salad", "Metal")],
+  "A bowl of soup or broth": [dish("Ramen", "ramen|noodle", "ramen", "Water"), dish("Pho", "vietnamese|pho", "pho", "Water")],
+  "Black beans or black sesame": [dish("Latin", "mexican|cuban|brazilian|latin_american", "mexican restaurant", "Water")],
+  "Blueberries or blackberries": [dish("Smoothie bar", "juice|smoothie|acai", "smoothie", "Water")],
+  "Seaweed snacks or sushi": [dish("Sushi", "sushi|japanese", "sushi", "Water")],
+  "An extra big glass of water": [dish("Juice bar", "juice|smoothie", "juice bar", "Water")],
+  "Miso soup": [dish("Japanese", "japanese|ramen|sushi", "japanese restaurant", "Water")],
 };
 
 // ------------------------------------------------------------ compatibility
@@ -805,6 +911,53 @@ export const MATCH_TIP: Record<Family | "fills", string> = {
   harvest: "Ask what they need before you fix it.",
   structure: "When they push, ask what they're aiming for.",
   fills: "They carry the element that balances your chart. Shared routines suit you two.",
+};
+
+export type MatchRel = "partner" | "friend" | "family" | "work";
+
+export const MATCH_REL_LABEL: Record<MatchRel, string> = { partner: "Partner or crush", friend: "Friend", family: "Family", work: "Coworker" };
+
+/** What the match means for this kind of bond. */
+export const MATCH_REL_LINE: Record<MatchRel, Record<"flowing" | "steady" | "mixed" | "gentle", string>> = {
+  partner: {
+    flowing: "As a couple, the pull is natural. Attraction and ease tend to show up together.",
+    steady: "As a couple, it's comfortable. The spark grows with time spent side by side.",
+    mixed: "As a couple, there's chemistry and some friction. Talking things through early keeps it sweet.",
+    gentle: "As a couple, your rhythms differ. Slow, patient attention goes a long way here.",
+  },
+  friend: {
+    flowing: "As friends, you click fast. Plans come together without much effort.",
+    steady: "As friends, you're easy company. The kind of friend you can call on a quiet day.",
+    mixed: "As friends, you see things differently, which keeps it interesting. Pick shared plans with care.",
+    gentle: "As friends, you move at different speeds. Small, regular check-ins work better than big plans.",
+  },
+  family: {
+    flowing: "As family, care flows both ways. You tend to feel at home around each other.",
+    steady: "As family, it's a steady bond. Shared routines hold it together.",
+    mixed: "As family, love is there with some old patterns. A little patience softens them.",
+    gentle: "As family, you speak different languages of care. Say plainly what helps you.",
+  },
+  work: {
+    flowing: "As coworkers, you divide the work well and push each other forward.",
+    steady: "As coworkers, you're reliable together. Clear roles keep it smooth.",
+    mixed: "As coworkers, you approach tasks differently. Agree on who decides what.",
+    gentle: "As coworkers, your styles are far apart. Written plans save a lot of back and forth.",
+  },
+};
+
+/** The element between two pulling elements, or the one that steadies both. */
+export const BRIDGE_LINE = {
+  between: "Your elements pull against each other a little. In the five-element cycle, {bridge} sits between them, so it turns that push into flow. Old texts call this a bridging element.",
+  shared: "{bridge} is the element that steadies you both. Sharing more of it brings you closer.",
+};
+
+/** Things to do together that carry each element. */
+export const BRIDGE_DO: Record<ElementName, string[]> = {
+  Wood: ["Take a walk in a park together", "Repot a plant or pick one out together", "Swap a book you each love"],
+  Fire: ["Go see live music or a show", "Cook something warm and spicy together", "Watch a sunset side by side"],
+  Earth: ["Cook a slow home meal together", "Bake something and share it", "Start one small routine you both keep"],
+  Metal: ["Visit a museum or gallery together", "Clear out a shelf or closet together", "Make one plan with clear steps"],
+  Water: ["Take a quiet walk by the water", "Have a long, unhurried talk", "Go for a swim together"],
 };
 
 // ------------------------------------------------------------ the bigger picture

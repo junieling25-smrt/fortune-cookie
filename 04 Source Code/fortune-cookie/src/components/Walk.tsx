@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { readWalk, type Profile, type Walk } from "../engine/reading";
+import { EXPLORE, readWalk, type ExploreItem, type Profile, type Walk } from "../engine/reading";
 
 type Spot = { lat: number; lon: number };
-type Place = { name: string; kind: string; lat: number; lon: number; dist: number; off: number };
+type Place = { name: string; kind: string; el: string; lat: number; lon: number; dist: number; off: number };
 type Found = { status: "loading" | "done" | "error"; list: Place[] };
 
 const TILE = 256;
@@ -44,7 +44,7 @@ const fmtDist = (m: number) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(
 const walkLink = (from: Spot, to: Place) =>
   `https://www.google.com/maps/dir/?api=1&origin=${from.lat.toFixed(5)},${from.lon.toFixed(5)}&destination=${to.lat.toFixed(5)},${to.lon.toFixed(5)}${to.dist <= 1500 ? "&travelmode=walking" : ""}`;
 
-type Raw = { name: string; kind: string; lat: number; lon: number };
+type Raw = { name: string; kind: string; el: string; lat: number; lon: number };
 const RADIUS = 2000; // meters, about a 30-minute walk at most
 
 /** One fetch with its own time limit, also stopped when the page moves on. */
@@ -63,45 +63,53 @@ async function getJson<T>(url: string, signal: AbortSignal, ms: number): Promise
   }
 }
 
-/** First choice: one Overpass query for every kind of place, by OpenStreetMap tag. */
-async function fromOverpass(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Raw[]> {
-  // Only ask inside today's cone, so a busy city's other directions don't crowd it out.
-  const arc = [spot, ...Array.from({ length: 9 }, (_, i) => destination(spot.lat, spot.lon, walk.deg - CONE + i * 10, RADIUS))];
-  const around = `(poly:"${arc.map((p) => `${p.lat.toFixed(5)} ${p.lon.toFixed(5)}`).join(" ")}")`;
-  const tags = walk.places.flatMap((p) => p.tags.map((t) => ({ t, label: p.label })));
-  const parts = tags.flatMap(({ t }) => {
-    const [k, v] = t.split("=");
-    return [`node["${k}"="${v}"]["name"]${around};`, `way["${k}"="${v}"]["name"]${around};`];
-  });
-  const query = `[out:json][timeout:15];(${parts.join("")});out center 1000;`;
-  type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
-  const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 8000);
-  return data.elements.flatMap((e) => {
-    const lat = e.lat ?? e.center?.lat;
-    const lon = e.lon ?? e.center?.lon;
-    const hit = tags.find(({ t }) => {
-      const [k, v] = t.split("=");
-      return e.tags?.[k] === v;
-    });
-    return lat != null && lon != null && e.tags?.name ? [{ name: e.tags.name, kind: hit?.label ?? "Place", lat, lon }] : [];
+/** Does a set of OpenStreetMap tags pass a filter like ["cuisine"~"sushi"]["amenity"="cafe"]? */
+function passes(filter: string, tags: Record<string, string>) {
+  return [...filter.matchAll(/\["([^"]+)"(=|!=|~)"([^"]+)"\]/g)].every(([, k, op, v]) => {
+    const t = tags[k];
+    if (op === "=") return t === v;
+    if (op === "!=") return t !== v;
+    return t != null && new RegExp(v).test(t);
   });
 }
 
-/** Nominatim, one plain search per kind inside the box around today's cone. Hands over each batch as it lands. */
-async function fromNominatim(spot: Spot, walk: Walk, signal: AbortSignal, onHits: (r: Raw[]) => void): Promise<void> {
-  const pts = [spot, ...[-CONE, -CONE / 2, 0, CONE / 2, CONE].map((o) => destination(spot.lat, spot.lon, walk.deg + o, RADIUS))];
+/** The cone of today's direction, as a polygon. */
+const cone = (spot: Spot, walk: Walk) => [spot, ...Array.from({ length: 9 }, (_, i) => destination(spot.lat, spot.lon, walk.deg - CONE + i * 10, RADIUS))];
+
+/** Overpass: one query for every kind in the category, asked only inside the cone. */
+async function fromOverpass(spot: Spot, walk: Walk, items: ExploreItem[], signal: AbortSignal): Promise<Raw[]> {
+  const poly = `(poly:"${cone(spot, walk).map((p) => `${p.lat.toFixed(5)} ${p.lon.toFixed(5)}`).join(" ")}")`;
+  const parts = items.flatMap((it) => it.osm.flatMap((f) => [`node${f}["name"]${poly};`, `way${f}["name"]${poly};`]));
+  const query = `[out:json][timeout:15];(${parts.join("")});out center 1000;`;
+  type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
+  const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 9000);
+  return data.elements.flatMap((e) => {
+    const lat = e.lat ?? e.center?.lat;
+    const lon = e.lon ?? e.center?.lon;
+    const tags = e.tags ?? {};
+    const it = items.find((i) => i.osm.some((f) => passes(f, tags)));
+    return lat != null && lon != null && tags.name && it ? [{ name: tags.name, kind: it.label, el: it.el, lat, lon }] : [];
+  });
+}
+
+/** Nominatim: one plain search per kind inside the box around the cone, one a second. */
+async function fromNominatim(spot: Spot, walk: Walk, items: ExploreItem[], signal: AbortSignal, onHits: (r: Raw[]) => void): Promise<void> {
+  const pts = cone(spot, walk);
   const box = [Math.min(...pts.map((p) => p.lon)), Math.max(...pts.map((p) => p.lat)), Math.max(...pts.map((p) => p.lon)), Math.min(...pts.map((p) => p.lat))].map((n) => n.toFixed(5)).join(",");
+  const seen = new Set<string>();
   let answered = 0;
-  for (const [i, p] of walk.places.entries()) {
-    if (i) await new Promise((r) => window.setTimeout(r, 1000)); // Nominatim asks for one request a second
+  for (const it of items) {
+    if (seen.has(it.phrase)) continue;
+    seen.add(it.phrase);
+    if (seen.size > 1) await new Promise((r) => window.setTimeout(r, 1000));
     if (signal.aborted) return;
     type Hit = { lat: string; lon: string; name?: string };
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${box}&q=${encodeURIComponent(p.phrase)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${box}&q=${encodeURIComponent(it.phrase)}`;
     try {
       const hits = await getJson<Hit[]>(url, signal, 6000);
       answered++;
-      onHits(hits.flatMap((h) => (h.name ? [{ name: h.name, kind: p.label, lat: Number(h.lat), lon: Number(h.lon) }] : [])));
-    } catch (e) {
+      onHits(hits.flatMap((h) => (h.name ? [{ name: h.name, kind: it.label, el: it.el, lat: Number(h.lat), lon: Number(h.lon) }] : [])));
+    } catch {
       if (signal.aborted) return;
     }
   }
@@ -128,9 +136,64 @@ function rank(raw: Raw[], spot: Spot, walk: Walk): Place[] {
   return pool.sort((a, b) => a.dist * (1 + a.off / CONE) - b.dist * (1 + b.off / CONE)).slice(0, 6);
 }
 
-/** Results are kept for the day, per spot, so coming back is instant. */
-const cacheKey = (spot: Spot, date: string) => `fc.places2.${date}.${spot.lat.toFixed(3)},${spot.lon.toFixed(3)}`;
+/**
+ * Overpass and Nominatim side by side, feeding one pool that's shown as it
+ * grows. Done when both answer, or sooner once there's plenty to show.
+ */
+function search(spot: Spot, walk: Walk, items: ExploreItem[], signal: AbortSignal, onList: (list: Place[], done: boolean) => void, onError: () => void) {
+  const overCtl = new AbortController();
+  const nomCtl = new AbortController();
+  signal.addEventListener("abort", () => (overCtl.abort(), nomCtl.abort()));
+  let pool: Raw[] = [];
+  let settled = false;
+  let overDone = false;
+  let nomDone = false;
+  const finish = () => {
+    if (settled || signal.aborted) return;
+    settled = true;
+    overCtl.abort();
+    nomCtl.abort();
+    onList(rank(pool, spot, walk), true);
+  };
+  const check = () => {
+    const n = rank(pool, spot, walk).length;
+    if ((overDone && nomDone) || (overDone && n >= 6) || (nomDone && n >= 3)) finish();
+  };
+  const over = fromOverpass(spot, walk, items, overCtl.signal)
+    .then((raw) => {
+      pool = [...raw, ...pool];
+      if (!settled) onList(rank(pool, spot, walk), false);
+    })
+    .finally(() => {
+      overDone = true;
+      check();
+    });
+  const nom = fromNominatim(spot, walk, items, nomCtl.signal, (hits) => {
+    if (settled || signal.aborted) return;
+    pool = [...pool, ...hits];
+    onList(rank(pool, spot, walk), false);
+  }).finally(() => {
+    nomDone = true;
+    check();
+  });
+  Promise.allSettled([over, nom]).then(([o, n]) => {
+    if (settled || signal.aborted) return;
+    if (o.status === "rejected" && n.status === "rejected") {
+      settled = true;
+      onError();
+    } else finish();
+  });
+}
+
+/**
+ * Kept for the day, per spot and kind, so coming back is instant: in memory
+ * for this visit, and in this browser for later ones. The spot itself is kept
+ * for the browser tab.
+ */
+const memory = new Map<string, Place[]>();
+const cacheKey = (spot: Spot, date: string, cat: string) => `fc.places3.${date}.${cat}.${spot.lat.toFixed(3)},${spot.lon.toFixed(3)}`;
 const readCache = (k: string): Place[] | null => {
+  if (memory.has(k)) return memory.get(k) as Place[];
   try {
     const v = JSON.parse(window.localStorage.getItem(k) ?? "null");
     return Array.isArray(v) ? v : null;
@@ -139,8 +202,25 @@ const readCache = (k: string): Place[] | null => {
   }
 };
 const writeCache = (k: string, list: Place[]) => {
+  memory.set(k, list);
   try {
     window.localStorage.setItem(k, JSON.stringify(list));
+  } catch {
+    /* fine */
+  }
+};
+const SPOT_KEY = "fc.spot";
+const readSpot = (): Spot | null => {
+  try {
+    const v = JSON.parse(window.sessionStorage.getItem(SPOT_KEY) ?? "null");
+    return v && typeof v.lat === "number" && typeof v.lon === "number" ? v : null;
+  } catch {
+    return null;
+  }
+};
+const writeSpot = (s: Spot) => {
+  try {
+    window.sessionStorage.setItem(SPOT_KEY, JSON.stringify(s));
   } catch {
     /* fine */
   }
@@ -244,120 +324,121 @@ function Compass({ deg: d, short }: { deg: number; short: string }) {
 /** Explore: today's joy direction, and real places that lie that way. */
 export function WalkPage({ profile, date }: { profile: Profile; date: string }) {
   const walk = useMemo(() => readWalk(profile, date), [profile, date]);
-  const [spot, setSpot] = useState<Spot | null>(null);
-  const [status, setStatus] = useState<"asking" | "denied" | "ok">("asking");
+  const cats = useMemo(
+    () => [
+      { id: "eat", label: "Eat today", items: walk.eat.items },
+      { id: "mine", label: `For your ${walk.element}`, items: walk.mine },
+      ...EXPLORE,
+    ],
+    [walk],
+  );
+  const [spot, setSpot] = useState<Spot | null>(readSpot);
+  const [status, setStatus] = useState<"asking" | "denied" | "ok">(() => (readSpot() ? "ok" : "asking"));
+  const [cat, setCat] = useState<string | null>(null);
   const [found, setFound] = useState<Found | null>(null);
   const [pick, setPick] = useState(0);
-  const [tries, setTries] = useState(0);
+  const [fresh, setFresh] = useState(0);
 
-  const locate = () => {
+  const locate = (then?: () => void) => {
     if (!navigator.geolocation) return setStatus("denied");
     setStatus("asking");
     navigator.geolocation.getCurrentPosition(
       (p) => {
-        setSpot({ lat: p.coords.latitude, lon: p.coords.longitude });
+        const s = { lat: p.coords.latitude, lon: p.coords.longitude };
+        writeSpot(s);
+        setSpot(s);
         setStatus("ok");
+        then?.();
       },
       () => setStatus("denied"),
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 },
     );
   };
 
-  // The page is about where you are, so it asks for your location straight away.
-  useEffect(locate, []);
-
-  // Overpass and Nominatim run side by side and feed one pool, shown as it
-  // grows. It's done when both answer, or sooner once there's plenty to show.
+  // Ask for the location once per tab; coming back to the page reuses it.
   useEffect(() => {
-    if (!spot) return;
-    const key = cacheKey(spot, date);
-    const cached = readCache(key);
-    setPick(0);
-    if (cached?.length) return setFound({ status: "done", list: cached });
-    const ctl = new AbortController();
-    const overCtl = new AbortController();
-    const nomCtl = new AbortController();
-    ctl.signal.addEventListener("abort", () => (overCtl.abort(), nomCtl.abort()));
-    let pool: Raw[] = [];
-    let settled = false;
-    let overDone = false;
-    let nomDone = false;
-    const show = () => setFound({ status: "loading", list: rank(pool, spot, walk) });
-    const finish = () => {
-      if (settled || ctl.signal.aborted) return;
-      settled = true;
-      overCtl.abort();
-      nomCtl.abort();
-      const list = rank(pool, spot, walk);
-      setFound({ status: "done", list });
-      if (list.length >= 3) writeCache(key, list);
-    };
-    const check = () => {
-      const n = rank(pool, spot, walk).length;
-      if ((overDone && nomDone) || (overDone && n >= 6) || (nomDone && n >= 3)) finish();
-    };
-    setFound({ status: "loading", list: [] });
-    const over = fromOverpass(spot, walk, overCtl.signal)
-      .then((raw) => {
-        pool = [...raw, ...pool];
-        if (!settled) show();
-      })
-      .finally(() => {
-        overDone = true;
-        check();
-      });
-    const nom = fromNominatim(spot, walk, nomCtl.signal, (hits) => {
-      if (settled || ctl.signal.aborted) return;
-      pool = [...pool, ...hits];
-      show();
-    }).finally(() => {
-      nomDone = true;
-      check();
-    });
-    Promise.allSettled([over, nom]).then(([o, n]) => {
-      if (settled || ctl.signal.aborted) return;
-      if (o.status === "rejected" && n.status === "rejected") {
-        settled = true;
-        setFound({ status: "error", list: [] });
-      } else finish();
-    });
-    return () => ctl.abort();
-  }, [spot, walk, date, tries]);
+    if (!spot) locate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const kinds = walk.places.map((p) => p.label.toLowerCase());
-  const places = found?.list ?? [];
+  // Only search once a kind is picked, and only that kind. Saved results come back instantly.
+  useEffect(() => {
+    if (!spot || !cat) return;
+    const items = cats.find((c) => c.id === cat)?.items ?? [];
+    const key = cacheKey(spot, date, cat);
+    setPick(0);
+    const cached = fresh ? null : readCache(key);
+    if (cached) return setFound({ status: "done", list: cached });
+    const ctl = new AbortController();
+    setFound({ status: "loading", list: [] });
+    search(
+      spot,
+      walk,
+      items,
+      ctl.signal,
+      (list, done) => {
+        setFound({ status: done ? "done" : "loading", list });
+        if (done) writeCache(key, list);
+      },
+      () => setFound({ status: "error", list: [] }),
+    );
+    return () => ctl.abort();
+  }, [spot, cat, cats, walk, date, fresh]);
+
+  const refresh = () =>
+    locate(() => {
+      setFound(null);
+      setFresh((n) => n + 1);
+    });
+
+  const places = cat ? (found?.list ?? []) : [];
+  const current = cats.find((c) => c.id === cat);
 
   return (
     <section className="page-body" aria-labelledby="walk-title">
       <header className="page-head">
         <p className="eyebrow">Explore</p>
         <h1 id="walk-title">Head {walk.dir.toLowerCase()} today</h1>
-        <p className="lede">Real places in the day's direction, picked for your element.</p>
+        <p className="lede">Pick what you feel like, and we'll look {walk.dir.toLowerCase()} of you.</p>
       </header>
 
       <div className="block walk-head" data-el={walk.element}>
         <Compass deg={walk.deg} short={walk.short} />
         <p>
-          {walk.note} Today that means a {kinds.slice(0, -1).join(", ")}, or {kinds[kinds.length - 1]}.
+          {walk.note} Places that carry {walk.element} get a <span className="suits">Suits today</span> tag.
         </p>
       </div>
 
       {spot ? (
         <>
+          <div className="explore-cats" role="radiogroup" aria-label="What to look for">
+            {cats.map((c) => (
+              <button key={c.id} type="button" role="radio" aria-checked={cat === c.id} className={`chip-btn ${cat === c.id ? "is-on" : ""}`} onClick={() => setCat(c.id)}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          {cat === "eat" ? <p className="hint">Today's eat tweak: {walk.eat.text}. We look for {walk.eat.items.map((i) => i.label.toLowerCase()).join(", ")}.</p> : null}
           <MapView here={spot} walk={walk} places={places} pick={pick} />
           <div className="block walk-results">
-            <p className="label block-label">Places {walk.dir.toLowerCase()} of you</p>
-            {found?.status === "loading" ? <p className="muted">{places.length ? "Finding more…" : `Looking ${walk.dir.toLowerCase()}…`}</p> : null}
-            {found?.status === "error" ? (
+            <div className="walk-results-head">
+              <p className="label block-label">{current ? `${current.label} ${walk.dir.toLowerCase()} of you` : `Places ${walk.dir.toLowerCase()} of you`}</p>
+              <button type="button" className="btn btn-soft btn-small" onClick={refresh} disabled={status === "asking" || found?.status === "loading"}>
+                ↻ Refresh
+              </button>
+            </div>
+            {!cat ? <p className="muted">Pick a kind of place above to start looking.</p> : null}
+            {cat && found?.status === "loading" ? <p className="muted">{places.length ? "Finding more…" : `Looking ${walk.dir.toLowerCase()}…`}</p> : null}
+            {cat && found?.status === "error" ? (
               <p className="muted">
                 The map service is busy right now.{" "}
-                <button type="button" className="link-btn" onClick={() => setTries((t) => t + 1)}>
+                <button type="button" className="link-btn" onClick={() => setFresh((n) => n + 1)}>
                   Try again
                 </button>
               </p>
             ) : null}
-            {found?.status === "done" && !places.length ? (
-              <p className="muted">Nothing like that on the map {walk.dir.toLowerCase()} of you. Heading that way still counts.</p>
+            {cat && found?.status === "done" && !places.length ? (
+              <p className="muted">Nothing like that on the map {walk.dir.toLowerCase()} of you. Try another kind, or head that way anyway.</p>
             ) : null}
             <ol className="walk-list">
               {places.map((p, i) => (
@@ -369,6 +450,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
                       <span className="muted small">
                         {p.kind} · {fmtDist(p.dist)}
                         {p.dist <= 1500 ? ` · ${minutes(p.dist)} min on foot` : ""}
+                        {p.el === walk.element ? <span className="suits">Suits today</span> : null}
                       </span>
                     </span>
                   </button>
@@ -378,10 +460,8 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
                 </li>
               ))}
             </ol>
-            {found?.status === "done" ? (
-              <p className="hint">
-                These are just a few nearby examples. You're welcome to go farther {walk.dir.toLowerCase()}: any {kinds.slice(0, 2).join(" or ")} that way suits today too.
-              </p>
+            {cat && found?.status === "done" && places.length ? (
+              <p className="hint">These are just a few nearby examples. You're welcome to go farther {walk.dir.toLowerCase()}.</p>
             ) : null}
           </div>
         </>
@@ -393,7 +473,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
             <>
               <p>To find places {walk.dir.toLowerCase()} of you, the app needs your location.</p>
               <div className="walk-ask-actions">
-                <button type="button" className="btn btn-cookie" onClick={locate}>
+                <button type="button" className="btn btn-cookie" onClick={() => locate()}>
                   Use my location
                 </button>
               </div>
