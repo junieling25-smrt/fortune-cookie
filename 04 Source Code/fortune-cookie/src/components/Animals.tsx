@@ -161,14 +161,18 @@ const ANIMALS: Record<string, () => React.JSX.Element> = {
   ),
 };
 
-export function AnimalIcon({ animal, size = 48 }: { animal: string; size?: number }) {
+export function AnimalIcon({ animal, size = 48, label, children }: { animal: string; size?: number; label?: string; children?: React.ReactNode }) {
   const Draw = ANIMALS[animal];
   if (!Draw) return null;
   return (
-    <svg className="animal-icon" width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={animal}>
+    <svg className="animal-icon" width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={label ?? animal}>
       <Draw />
+      {children}
     </svg>
   );
 }
+
+/** Where each face sits, so the pet's glasses land on its eyes. */
+export const FACE_Y: Record<string, number> = { Rat: 29, Ox: 25, Tiger: 29, Rabbit: 30, Dragon: 29, Snake: 25, Horse: 25, Goat: 25, Monkey: 27, Rooster: 25, Dog: 27, Pig: 25 };
 
 export const ANIMAL_NAMES = Object.keys(ANIMALS);

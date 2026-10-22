@@ -91,6 +91,30 @@ export function isBirthDetails(v: unknown): v is BirthDetails {
   );
 }
 
+// ------------------------------------------------------------ match invites
+
+/** Someone's name and birth details, carried in a link so a friend can see your match. */
+export type Invite = { name: string; birth: BirthDetails };
+
+const toB64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const fromB64 = (s: string) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+
+export function inviteLink(name: string, b: BirthDetails): string {
+  const packed = [name.slice(0, 30), b.date, b.timeKnown ? b.time : "", b.place, b.tz, +b.lat.toFixed(3), +b.lon.toFixed(3)];
+  return `${window.location.origin}${window.location.pathname}?invite=${toB64(JSON.stringify(packed))}#match`;
+}
+
+export function readInvite(code: string | null): Invite | null {
+  if (!code) return null;
+  try {
+    const [name, date, time, place, tz, lat, lon] = JSON.parse(fromB64(code));
+    const birth = { date, time, timeKnown: /^\d{2}:\d{2}$/.test(time), place, tz, lat, lon };
+    return typeof name === "string" && isBirthDetails(birth) && /^\d{4}-\d{2}-\d{2}$/.test(date) ? { name: name.trim().slice(0, 30) || "Your friend", birth } : null;
+  } catch {
+    return null;
+  }
+}
+
 export type Saved = { birth: BirthDetails; person: Person };
 
 export function isSaved(v: unknown): v is Saved {

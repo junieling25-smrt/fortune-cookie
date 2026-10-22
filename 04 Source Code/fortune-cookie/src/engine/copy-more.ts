@@ -701,12 +701,42 @@ export const TWEAK_WHY: Record<"structure" | "expression" | "harvest" | "company
 };
 
 /** What ties each tweak to its element, in the five-element tradition. */
-export const TWEAK_NOTE: Record<ElementName, { wear: string; eat: string; do: string }> = {
-  Wood: { wear: "Green is Wood's color in the five elements.", eat: "Five-element food lore links sour tastes and fresh greens to Wood.", do: "Trees, plants, and stretching all carry Wood." },
-  Fire: { wear: "Reds, pinks, and purples are Fire's colors.", eat: "Bitter and warming foods belong to Fire.", do: "Sunlight, warmth, and good company all carry Fire." },
-  Earth: { wear: "Yellows and browns are Earth's colors.", eat: "Sweet, grounding foods like grains and squash belong to Earth.", do: "Cooking, routines, and tending your home all carry Earth." },
-  Metal: { wear: "White, gray, and gold are Metal's colors.", eat: "Pungent foods like ginger, garlic, and radish belong to Metal.", do: "Clearing, sorting, and slow breaths all carry Metal." },
-  Water: { wear: "Black and deep blues are Water's colors.", eat: "Salty, dark foods like seaweed and black beans belong to Water.", do: "Rest, quiet, and time near water all carry Water." },
+export const TWEAK_NOTE: Record<ElementName, { wear: string; eat: string; do: string; listen: string }> = {
+  Wood: { wear: "Green is Wood's color in the five elements.", eat: "Five-element food lore links sour tastes and fresh greens to Wood.", do: "Trees, plants, and stretching all carry Wood.", listen: "Chinese music theory gives each element a tone. Wood's is bright and rising, like acoustic strings and open air." },
+  Fire: { wear: "Reds, pinks, and purples are Fire's colors.", eat: "Bitter and warming foods belong to Fire.", do: "Sunlight, warmth, and good company all carry Fire.", listen: "Chinese music theory gives each element a tone. Fire's is quick and bright, so anything with a beat you can move to carries it." },
+  Earth: { wear: "Yellows and browns are Earth's colors.", eat: "Sweet, grounding foods like grains and squash belong to Earth.", do: "Cooking, routines, and tending your home all carry Earth.", listen: "Chinese music theory gives each element a tone. Earth's is the warm center note, steady and full, like soul and slow grooves." },
+  Metal: { wear: "White, gray, and gold are Metal's colors.", eat: "Pungent foods like ginger, garlic, and radish belong to Metal.", do: "Clearing, sorting, and slow breaths all carry Metal.", listen: "Chinese music theory gives each element a tone. Metal's is clear and ringing, so clean, precise sounds carry it." },
+  Water: { wear: "Black and deep blues are Water's colors.", eat: "Salty, dark foods like seaweed and black beans belong to Water.", do: "Rest, quiet, and time near water all carry Water.", listen: "Chinese music theory gives each element a tone. Water's is low and flowing, so slow, spacious sounds carry it." },
+};
+
+/** Kinds of music for the day's helpful element. Genres only, never song names. */
+export const MUSIC: Record<ElementName, string[]> = {
+  Wood: ["Acoustic folk", "Indie folk", "Bossa nova", "Bluegrass", "Fingerstyle guitar", "Chamber strings"],
+  Fire: ["Upbeat pop", "Funk", "Disco", "Salsa", "Afrobeats", "K-pop"],
+  Earth: ["Classic soul", "Old-school R&B", "Country", "Soft rock", "Reggae", "Gospel"],
+  Metal: ["Classical piano", "Baroque", "Minimal electronic", "Synth-pop", "Cool jazz", "Brass band"],
+  Water: ["Lo-fi beats", "Ambient", "Dream pop", "Trip-hop", "Smooth jazz", "Rain and piano"],
+};
+
+/** The almanac's joy direction, by day stem (Jia and Ji, Yi and Geng, Bing and Xin, Ding and Ren, Wu and Gui). */
+export const WALK_DIRS: { dir: string; short: string; deg: number }[] = [
+  { dir: "Northeast", short: "NE", deg: 45 },
+  { dir: "Northwest", short: "NW", deg: 315 },
+  { dir: "Southwest", short: "SW", deg: 225 },
+  { dir: "South", short: "S", deg: 180 },
+  { dir: "Southeast", short: "SE", deg: 135 },
+];
+
+export const WALK_NOTE =
+  "Old Chinese almanacs name a joy direction for every day, set by the day's stem. Today it points {dir}. {el} is your helpful element today, so the places below carry it.";
+
+/** Places to look for, by element. Each one is also a map search. */
+export const WALK_PLACES: Record<ElementName, string[]> = {
+  Wood: ["Park", "Garden", "Bookstore", "Plant shop"],
+  Fire: ["Cafe", "Dessert shop", "Dance studio", "Sunny plaza"],
+  Earth: ["Bakery", "Farmers market", "Pottery studio", "Neighborhood diner"],
+  Metal: ["Museum", "Art gallery", "Record store", "Stationery shop"],
+  Water: ["Waterfront", "Tea house", "Aquarium", "Swimming pool"],
 };
 
 // ------------------------------------------------------------ compatibility

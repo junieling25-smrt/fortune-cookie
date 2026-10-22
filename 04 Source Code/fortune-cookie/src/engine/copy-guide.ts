@@ -118,7 +118,6 @@ export const GLOSSARY: Record<string, string> = {
   "year animal": "Your year animal is the zodiac sign most people know. It's one of four in your chart.",
   "day energy": "Every day has an element and an animal of its own, in a cycle of 60 days.",
   tweak: "The element that eases today for your chart. The color, food, and action all carry it.",
-  "best time": "Days are split into twelve two-hour blocks, each with an animal. This one suits you and today.",
 };
 
 export const animalTip = (animal: string) => {

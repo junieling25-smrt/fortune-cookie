@@ -207,6 +207,15 @@ export function TabMatch({ size = 22 }: IconProps) {
   );
 }
 
+export function TabMap({ size = 22 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M15.5 8.5l-2 5-5 2 2-5z" />
+    </svg>
+  );
+}
+
 export function TabYou({ size = 22 }: IconProps) {
   return (
     <svg {...base(size)}>
@@ -251,11 +260,12 @@ export function Hand({ size = 18 }: IconProps) {
   );
 }
 
-export function Clock({ size = 18 }: IconProps) {
+export function Music({ size = 18 }: IconProps) {
   return (
     <svg {...base(size)}>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M12 7.5V12l3 2" />
+      <path d="M9 17.5V6l10-2v11.5" />
+      <circle cx="6.5" cy="17.5" r="2.5" />
+      <circle cx="16.5" cy="15.5" r="2.5" />
     </svg>
   );
 }

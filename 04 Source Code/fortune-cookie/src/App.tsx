@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { BiggerPicture } from "./components/BiggerPicture";
 import { HowPage } from "./components/HowPage";
 import { Floaties } from "./components/Floaties";
-import { Book, TabForecast, TabMatch, TabYou } from "./components/Icons";
+import { Book, TabForecast, TabMap, TabMatch, TabYou } from "./components/Icons";
 import { Intro, Splash } from "./components/Intro";
 import { Mark } from "./components/Mark";
 import { MatchPage } from "./components/Match";
@@ -11,6 +11,7 @@ import { Onboarding } from "./components/Onboarding";
 import { Avatar, ProfilePage } from "./components/Profile";
 import { Today, type CheckIn } from "./components/Today";
 import { Tour } from "./components/Tour";
+import { WalkPage } from "./components/Walk";
 import { describeCity, findCity, loadCities } from "./engine/cities";
 import { AREAS, DEFAULT_PERSON, readChart, readDay, tomorrowTeaser, validateBirth, type AreaId, type Person } from "./engine/reading";
 import {
@@ -26,11 +27,13 @@ import {
   markCracked,
   markIntroSeen,
   normalizeSaved,
+  readInvite,
   save,
   saveAvatar,
   saveSteps,
   shiftDate,
   streakInfo,
+  type Invite,
   type Saved,
 } from "./lib";
 
@@ -76,8 +79,8 @@ function fromLink(): Link {
   return { saved: validateBirth(birth) ? null : { birth, person }, day, sealed };
 }
 
-type Page = "today" | "forecast" | "match" | "me" | "meaning" | "how";
-const PAGES: Page[] = ["today", "forecast", "match", "me", "meaning", "how"];
+type Page = "today" | "forecast" | "match" | "walk" | "me" | "meaning" | "how";
+const PAGES: Page[] = ["today", "forecast", "match", "walk", "me", "meaning", "how"];
 const route = (): Page => {
   const h = window.location.hash.replace(/^#\/?/, "") as Page;
   return PAGES.includes(h) ? h : "today";
@@ -86,9 +89,29 @@ const TABS: { id: Page; label: string; Icon: (p: { size?: number }) => React.JSX
   { id: "today", label: "Today", Icon: ({ size }) => <Mark size={size} /> },
   { id: "forecast", label: "Forecast", Icon: TabForecast },
   { id: "match", label: "Match", Icon: TabMatch },
+  { id: "walk", label: "Walk", Icon: TabMap },
   { id: "meaning", label: "Meaning", Icon: Book },
   { id: "me", label: "You", Icon: TabYou },
 ];
+
+const INVITE_KEY = "fc.invite";
+
+/** An invite link is read once, kept for this tab until it's used, and taken out of the address bar. */
+function takeInvite(): Invite | null {
+  try {
+    const q = linkQuery();
+    const code = q.get("invite");
+    if (code) {
+      window.sessionStorage.setItem(INVITE_KEY, code);
+      q.delete("invite");
+      const rest = q.toString();
+      history.replaceState(null, "", window.location.pathname + (rest ? `?${rest}` : "") + "#match");
+    }
+    return readInvite(window.sessionStorage.getItem(INVITE_KEY));
+  } catch {
+    return null;
+  }
+}
 
 const splashDone = () => {
   try {
@@ -103,7 +126,8 @@ export function App() {
   const [saved, setSaved] = useState<Saved | null>(() => normalizeSaved(load(STORE_KEY, isSaved)));
   const [splash, setSplash] = useState(() => !hasLink() && !splashDone() && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
   const [intro, setIntro] = useState(() => !introSeen());
-  const [page, setPage] = useState<Page>(route);
+  const [invite, setInvite] = useState<Invite | null>(takeInvite);
+  const [page, setPage] = useState<Page>(() => (invite ? "match" : route()));
   const [today, setToday] = useState(localToday);
   const [date, setDate] = useState(localToday);
   const [cracked, setCracked] = useState(crackedDays);
@@ -193,11 +217,11 @@ export function App() {
     setCracked(markCracked(localToday()));
     setDate(localToday());
     setRevealing(true);
-    go("today");
+    go(invite ? "match" : "today");
     window.setTimeout(() => {
       setRevealing(false);
       // ?tour=1 replays the tour, for screenshots
-      if (!load(TOUR_KEY, (v): v is boolean => v === true)) setTouring(true);
+      if (!invite && !load(TOUR_KEY, (v): v is boolean => v === true)) setTouring(true);
     }, 1300);
   };
 
@@ -223,6 +247,15 @@ export function App() {
     setIntro(true);
     go("today");
   };
+
+  const inviteUsed = useCallback(() => {
+    setInvite(null);
+    try {
+      window.sessionStorage.removeItem(INVITE_KEY);
+    } catch {
+      /* fine */
+    }
+  }, []);
 
   if (!link) return <Splash onDone={() => undefined} />;
   if (splash) return <Splash onDone={endSplash} />;
@@ -309,7 +342,9 @@ export function App() {
         ) : page === "forecast" ? (
           <BiggerPicture profile={profile} date={today} today={today} cracked={cracked} onPick={pickDay} onProfile={() => go("me")} />
         ) : page === "match" ? (
-          <MatchPage profile={profile} />
+          <MatchPage profile={profile} incoming={invite} onIncoming={inviteUsed} />
+        ) : page === "walk" ? (
+          <WalkPage profile={profile} date={today} />
         ) : page === "me" ? (
           <ProfilePage
             profile={profile}

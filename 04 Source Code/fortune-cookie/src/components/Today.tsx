@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ANIMAL_INFO, ELEMENT_INFO, GLOSSARY } from "../engine/copy-guide";
 import type { AreaId, DailyReading, Profile, Tone } from "../engine/reading";
 import { fmtLongDate, fmtShortDate, greeting, type Streak } from "../lib";
 import { Floaties } from "./Floaties";
-import { AREA_ICON, Bowl, Check, Chevron, Clock, Copy, Hand, ImageIcon, Info, Shirt } from "./Icons";
+import { AREA_ICON, Bowl, Check, Chevron, Copy, Hand, ImageIcon, Info, Music, Shirt } from "./Icons";
 import { CookieArt, Mark } from "./Mark";
+import { Pet } from "./Pet";
 import { ReadMore } from "./ReadMore";
 import { ScoreBar, ScorePill, ScoreRing, SHORT } from "./Score";
 import { ShareModal } from "./ShareCard";
 import { Term } from "./Term";
 
 export type CheckIn = { date: string; items: { id: string; label: string; text: string }[] } | null;
-export type TweakId = "wear" | "eat" | "do" | "time";
+export type TweakId = "wear" | "eat" | "do" | "listen";
 
 const firstTrait = (el: keyof typeof ELEMENT_INFO) => ELEMENT_INFO[el].traits.split(",")[0].toLowerCase();
 
@@ -61,6 +62,9 @@ export function Today({
   const [cracking, setCracking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState<AreaId | null>(null);
+  const [cheer, setCheer] = useState(0);
+  const [pull, setPull] = useState(0);
+  const touch = useRef<{ pts: Map<number, { x: number; y: number }>; start: number; last: string }>({ pts: new Map(), start: 0, last: "" });
   const closeShare = useCallback(() => setSharing(false), []);
   useEffect(() => setOpen(null), [reading.date]);
 
@@ -70,15 +74,49 @@ export function Today({
   const ordered = [...reading.areas.filter((a) => a.interested), ...reading.areas.filter((a) => !a.interested)];
   const focus = reading.areas.find((a) => a.focus) ?? ordered[0];
   const others = ordered.filter((a) => a.id !== focus.id);
-  const tried = (["wear", "eat", "do", "time"] as TweakId[]).filter((t) => done.includes(t)).length;
+  const tried = (["wear", "eat", "do", "listen"] as TweakId[]).filter((t) => done.includes(t)).length;
 
   const crack = () => {
+    if (cracking) return;
     setCracking(true);
+    setPull(0);
+    navigator.vibrate?.([18, 40, 30]);
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.setTimeout(() => {
       onCrack();
       setCracking(false);
     }, reduce ? 50 : 900);
+  };
+
+  // On a touch screen you pull the cookie apart: two fingers spread, or one finger drags sideways.
+  const spread = () => {
+    const p = [...touch.current.pts.values()];
+    return p.length >= 2 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : p.length ? p[0].x : 0;
+  };
+  const onDown = (e: React.PointerEvent) => {
+    touch.current.last = e.pointerType;
+    if (e.pointerType === "mouse" || cracking) return;
+    touch.current.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    touch.current.start = spread();
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const t = touch.current;
+    if (!t.pts.has(e.pointerId) || cracking) return;
+    t.pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const p = Math.max(0, Math.min(1, Math.abs(spread() - t.start) / (t.pts.size >= 2 ? 110 : 140)));
+    if (p >= 1) {
+      t.pts.clear();
+      crack();
+    } else {
+      if (Math.floor(p * 4) > Math.floor(pull * 4)) navigator.vibrate?.(8);
+      setPull(p);
+    }
+  };
+  const onUp = (e: React.PointerEvent) => {
+    const t = touch.current;
+    t.pts.delete(e.pointerId);
+    if (t.pts.size === 0 && !cracking) setPull(0);
+    else t.start = spread() - (pull * (t.pts.size >= 2 ? 110 : 140));
   };
 
   const copy = async () => {
@@ -107,17 +145,7 @@ export function Today({
     },
     { id: "eat", label: "Eat", Icon: Bowl, value: tweaks.eat, tip: `${tweaks.notes.eat} ${tweaks.why}` },
     { id: "do", label: "Do", Icon: Hand, value: tweaks.do, tip: `${tweaks.notes.do} ${tweaks.why}` },
-    {
-      id: "time",
-      label: "Best time",
-      Icon: Clock,
-      value: (
-        <>
-          {tweaks.time.label} <span className="muted">· {tweaks.time.animal} hours</span>
-        </>
-      ),
-      tip: tweaks.time.note,
-    },
+    { id: "listen", label: "Listen", Icon: Music, value: tweaks.listen, tip: `${tweaks.notes.listen} ${tweaks.why}` },
   ];
 
   const stage = (
@@ -125,13 +153,24 @@ export function Today({
       <Floaties dense={false} />
       {sealed ? (
         <div className="sealed">
-          <button type="button" className={`crack-me ${cracking ? "is-cracking" : ""}`} onClick={crack} disabled={cracking} aria-label="Crack today's cookie">
-            <CookieArt progress={cracking ? 1 : 0} open={cracking} />
+          <button
+            type="button"
+            className={`crack-me ${cracking ? "is-cracking" : ""} ${pull > 0 ? "is-pulling" : ""}`}
+            onClick={(e) => (e.detail === 0 || touch.current.last === "mouse" || !touch.current.last ? crack() : undefined)}
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={onUp}
+            disabled={cracking}
+            aria-label="Crack today's cookie"
+          >
+            <CookieArt progress={cracking ? 1 : pull} open={cracking} />
           </button>
           <p className="sealed-title">Today's cookie is sealed.</p>
-          <button type="button" className="btn btn-cookie" onClick={crack} disabled={cracking}>
+          <button type="button" className="btn btn-cookie crack-click" onClick={crack} disabled={cracking}>
             Crack it open
           </button>
+          <p className="crack-touch">Pull it apart with your fingers</p>
           <p className="sealed-note">{streak.streak > 0 ? `Keep your ${streak.streak}-day streak going.` : "One cookie a day. Start a streak."}</p>
         </div>
       ) : (
@@ -165,6 +204,7 @@ export function Today({
 
   const scoreBlock = (
     <section className="block score-block" aria-label="Today's score">
+      <Pet animal={profile.chart.year.branch.animal} season={reading.season.name} cheer={cheer} />
       <ScoreRing score={overall.score} tone={overall.tone} label="Today's score" />
       <div className="score-copy">
         <p className="label">
@@ -291,7 +331,7 @@ export function Today({
                     const on = done.includes(id);
                     return (
                       <li key={id} className={on ? "is-done" : ""}>
-                        <button type="button" className="tweak-btn" aria-pressed={on} onClick={() => onToggle(id)}>
+                        <button type="button" className="tweak-btn" aria-pressed={on} onClick={() => (on || setCheer((c) => c + 1), onToggle(id))}>
                           <span className="tweak-ic">{on ? <Check size={16} /> : <Icon />}</span>
                           <span className="label">{label}</span>
                           <span className="tweak-val">{value}</span>

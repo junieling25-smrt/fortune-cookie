@@ -83,6 +83,10 @@ import {
   TWEAK,
   TWEAK_NOTE,
   TWEAK_WHY,
+  MUSIC,
+  WALK_DIRS,
+  WALK_NOTE,
+  WALK_PLACES,
   YEAR,
   YEAR_AREA,
   YEAR_LINK,
@@ -462,16 +466,20 @@ export type AreaReading = {
   deep: string;
 };
 
+export type SeasonName = "spring" | "summer" | "autumn" | "winter";
+/** Solar months from the Tiger on: three of spring, three of summer, and so on. */
+const SEASON_OF_BRANCH: SeasonName[] = ["spring", "summer", "autumn", "winter"];
+
 export type DailyReading = {
   date: string;
   slip: string;
-  today: { element: ElementName; yang: boolean; animal: string; animalElement: ElementName };
+  today: { element: ElementName; yang: boolean; animal: string; animalElement: ElementName; stemIdx: number };
   energy: { element: ElementName; family: Family; familyName: string; means: string };
   undercurrent: { element: ElementName; family: Family; familyName: string; means: string; animal: string };
   personal: { nick: string; text: string };
   overall: { score: number; tone: Tone; toneLabel: string; toneLine: string; ask: string; deep: string };
   tweaks: Tweaks;
-  season: { text: string; element: ElementName; familyName: string; until: string | null };
+  season: { text: string; element: ElementName; familyName: string; until: string | null; name: SeasonName };
   areas: AreaReading[];
   focus: AreaId;
   keys: Record<string, string>;
@@ -599,7 +607,7 @@ export function readDay(profile: Profile, date: string): DailyReading {
   return {
     date,
     slip,
-    today: { element: s.stemEl, yang: day.day.stem.yang, animal: todayAnimal, animalElement: day.day.branch.element },
+    today: { element: s.stemEl, yang: day.day.stem.yang, animal: todayAnimal, animalElement: day.day.branch.element, stemIdx: day.day.stemIdx },
     energy: { element: s.stemEl, family: stemFam, familyName: FAMILY_NAME[stemFam], means: FAMILY_MEANS[stemFam] },
     undercurrent: { element: s.branchEl, family: branchFam, familyName: FAMILY_NAME[branchFam], means: FAMILY_MEANS[branchFam], animal: todayAnimal },
     personal: { nick: CORE_NICK[coreKey], text: CORE_TODAY[coreKey][stemFam] },
@@ -611,12 +619,13 @@ export function readDay(profile: Profile, date: string): DailyReading {
       deep: OVERALL_DEEP[stemFam],
       ask: ASK[askKey],
     },
-    tweaks: readTweaks(profile, n, stemFam, s.stemEl, day.day.branchIdx, salt),
+    tweaks: readTweaks(profile, n, stemFam, s.stemEl, salt),
     season: {
       text: SEASON[`${familyOf(dmEl, seasonEl)}.${profile.band}`],
       element: seasonEl,
       familyName: FAMILY_NAME[familyOf(dmEl, seasonEl)],
       until,
+      name: SEASON_OF_BRANCH[mod(day.month.branchIdx - 2, 12) / 3 | 0],
     },
     areas,
     focus,
@@ -647,8 +656,8 @@ export type Tweaks = {
   wear: { color: string; hex: string };
   eat: string;
   do: string;
-  time: { label: string; animal: string; element: ElementName; note: string };
-  notes: { wear: string; eat: string; do: string };
+  listen: string;
+  notes: { wear: string; eat: string; do: string; listen: string };
 };
 
 /** The element a family points at, seen from your core element. */
@@ -662,7 +671,7 @@ function elementOfFamily(core: ElementName, fam: Family): ElementName {
  * support, money and tasks by backup, and a crowd of your own element by an
  * outlet. Which color, food, and action within that element rotates daily.
  */
-function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: ElementName, dayBranch: number, salt: number): Tweaks {
+function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: ElementName, salt: number): Tweaks {
   const core = profile.core.element;
   const light = profile.band === "light";
   const ease: Record<Family, Family> = {
@@ -677,25 +686,6 @@ function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: Elem
   const set = TWEAK[el];
   const color = set.wear[mod(n + salt, set.wear.length)];
 
-  // Best two hours while awake (5 AM to 9 PM): an easy element that gets along with today and with you.
-  let best = 3;
-  let bestScore = -Infinity;
-  for (let b = 3; b <= 10; b++) {
-    const bEl = BRANCHES[b].element;
-    const v =
-      profile.ease[bEl] +
-      REL_MOD[branchRelation(b, dayBranch)] +
-      0.5 * REL_MOD[branchRelation(b, profile.chart.day.branchIdx)] +
-      (b >= 4 && b <= 9 ? 0.2 : 0) +
-      ((mod(n, 5) === b % 5 ? 0.15 : 0));
-    if (v > bestScore) [best, bestScore] = [b, v];
-  }
-  const start = mod(best * 2 - 1, 24);
-  const hr = (h: number) => `${h % 12 === 0 ? 12 : h % 12}`;
-  const ampm = (h: number) => (h < 12 ? "AM" : "PM");
-  const end = start + 2;
-  const label = ampm(start) === ampm(end) ? `${hr(start)} to ${hr(end)} ${ampm(end)}` : `${hr(start)} ${ampm(start)} to ${hr(end)} ${ampm(end)}`;
-
   return {
     element: el,
     why: fill(TWEAK_WHY[(todayFam === "company" || todayFam === "nurture") && light ? (`${todayFam}.light` as const) : todayFam], { el, core, today: todayEl }),
@@ -703,12 +693,7 @@ function readTweaks(profile: Profile, n: number, todayFam: Family, todayEl: Elem
     wear: color,
     eat: set.eat[mod(n * 3 + salt, set.eat.length)],
     do: set.do[mod(n * 5 + salt * 2, set.do.length)],
-    time: {
-      label,
-      animal: BRANCHES[best].animal,
-      element: BRANCHES[best].element,
-      note: `Each two-hour block of the day has an animal. ${BRANCHES[best].animal} hours carry ${BRANCHES[best].element}, which suits your chart and gets along with today's ${BRANCHES[dayBranch].animal}.`,
-    },
+    listen: MUSIC[el][mod(n * 7 + salt * 3, MUSIC[el].length)],
   };
 }
 
@@ -1011,4 +996,20 @@ export function readLife(profile: Profile): LifeReading {
   return {
     areas: AREAS.map((id) => ({ id, title: AREA_META[id].title, text: LIFE_AREA[id][src[id].fam], source: src[id].source })),
   };
+}
+
+// ------------------------------------------------------------ a walk
+
+export type Walk = { dir: string; short: string; deg: number; element: ElementName; note: string; places: string[] };
+
+/**
+ * The almanac's joy direction for the day, from the day's stem (Jia and Ji
+ * point northeast, Yi and Geng northwest, and so on), plus places that carry
+ * the day's helpful element.
+ */
+export function readWalk(profile: Profile, date: string): Walk {
+  const r = readDay(profile, date);
+  const d = WALK_DIRS[r.today.stemIdx % 5];
+  const el = r.tweaks.element;
+  return { ...d, element: el, note: fill(WALK_NOTE, { dir: d.dir.toLowerCase(), el }), places: WALK_PLACES[el] };
 }

@@ -84,7 +84,7 @@ const people: BirthDetails[] = [
 ];
 const fullPerson: Person = { name: "Maya", interests: [...AREAS], career: ["job"], love: ["partnered"], home: ["cat", "kids"], growth: ["calm"] };
 const seen: Record<string, Set<string>> = {
-  slip: new Set(), wear: new Set(), eat: new Set(), act: new Set(), time: new Set(), ask: new Set(), season: new Set(), areaText: new Set(), areaTone: new Set(),
+  slip: new Set(), wear: new Set(), eat: new Set(), act: new Set(), listen: new Set(), ask: new Set(), season: new Set(), areaText: new Set(), areaTone: new Set(),
   step: new Set(), core: new Set(), forYou: new Set(), year: new Set(), yearArea: new Set(), life: new Set(),
 };
 const toneCount: Record<string, number> = { flowing: 0, steady: 0, mixed: 0, gentle: 0 };
@@ -122,7 +122,7 @@ const dates = Array.from({ length: days }, (_, k) => new Date(Date.UTC(2026, 0, 
     seen.wear.add(r.tweaks.wear.color);
     seen.eat.add(r.tweaks.eat);
     seen.act.add(r.tweaks.do);
-    seen.time.add(r.tweaks.time.label);
+    seen.listen.add(r.tweaks.listen);
     scores.push(r.overall.score, ...r.areas.map((a) => a.score));
     seen.ask.add(r.keys.ask);
     seen.season.add(r.keys.season);
@@ -174,7 +174,7 @@ check("slip lines reached", String(seen.slip.size), String(Object.keys(copy.SLIP
 check("wear colors reached", String(seen.wear.size), String(Object.values(more.TWEAK).flatMap((t) => t.wear).length));
 check("eat tweaks reached", String(seen.eat.size), String(Object.values(more.TWEAK).flatMap((t) => t.eat).length));
 check("do tweaks reached", String(seen.act.size), String(Object.values(more.TWEAK).flatMap((t) => t.do).length));
-assert("best-time windows vary", seen.time.size >= 6, [...seen.time].join(", "));
+check("music kinds reached", String(seen.listen.size), String(Object.values(more.MUSIC).flat().length));
 const sorted = [...scores].sort((a, b) => a - b);
 const q = (p: number) => sorted[Math.floor(p * (sorted.length - 1))];
 console.log(`      daily numbers: min ${sorted[0]}, 10% ${q(0.1)}, median ${q(0.5)}, 90% ${q(0.9)}, max ${sorted[sorted.length - 1]}`);

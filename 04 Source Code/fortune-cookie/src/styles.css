@@ -3429,7 +3429,7 @@ select.field {
     right: 0;
     bottom: 0;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     padding: 6px 6px max(8px, env(safe-area-inset-bottom));
     background: color-mix(in srgb, var(--card) 92%, transparent);
     backdrop-filter: blur(14px);
@@ -3978,4 +3978,349 @@ select.field {
   font-weight: 600;
   font-size: 20px;
   line-height: 1.2;
+}
+
+/* ------------------------------------------------------------- round 6: pull to crack, pet, walk, invites */
+
+.crack-me {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.crack-me.is-pulling {
+  animation: none;
+}
+
+.crack-me.is-pulling .cookie-art g {
+  transition-duration: 0.08s;
+}
+
+.crack-touch {
+  display: none;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--night-ink-2);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .crack-click {
+    display: none;
+  }
+
+  .crack-touch {
+    display: block;
+    animation: nudge 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    letter-spacing: 0;
+  }
+  50% {
+    letter-spacing: 0.06em;
+  }
+}
+
+/* the pet sits in the score block's top corner */
+.score-block {
+  position: relative;
+}
+
+.pet {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.pet-body {
+  display: block;
+  animation: pet-idle 3.2s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.pet.is-happy .pet-body {
+  animation: pet-hop 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) 2;
+}
+
+@keyframes pet-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+}
+
+@keyframes pet-hop {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  20% {
+    transform: translateY(0) scale(1.1, 0.88);
+  }
+  50% {
+    transform: translateY(-16px) scale(0.94, 1.08) rotate(6deg);
+  }
+  80% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+.pet-bubble {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  right: 4px;
+  white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--pink-ink);
+  animation: pop-in 0.25s ease both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+}
+
+.pet-hearts i {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  font-style: normal;
+  font-size: 13px;
+  color: #ff7fa3;
+  animation: heart-up 1.1s ease-out both;
+  pointer-events: none;
+}
+
+.pet-hearts i:nth-child(2) {
+  margin-left: -18px;
+  animation-delay: 0.12s;
+}
+
+.pet-hearts i:nth-child(3) {
+  margin-left: 14px;
+  animation-delay: 0.24s;
+}
+
+@keyframes heart-up {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-38px) scale(1.1);
+  }
+}
+
+@media (min-width: 521px) {
+  .score-copy {
+    padding-right: 76px;
+  }
+}
+
+@media (max-width: 520px) {
+  .pet {
+    top: 0;
+    right: -4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-body,
+  .pet.is-happy .pet-body,
+  .crack-touch {
+    animation: none;
+  }
+}
+
+/* today's direction */
+.walk-head {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.walk-head p {
+  color: var(--ink-2);
+}
+
+.walk-compass {
+  width: 96px;
+  height: 96px;
+}
+
+.wc-ring {
+  fill: var(--card);
+  stroke: var(--line);
+  stroke-width: 2;
+}
+
+.wc-letter {
+  font-size: 11px;
+  font-weight: 800;
+  fill: var(--ink-3);
+}
+
+.wc-arrow {
+  fill: var(--pink-ink);
+}
+
+.wc-short {
+  font-size: 12px;
+  font-weight: 800;
+  fill: var(--ink);
+}
+
+.walk-map {
+  position: relative;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: #e9e4dc;
+  margin-block: 16px;
+}
+
+.walk-tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  user-select: none;
+}
+
+.walk-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.walk-line {
+  stroke: var(--pink-ink);
+  stroke-width: 4;
+  stroke-dasharray: 2 9;
+  stroke-linecap: round;
+}
+
+.walk-halo {
+  fill: color-mix(in srgb, var(--focus) 22%, transparent);
+}
+
+.walk-me {
+  fill: var(--focus);
+  stroke: #fff;
+  stroke-width: 3;
+}
+
+.walk-pin path {
+  fill: var(--pink-ink);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+.walk-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 2px 8px;
+  font-size: 11px;
+  background: rgb(255 255 255 / 80%);
+  color: #444;
+  border-top-left-radius: 8px;
+}
+
+.walk-credit a {
+  color: inherit;
+}
+
+.walk-ask {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+}
+
+.walk-ask-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.walk-places {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.walk-places a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.chip-btn.is-static:hover {
+  border-color: var(--line);
+}
+
+@media (max-width: 520px) {
+  .walk-head {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .walk-compass {
+    width: 72px;
+    height: 72px;
+  }
+
+  .walk-map {
+    height: 300px;
+  }
+}
+
+/* match invites */
+.invite {
+  display: grid;
+  gap: 10px;
+}
+
+.invite-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.invite-banner {
+  background: var(--personal);
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-weight: 700;
 }

@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ANIMAL_INFO } from "../engine/copy-guide";
 import { readChart, readMatch, validateBirth, type BirthDetails, type Profile } from "../engine/reading";
-import { isBirthDetails, load, save } from "../lib";
+import { inviteLink, isBirthDetails, load, save, type Invite } from "../lib";
 import { DateFields, TimeFields } from "./DateTimeFields";
-import { Close } from "./Icons";
+import { Close, Copy } from "./Icons";
 import { PlaceField, type Place } from "./PlaceField";
 import { ScoreRing } from "./Score";
 import { Term } from "./Term";
@@ -14,7 +14,32 @@ const isPeople = (v: unknown): v is Person[] =>
   Array.isArray(v) && v.every((p) => p && typeof p === "object" && typeof (p as Person).name === "string" && isBirthDetails((p as Person).birth));
 
 /** Compatibility with a partner, friend, or family member, from their birthday. */
-export function MatchPage({ profile }: { profile: Profile }) {
+/** Share your own details as a link. Whoever opens it sees your match right away. */
+function InviteButton({ profile, label }: { profile: Profile; label: string }) {
+  const [done, setDone] = useState(false);
+  const send = async () => {
+    const url = inviteLink(profile.person.name, profile.birth);
+    const who = profile.person.name || "A friend";
+    try {
+      if (navigator.share && window.matchMedia?.("(pointer: coarse)").matches) {
+        await navigator.share({ title: "Fortune Cookie match", text: `${who} wants to see how your charts fit.`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setDone(true);
+        window.setTimeout(() => setDone(false), 2000);
+      }
+    } catch {
+      /* share sheet closed */
+    }
+  };
+  return (
+    <button type="button" className="btn btn-soft btn-small" onClick={send}>
+      <Copy size={14} /> {done ? "Link copied" : label}
+    </button>
+  );
+}
+
+export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile; incoming: Invite | null; onIncoming: () => void }) {
   const [people, setPeople] = useState<Person[]>(() => load(KEY, isPeople) ?? []);
   const [current, setCurrent] = useState<Person | null>(people[0] ?? null);
   const [adding, setAdding] = useState(people.length === 0);
@@ -25,6 +50,21 @@ export function MatchPage({ profile }: { profile: Profile }) {
   const [timeParts, setTimeParts] = useState({ h: "", min: "", pm: false });
   const [place, setPlace] = useState<Place | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [invitedBy, setInvitedBy] = useState<string | null>(null);
+
+  // Someone opened an invite link: add them and show the match straight away.
+  useEffect(() => {
+    if (!incoming) return;
+    setPeople((list) => {
+      const next = [incoming, ...list.filter((x) => x.name !== incoming.name)].slice(0, 8);
+      save(KEY, next);
+      return next;
+    });
+    setCurrent(incoming);
+    setAdding(false);
+    setInvitedBy(incoming.name);
+    onIncoming();
+  }, [incoming, onIncoming]);
 
   const result = useMemo(() => (current ? readMatch(profile, readChart(current.birth), current.name) : null), [profile, current]);
 
@@ -71,6 +111,16 @@ export function MatchPage({ profile }: { profile: Profile }) {
         <h1 id="match-title">How do you two fit?</h1>
         <p className="lede">A partner, a friend, a sister. Add their birthday and see how your charts get along.</p>
       </header>
+
+      {invitedBy ? <p className="invite-banner">{invitedBy} sent you an invite. Here's how your charts fit.</p> : null}
+
+      <div className="block invite">
+        <div className="invite-row">
+          <p className="label">Easier: send a link</p>
+          <InviteButton profile={profile} label="Copy my invite link" />
+        </div>
+        <p className="hint">Whoever opens it sees your match with them, no typing needed. The link carries your birthday and birthplace, so share it only with people you trust.</p>
+      </div>
 
       {people.length ? (
         <div className="people">
@@ -151,7 +201,7 @@ export function MatchPage({ profile }: { profile: Profile }) {
               <p className="muted small">
                 They're{" "}
                 <Term tip={`Their core element is ${result.them.yang ? "Yang" : "Yin"} ${result.them.core}.`}>
-                  {result.them.title.replace(/^The /, "a ")}
+                  {result.them.title.replace(/^The (?=[AEIOU])/, "an ").replace(/^The /, "a ")}
                 </Term>
                 , a {result.them.yearAnimal} ({(ANIMAL_INFO[result.them.yearAnimal]?.trait ?? "").toLowerCase()}).
               </p>
@@ -165,6 +215,10 @@ export function MatchPage({ profile }: { profile: Profile }) {
               </div>
             ))}
           </dl>
+          <div className="invite-row">
+            <span className="muted small">Want {result.them.name} to see this too?</span>
+            <InviteButton profile={profile} label={`Send ${result.them.name} my link`} />
+          </div>
         </article>
       ) : null}
     </section>
