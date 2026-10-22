@@ -4921,3 +4921,202 @@ select.field {
   line-height: 1.7;
   white-space: nowrap;
 }
+
+/* years ahead: a line per area. Hues follow each area's color, stepped and
+   checked for color-blind separation and 3:1 contrast in both themes. */
+.yc {
+  --s-growth: #1f9e6e;
+  --s-career: #b87510;
+  --s-love: #d55181;
+  --s-family: #2a78d6;
+  display: grid;
+  gap: 10px;
+  margin-block: 6px 18px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .yc {
+    --s-growth: #28a374;
+    --s-career: #c4851a;
+    --s-love: #d7558a;
+    --s-family: #4a86de;
+  }
+}
+
+:root[data-theme="dark"] .yc {
+  --s-growth: #28a374;
+  --s-career: #c4851a;
+  --s-love: #d7558a;
+  --s-family: #4a86de;
+}
+
+.yc [data-s="growth"] { --s: var(--s-growth); }
+.yc [data-s="career"] { --s: var(--s-career); }
+.yc [data-s="love"] { --s: var(--s-love); }
+.yc [data-s="family"] { --s: var(--s-family); }
+
+.yc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.yc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink-3);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.yc-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--s);
+}
+
+.yc-chip.is-on {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--s) 45%, var(--line));
+}
+
+.yc-chip.is-on i {
+  background: var(--s);
+}
+
+.yc-plot {
+  position: relative;
+  border-radius: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.yc-plot svg {
+  display: block;
+}
+
+.yc-now {
+  fill: var(--lilac-soft);
+  opacity: 0.7;
+}
+
+.yc-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.yc-axis {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.yc-axis.is-now {
+  fill: var(--ink);
+  font-weight: 800;
+}
+
+.yc-cross {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.yc-series polyline {
+  fill: none;
+  stroke: var(--s);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.yc-series circle {
+  fill: var(--s);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.yc-end text {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.yc-end circle {
+  fill: var(--s);
+}
+
+.yc-read {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 13.5px;
+}
+
+.yc-read-year {
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+.yc-read-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+}
+
+.yc-read-row i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--s);
+}
+
+.yc-read-row strong {
+  color: var(--ink);
+}
+
+.yc-table-btn {
+  justify-self: start;
+  font-size: 13px;
+}
+
+.yc-table-wrap {
+  overflow-x: auto;
+}
+
+.yc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  text-align: right;
+}
+
+.yc-table th,
+.yc-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.yc-table th:first-child,
+.yc-table td:first-child {
+  text-align: left;
+}
+
+.yc-table th {
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.yc-table tr.is-now td {
+  font-weight: 800;
+}

@@ -8,6 +8,7 @@ import { AREA_ICON } from "./Icons";
 import { Mark } from "./Mark";
 import { ScorePill, ScoreRing, SHORT } from "./Score";
 import { Term } from "./Term";
+import { YearsChart } from "./YearsChart";
 
 type Tab = "month" | "year" | "years" | "life";
 
@@ -155,6 +156,7 @@ function Years({ profile, date }: { profile: Profile; date: string }) {
         ))}
         . Each year starts in early February.
       </p>
+      <YearsChart ys={ys} />
       <ol className="yrows">
         {ys.rows.map((r) => (
           <li key={r.year} className={r.current ? "is-now" : ""}>
