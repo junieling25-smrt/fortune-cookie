@@ -1,8 +1,41 @@
 import { useEffect, useRef, useState } from "react";
 import type { SeasonName } from "../engine/reading";
-import { AnimalIcon, FACE_Y } from "./Animals";
+import { AnimalHead, FACE_Y } from "./Animals";
 
 const LINE = "#5A3A22";
+
+/** Body and belly colors, matched to each head. */
+const BODY: Record<string, [string, string]> = {
+  Rat: ["#DCD8E6", "#F2EFF7"],
+  Ox: ["#D9B283", "#F4D9B8"],
+  Tiger: ["#F7B35C", "#FFF6E8"],
+  Rabbit: ["#FFF7F7", "#FFE3EA"],
+  Dragon: ["#9EDFC0", "#C9F0DD"],
+  Snake: ["#C8B8F6", "#E4DBFF"],
+  Horse: ["#D69A68", "#F0C79E"],
+  Goat: ["#F5EEDD", "#FFFFFF"],
+  Monkey: ["#B98158", "#F4D2B0"],
+  Rooster: ["#FFF8EC", "#FFE9C2"],
+  Dog: ["#EBCB9C", "#FFF1DC"],
+  Pig: ["#FFC6D4", "#FFE0E8"],
+};
+
+/** A round little body under the head: arms, belly, and two feet. */
+function Body({ animal }: { animal: string }) {
+  const [fill, belly] = BODY[animal] ?? ["#E7D9C4", "#FFF6E8"];
+  const st = { stroke: LINE, strokeWidth: 1.6, strokeLinejoin: "round" as const };
+  return (
+    <g className="pet-limbs">
+      <ellipse cx="18.5" cy="62" rx="4.6" ry="2.8" fill={fill} {...st} />
+      <ellipse cx="29.5" cy="62" rx="4.6" ry="2.8" fill={fill} {...st} />
+      <ellipse cx="24" cy="51" rx="11.5" ry="11" fill={fill} {...st} />
+      <ellipse cx="24" cy="53.5" rx="6.5" ry="6.5" fill={belly} />
+      <ellipse className="pet-arm-l" cx="13.5" cy="50" rx="3" ry="5" fill={fill} transform="rotate(28 13.5 50)" {...st} />
+      <ellipse className="pet-arm-r" cx="34.5" cy="50" rx="3" ry="5" fill={fill} transform="rotate(-28 34.5 50)" {...st} />
+    </g>
+  );
+}
+
 const CHEERS = ["Yay!", "Nice one!", "Go you!", "Love it!"];
 
 /** One small seasonal accessory, drawn on the 48 by 48 animal. */
@@ -79,9 +112,11 @@ export function Pet({ animal, season, cheer }: { animal: string; season: SeasonN
         </span>
       ) : null}
       <span className="pet-body">
-        <AnimalIcon animal={animal} size={64} label={`${animal} in ${season} clothes`}>
+        <svg className="animal-icon" width="56" height="80" viewBox="0 0 48 68" role="img" aria-label={`${animal} in ${season} clothes`}>
+          <Body animal={animal} />
+          <AnimalHead animal={animal} />
           <Outfit season={season} faceY={FACE_Y[animal] ?? 29} />
-        </AnimalIcon>
+        </svg>
       </span>
       {happy ? (
         <span className="pet-hearts" aria-hidden="true">

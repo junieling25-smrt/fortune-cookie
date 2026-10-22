@@ -728,15 +728,40 @@ export const WALK_DIRS: { dir: string; short: string; deg: number }[] = [
 ];
 
 export const WALK_NOTE =
-  "Old Chinese almanacs name a joy direction for every day, set by the day's stem. Today it points {dir}. {el} is your helpful element today, so the places below carry it.";
+  "Old Chinese almanacs name a joy direction for every day, set by the day's stem. Today it points {dir}. {el} is your helpful element today, so we look for places that carry it.";
 
-/** Places to look for, by element. Each one is also a map search. */
-export const WALK_PLACES: Record<ElementName, string[]> = {
-  Wood: ["Park", "Garden", "Bookstore", "Plant shop"],
-  Fire: ["Cafe", "Dessert shop", "Dance studio", "Sunny plaza"],
-  Earth: ["Bakery", "Farmers market", "Pottery studio", "Neighborhood diner"],
-  Metal: ["Museum", "Art gallery", "Record store", "Stationery shop"],
-  Water: ["Waterfront", "Tea house", "Aquarium", "Swimming pool"],
+/** Places to look for, by element, with the OpenStreetMap tags that find them. */
+export const WALK_PLACES: Record<ElementName, { label: string; tags: string[] }[]> = {
+  Wood: [
+    { label: "Park", tags: ["leisure=park"] },
+    { label: "Garden", tags: ["leisure=garden"] },
+    { label: "Bookstore", tags: ["shop=books"] },
+    { label: "Plant shop", tags: ["shop=garden_centre", "shop=florist"] },
+  ],
+  Fire: [
+    { label: "Cafe", tags: ["amenity=cafe"] },
+    { label: "Dessert shop", tags: ["shop=pastry", "shop=confectionery", "amenity=ice_cream"] },
+    { label: "Theater", tags: ["amenity=theatre", "amenity=cinema"] },
+    { label: "Dance studio", tags: ["leisure=dance"] },
+  ],
+  Earth: [
+    { label: "Bakery", tags: ["shop=bakery"] },
+    { label: "Market", tags: ["amenity=marketplace", "shop=greengrocer"] },
+    { label: "Deli", tags: ["shop=deli"] },
+    { label: "Pottery studio", tags: ["craft=pottery", "shop=pottery"] },
+  ],
+  Metal: [
+    { label: "Museum", tags: ["tourism=museum"] },
+    { label: "Art gallery", tags: ["tourism=gallery", "shop=art"] },
+    { label: "Record store", tags: ["shop=music"] },
+    { label: "Stationery shop", tags: ["shop=stationery"] },
+  ],
+  Water: [
+    { label: "Waterfront", tags: ["natural=water", "leisure=marina", "amenity=fountain"] },
+    { label: "Tea house", tags: ["shop=tea", "cuisine=tea"] },
+    { label: "Aquarium", tags: ["tourism=aquarium"] },
+    { label: "Swimming pool", tags: ["leisure=swimming_pool", "leisure=water_park"] },
+  ],
 };
 
 // ------------------------------------------------------------ compatibility

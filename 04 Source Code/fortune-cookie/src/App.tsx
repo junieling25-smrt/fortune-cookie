@@ -300,7 +300,7 @@ export function App() {
         </button>
         <nav className="topnav" aria-label="Main">
           {TABS.filter((t) => t.id !== "me").map((t) => (
-            <button key={t.id} type="button" className={`topnav-link ${page === t.id || (t.id === "meaning" && page === "how") ? "is-on" : ""}`} onClick={() => go(t.id)}>
+            <button key={t.id} type="button" className={`topnav-link ${t.id === "meaning" ? "is-quiet" : ""} ${page === t.id || (t.id === "meaning" && page === "how") ? "is-on" : ""}`} onClick={() => go(t.id)}>
               {t.label}
             </button>
           ))}

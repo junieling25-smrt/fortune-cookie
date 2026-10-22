@@ -172,6 +172,12 @@ export function AnimalIcon({ animal, size = 48, label, children }: { animal: str
   );
 }
 
+/** Just the drawing, for use inside another svg (the pet adds a body). */
+export function AnimalHead({ animal }: { animal: string }) {
+  const Draw = ANIMALS[animal];
+  return Draw ? <Draw /> : null;
+}
+
 /** Where each face sits, so the pet's glasses land on its eyes. */
 export const FACE_Y: Record<string, number> = { Rat: 29, Ox: 25, Tiger: 29, Rabbit: 30, Dragon: 29, Snake: 25, Horse: 25, Goat: 25, Monkey: 27, Rooster: 25, Dog: 27, Pig: 25 };
 

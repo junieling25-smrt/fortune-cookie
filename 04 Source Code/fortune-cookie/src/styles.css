@@ -4031,10 +4031,10 @@ select.field {
 
 .pet {
   position: absolute;
-  top: 6px;
+  top: 0;
   right: 0;
   width: 72px;
-  height: 72px;
+  height: 88px;
   display: grid;
   place-items: center;
   background: none;
@@ -4144,8 +4144,32 @@ select.field {
 
 @media (max-width: 520px) {
   .pet {
-    top: 0;
+    top: -6px;
     right: -4px;
+  }
+}
+
+.pet.is-happy .pet-arm-l {
+  animation: wave-l 0.35s ease-in-out 4 alternate;
+  transform-box: fill-box;
+  transform-origin: 80% 10%;
+}
+
+.pet.is-happy .pet-arm-r {
+  animation: wave-r 0.35s ease-in-out 4 alternate;
+  transform-box: fill-box;
+  transform-origin: 20% 10%;
+}
+
+@keyframes wave-l {
+  to {
+    rotate: 70deg;
+  }
+}
+
+@keyframes wave-r {
+  to {
+    rotate: -70deg;
   }
 }
 
@@ -4271,22 +4295,99 @@ select.field {
   gap: 10px;
 }
 
-.walk-places {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 8px;
-  display: flex;
-  flex-wrap: wrap;
+.walk-cone {
+  fill: color-mix(in srgb, var(--pink) 16%, transparent);
+  stroke: color-mix(in srgb, var(--pink-ink) 35%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+
+.walk-dot circle {
+  fill: #fff;
+  stroke: var(--pink-ink);
+  stroke-width: 2;
+}
+
+.walk-dot text,
+.walk-pin text {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.walk-dot text {
+  fill: var(--pink-ink);
+}
+
+.walk-pin text {
+  fill: #fff;
+}
+
+.walk-results {
+  display: grid;
   gap: 8px;
 }
 
-.walk-places a {
-  color: var(--ink);
-  text-decoration: none;
+.walk-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
 }
 
-.chip-btn.is-static:hover {
+.walk-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+}
+
+.walk-list li.is-on {
+  background: var(--card);
   border-color: var(--line);
+}
+
+.walk-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.walk-num {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--pink-ink);
+  color: var(--pink-ink);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.is-on .walk-num {
+  background: var(--pink-ink);
+  color: #fff;
+}
+
+.walk-name {
+  display: grid;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.walk-list .btn {
+  flex: none;
+  text-decoration: none;
 }
 
 @media (max-width: 520px) {
@@ -4323,4 +4424,61 @@ select.field {
   border-radius: 16px;
   padding: 12px 16px;
   font-weight: 700;
+}
+
+/* the theory page is a side door, so it reads quieter in the nav */
+.topnav-link.is-quiet {
+  position: relative;
+  margin-left: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.topnav-link.is-quiet::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  width: 1px;
+  height: 16px;
+  translate: 0 -50%;
+  background: var(--line);
+}
+
+.topnav-link.is-quiet:hover,
+.topnav-link.is-quiet.is-on {
+  background: var(--bg-band);
+  color: var(--ink-2);
+}
+
+/* an area: today on the left, for you on the right */
+.area-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.area-cols > div {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.area-cols .area-text {
+  font-size: 16px;
+}
+
+.area-cols .area-foryou {
+  border-left: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--personal);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .area-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
