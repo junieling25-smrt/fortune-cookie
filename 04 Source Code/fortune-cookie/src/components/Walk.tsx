@@ -73,7 +73,7 @@ async function fromOverpass(spot: Spot, walk: Walk, signal: AbortSignal): Promis
   });
   const query = `[out:json][timeout:15];(${parts.join("")});out center 300;`;
   type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
-  const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 15000);
+  const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 8000);
   return data.elements.flatMap((e) => {
     const lat = e.lat ?? e.center?.lat;
     const lon = e.lon ?? e.center?.lon;
@@ -85,41 +85,32 @@ async function fromOverpass(spot: Spot, walk: Walk, signal: AbortSignal): Promis
   });
 }
 
-/** Backup: Nominatim, one plain search per kind, held inside the box around today's cone. */
-async function fromNominatim(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Raw[]> {
+/** Nominatim, one plain search per kind inside the box around today's cone. Hands over each batch as it lands. */
+async function fromNominatim(spot: Spot, walk: Walk, signal: AbortSignal, onHits: (r: Raw[]) => void): Promise<void> {
   const pts = [spot, ...[-CONE, -CONE / 2, 0, CONE / 2, CONE].map((o) => destination(spot.lat, spot.lon, walk.deg + o, RADIUS))];
   const box = [Math.min(...pts.map((p) => p.lon)), Math.max(...pts.map((p) => p.lat)), Math.max(...pts.map((p) => p.lon)), Math.min(...pts.map((p) => p.lat))].map((n) => n.toFixed(5)).join(",");
-  const out: Raw[] = [];
   let answered = 0;
-  for (const p of walk.places) {
+  for (const [i, p] of walk.places.entries()) {
+    if (i) await new Promise((r) => window.setTimeout(r, 1000)); // Nominatim asks for one request a second
+    if (signal.aborted) return;
     type Hit = { lat: string; lon: string; name?: string };
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=20&bounded=1&viewbox=${box}&q=${encodeURIComponent(p.phrase)}`;
     try {
-      const hits = await getJson<Hit[]>(url, signal, 8000);
+      const hits = await getJson<Hit[]>(url, signal, 6000);
       answered++;
-      for (const h of hits) if (h.name) out.push({ name: h.name, kind: p.label, lat: Number(h.lat), lon: Number(h.lon) });
+      onHits(hits.flatMap((h) => (h.name ? [{ name: h.name, kind: p.label, lat: Number(h.lat), lon: Number(h.lon) }] : [])));
     } catch (e) {
-      if (signal.aborted) throw e;
+      if (signal.aborted) return;
     }
-    await new Promise((r) => window.setTimeout(r, 1100)); // Nominatim asks for one request a second
   }
   if (!answered) throw new Error("no answer");
-  return out;
 }
 
 /**
- * Named places of the day's element that sit in today's direction, from
- * OpenStreetMap. Places inside the cone are ranked by how close they are and
- * how straight ahead; a near ring is preferred, a wider one fills in.
+ * Keeps the named places that sit in today's direction, ranked by how close
+ * they are and how straight ahead; a near ring is preferred, a wider one fills in.
  */
-async function findPlaces(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Place[]> {
-  let raw: Raw[] = [];
-  try {
-    raw = await fromOverpass(spot, walk, signal);
-  } catch (e) {
-    if (signal.aborted) throw e;
-  }
-  if (!raw.length) raw = await fromNominatim(spot, walk, signal);
+function rank(raw: Raw[], spot: Spot, walk: Walk): Place[] {
   const seen = new Set<string>();
   const out: Place[] = [];
   for (const r of raw) {
@@ -134,6 +125,24 @@ async function findPlaces(spot: Spot, walk: Walk, signal: AbortSignal): Promise<
   const pool = near.length >= 3 ? near : out;
   return pool.sort((a, b) => a.dist * (1 + a.off / CONE) - b.dist * (1 + b.off / CONE)).slice(0, 6);
 }
+
+/** Results are kept for the day, per spot, so coming back is instant. */
+const cacheKey = (spot: Spot, date: string) => `fc.places.${date}.${spot.lat.toFixed(3)},${spot.lon.toFixed(3)}`;
+const readCache = (k: string): Place[] | null => {
+  try {
+    const v = JSON.parse(window.localStorage.getItem(k) ?? "null");
+    return Array.isArray(v) ? v : null;
+  } catch {
+    return null;
+  }
+};
+const writeCache = (k: string, list: Place[]) => {
+  try {
+    window.localStorage.setItem(k, JSON.stringify(list));
+  } catch {
+    /* fine */
+  }
+};
 
 function MapView({ here, walk, places, pick }: { here: Spot; walk: Walk; places: Place[]; pick: number }) {
   const reach = Math.max(700, ...places.map((p) => p.dist));
@@ -255,20 +264,49 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
   // The page is about where you are, so it asks for your location straight away.
   useEffect(locate, []);
 
+  // Overpass and Nominatim run side by side. Nominatim's batches show up as
+  // they land; a full Overpass answer replaces them and stops the rest.
   useEffect(() => {
     if (!spot) return;
-    const ctl = new AbortController();
-    setFound({ status: "loading", list: [] });
+    const key = cacheKey(spot, date);
+    const cached = readCache(key);
     setPick(0);
-    (async () => {
-      try {
-        setFound({ status: "done", list: await findPlaces(spot, walk, ctl.signal) });
-      } catch {
-        if (!ctl.signal.aborted) setFound({ status: "error", list: [] });
-      }
-    })();
+    if (cached?.length) return setFound({ status: "done", list: cached });
+    const ctl = new AbortController();
+    const nomCtl = new AbortController();
+    ctl.signal.addEventListener("abort", () => nomCtl.abort());
+    let pool: Raw[] = [];
+    let settled = false;
+    const finish = (list: Place[]) => {
+      if (settled || ctl.signal.aborted) return;
+      settled = true;
+      nomCtl.abort();
+      setFound({ status: "done", list });
+      if (list.length) writeCache(key, list);
+    };
+    setFound({ status: "loading", list: [] });
+    const over = fromOverpass(spot, walk, ctl.signal).then((raw) => {
+      const list = rank(raw, spot, walk);
+      if (list.length) finish(list);
+      return list.length > 0;
+    });
+    const nom = fromNominatim(spot, walk, nomCtl.signal, (hits) => {
+      if (settled || ctl.signal.aborted) return;
+      pool = [...pool, ...hits];
+      setFound({ status: "loading", list: rank(pool, spot, walk) });
+    }).then(() => {
+      // Nominatim found enough on its own: no need to keep waiting on Overpass.
+      const list = rank(pool, spot, walk);
+      if (list.length) finish(list);
+      return true;
+    });
+    Promise.allSettled([over, nom]).then(([o, n]) => {
+      if (settled || ctl.signal.aborted) return;
+      if (o.status === "rejected" && n.status === "rejected") setFound({ status: "error", list: [] });
+      else finish(rank(pool, spot, walk));
+    });
     return () => ctl.abort();
-  }, [spot, walk, tries]);
+  }, [spot, walk, date, tries]);
 
   const kinds = walk.places.map((p) => p.label.toLowerCase());
   const places = found?.list ?? [];
@@ -293,7 +331,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
           <MapView here={spot} walk={walk} places={places} pick={pick} />
           <div className="block walk-results">
             <p className="label block-label">Places {walk.dir.toLowerCase()} of you</p>
-            {found?.status === "loading" ? <p className="muted">Looking {walk.dir.toLowerCase()}…</p> : null}
+            {found?.status === "loading" ? <p className="muted">{places.length ? "Finding more…" : `Looking ${walk.dir.toLowerCase()}…`}</p> : null}
             {found?.status === "error" ? (
               <p className="muted">
                 The map service is busy right now.{" "}
