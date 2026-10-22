@@ -65,13 +65,15 @@ async function getJson<T>(url: string, signal: AbortSignal, ms: number): Promise
 
 /** First choice: one Overpass query for every kind of place, by OpenStreetMap tag. */
 async function fromOverpass(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Raw[]> {
-  const around = `(around:${RADIUS},${spot.lat.toFixed(5)},${spot.lon.toFixed(5)})`;
+  // Only ask inside today's cone, so a busy city's other directions don't crowd it out.
+  const arc = [spot, ...Array.from({ length: 9 }, (_, i) => destination(spot.lat, spot.lon, walk.deg - CONE + i * 10, RADIUS))];
+  const around = `(poly:"${arc.map((p) => `${p.lat.toFixed(5)} ${p.lon.toFixed(5)}`).join(" ")}")`;
   const tags = walk.places.flatMap((p) => p.tags.map((t) => ({ t, label: p.label })));
   const parts = tags.flatMap(({ t }) => {
     const [k, v] = t.split("=");
     return [`node["${k}"="${v}"]["name"]${around};`, `way["${k}"="${v}"]["name"]${around};`];
   });
-  const query = `[out:json][timeout:15];(${parts.join("")});out center 300;`;
+  const query = `[out:json][timeout:15];(${parts.join("")});out center 1000;`;
   type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
   const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 8000);
   return data.elements.flatMap((e) => {
@@ -94,7 +96,7 @@ async function fromNominatim(spot: Spot, walk: Walk, signal: AbortSignal, onHits
     if (i) await new Promise((r) => window.setTimeout(r, 1000)); // Nominatim asks for one request a second
     if (signal.aborted) return;
     type Hit = { lat: string; lon: string; name?: string };
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=20&bounded=1&viewbox=${box}&q=${encodeURIComponent(p.phrase)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=40&bounded=1&viewbox=${box}&q=${encodeURIComponent(p.phrase)}`;
     try {
       const hits = await getJson<Hit[]>(url, signal, 6000);
       answered++;
@@ -127,7 +129,7 @@ function rank(raw: Raw[], spot: Spot, walk: Walk): Place[] {
 }
 
 /** Results are kept for the day, per spot, so coming back is instant. */
-const cacheKey = (spot: Spot, date: string) => `fc.places.${date}.${spot.lat.toFixed(3)},${spot.lon.toFixed(3)}`;
+const cacheKey = (spot: Spot, date: string) => `fc.places2.${date}.${spot.lat.toFixed(3)},${spot.lon.toFixed(3)}`;
 const readCache = (k: string): Place[] | null => {
   try {
     const v = JSON.parse(window.localStorage.getItem(k) ?? "null");
@@ -264,8 +266,8 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
   // The page is about where you are, so it asks for your location straight away.
   useEffect(locate, []);
 
-  // Overpass and Nominatim run side by side. Nominatim's batches show up as
-  // they land; a full Overpass answer replaces them and stops the rest.
+  // Overpass and Nominatim run side by side and feed one pool, shown as it
+  // grows. It's done when both answer, or sooner once there's plenty to show.
   useEffect(() => {
     if (!spot) return;
     const key = cacheKey(spot, date);
@@ -273,37 +275,51 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
     setPick(0);
     if (cached?.length) return setFound({ status: "done", list: cached });
     const ctl = new AbortController();
+    const overCtl = new AbortController();
     const nomCtl = new AbortController();
-    ctl.signal.addEventListener("abort", () => nomCtl.abort());
+    ctl.signal.addEventListener("abort", () => (overCtl.abort(), nomCtl.abort()));
     let pool: Raw[] = [];
     let settled = false;
-    const finish = (list: Place[]) => {
+    let overDone = false;
+    let nomDone = false;
+    const show = () => setFound({ status: "loading", list: rank(pool, spot, walk) });
+    const finish = () => {
       if (settled || ctl.signal.aborted) return;
       settled = true;
+      overCtl.abort();
       nomCtl.abort();
+      const list = rank(pool, spot, walk);
       setFound({ status: "done", list });
-      if (list.length) writeCache(key, list);
+      if (list.length >= 3) writeCache(key, list);
+    };
+    const check = () => {
+      const n = rank(pool, spot, walk).length;
+      if ((overDone && nomDone) || (overDone && n >= 6) || (nomDone && n >= 3)) finish();
     };
     setFound({ status: "loading", list: [] });
-    const over = fromOverpass(spot, walk, ctl.signal).then((raw) => {
-      const list = rank(raw, spot, walk);
-      if (list.length) finish(list);
-      return list.length > 0;
-    });
+    const over = fromOverpass(spot, walk, overCtl.signal)
+      .then((raw) => {
+        pool = [...raw, ...pool];
+        if (!settled) show();
+      })
+      .finally(() => {
+        overDone = true;
+        check();
+      });
     const nom = fromNominatim(spot, walk, nomCtl.signal, (hits) => {
       if (settled || ctl.signal.aborted) return;
       pool = [...pool, ...hits];
-      setFound({ status: "loading", list: rank(pool, spot, walk) });
-    }).then(() => {
-      // Nominatim found enough on its own: no need to keep waiting on Overpass.
-      const list = rank(pool, spot, walk);
-      if (list.length) finish(list);
-      return true;
+      show();
+    }).finally(() => {
+      nomDone = true;
+      check();
     });
     Promise.allSettled([over, nom]).then(([o, n]) => {
       if (settled || ctl.signal.aborted) return;
-      if (o.status === "rejected" && n.status === "rejected") setFound({ status: "error", list: [] });
-      else finish(rank(pool, spot, walk));
+      if (o.status === "rejected" && n.status === "rejected") {
+        settled = true;
+        setFound({ status: "error", list: [] });
+      } else finish();
     });
     return () => ctl.abort();
   }, [spot, walk, date, tries]);
@@ -362,6 +378,11 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
                 </li>
               ))}
             </ol>
+            {found?.status === "done" ? (
+              <p className="hint">
+                These are just a few nearby examples. You're welcome to go farther {walk.dir.toLowerCase()}: any {kinds.slice(0, 2).join(" or ")} that way suits today too.
+              </p>
+            ) : null}
           </div>
         </>
       ) : (

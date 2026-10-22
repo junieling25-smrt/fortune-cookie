@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { SeasonName } from "../engine/reading";
+import type { SeasonName, Tone } from "../engine/reading";
 import { AnimalHead, FACE_Y } from "./Animals";
 
 const LINE = "#5A3A22";
@@ -100,6 +100,65 @@ function Body({ animal }: { animal: string }) {
 }
 
 const CHEERS = ["Yay!", "Nice one!", "Go you!", "Love it!"];
+const INK = "#2A1C44";
+
+/** The skin around the eyes, to paint over the open eyes when they close. */
+const FACE: Record<string, string> = { ...Object.fromEntries(Object.entries(BODY).map(([k, v]) => [k, v[0]])), Monkey: "#F4D2B0" };
+
+const MOOD_WORD: Record<Tone, string> = { flowing: "beaming", steady: "content", mixed: "a little unsure", gentle: "sleepy" };
+
+/**
+ * The day's score shows on the face: a beaming day closes the eyes into happy
+ * arcs with sparkles, a mixed day brings a sweat drop, a gentle day gets sleepy.
+ */
+function Mood({ animal, mood, faceY, shades }: { animal: string; mood: Tone; faceY: number; shades: boolean }) {
+  const y = faceY - 2;
+  const skin = FACE[animal] ?? "#EBCB9C";
+  const lid = (cx: number) => <circle cx={cx} cy={y - 0.4} r="2.9" fill={skin} />;
+  const eyes = (d: (cx: number) => string) =>
+    shades ? null : (
+      <>
+        {lid(18)}
+        {lid(30)}
+        <path d={`${d(18)} ${d(30)}`} fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+      </>
+    );
+  if (mood === "flowing")
+    return (
+      <g>
+        {eyes((cx) => `M${cx - 2.6} ${y + 0.8} Q${cx} ${y - 2.6} ${cx + 2.6} ${y + 0.8}`)}
+        <g className="pet-sparkle" fill="#FFD66B" stroke={LINE} strokeWidth="0.6">
+          <path d="M5 14 L6 17 L9 18 L6 19 L5 22 L4 19 L1 18 L4 17 Z" />
+          <path d="M42 26 L42.7 28 L44.7 28.7 L42.7 29.4 L42 31.4 L41.3 29.4 L39.3 28.7 L41.3 28 Z" />
+        </g>
+      </g>
+    );
+  if (mood === "mixed")
+    return (
+      <path
+        className="pet-sweat"
+        d={`M38 ${y - 7} C 36.2 ${y - 4}, 36 ${y - 2}, 38 ${y - 1.4} C 40 ${y - 2}, 39.8 ${y - 4}, 38 ${y - 7} Z`}
+        fill="#A9D4FF"
+        stroke="#4A7FC1"
+        strokeWidth="0.7"
+      />
+    );
+  if (mood === "gentle")
+    return (
+      <g>
+        {eyes((cx) => `M${cx - 2.6} ${y - 0.6} Q${cx} ${y + 1.8} ${cx + 2.6} ${y - 0.6}`)}
+        <g className="pet-zzz" fill={INK} fontWeight="800" fontFamily="inherit">
+          <text x="6" y="14" fontSize="6">
+            z
+          </text>
+          <text x="2" y="8" fontSize="4.5">
+            z
+          </text>
+        </g>
+      </g>
+    );
+  return null;
+}
 
 /** One small seasonal accessory, drawn on the 48 by 48 animal. */
 function Outfit({ season, faceY }: { season: SeasonName; faceY: number }) {
@@ -144,10 +203,10 @@ function Outfit({ season, faceY }: { season: SeasonName; faceY: number }) {
 }
 
 /**
- * Your year animal, sitting by today's score. It dresses for the solar season
- * and does a happy hop whenever you try a tweak.
+ * Your year animal, sitting by today's score. Its face follows the day's
+ * score, it dresses for the solar season, and it hops when you try a tweak.
  */
-export function Pet({ animal, season, cheer }: { animal: string; season: SeasonName; cheer: number }) {
+export function Pet({ animal, season, mood, cheer }: { animal: string; season: SeasonName; mood: Tone; cheer: number }) {
   const [happy, setHappy] = useState<string | null>(null);
   const first = useRef(true);
   const timer = useRef<number>(0);
@@ -168,7 +227,7 @@ export function Pet({ animal, season, cheer }: { animal: string; season: SeasonN
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <button type="button" className={`pet ${happy ? "is-happy" : ""}`} onClick={hop} aria-label={`Your ${animal}, dressed for ${season}`}>
+    <button type="button" className={`pet mood-${happy ? "flowing" : mood} ${happy ? "is-happy" : ""}`} onClick={hop} aria-label={`Your ${animal}, ${MOOD_WORD[mood]} today, dressed for ${season}`}>
       {happy ? (
         <span className="pet-bubble" aria-live="polite">
           {happy}
@@ -178,6 +237,7 @@ export function Pet({ animal, season, cheer }: { animal: string; season: SeasonN
         <svg className="animal-icon pet-svg" width="62" height="80" viewBox="0 0 48 62" role="img" aria-label={`${animal} in ${season} clothes`}>
           <Body animal={animal} />
           <AnimalHead animal={animal} />
+          <Mood animal={animal} mood={happy ? "flowing" : mood} faceY={FACE_Y[animal] ?? 29} shades={season === "summer"} />
           <Outfit season={season} faceY={FACE_Y[animal] ?? 29} />
         </svg>
       </span>

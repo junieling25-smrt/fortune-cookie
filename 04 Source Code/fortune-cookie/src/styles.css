@@ -4504,3 +4504,119 @@ select.field {
     animation: none;
   }
 }
+
+/* the pet's mood follows today's score */
+.pet.mood-flowing .pet-body {
+  animation: pet-bounce 1.4s ease-in-out infinite;
+}
+
+.pet.mood-gentle .pet-body {
+  animation: pet-breathe 4.2s ease-in-out infinite;
+}
+
+.pet.mood-mixed .pet-body {
+  animation: pet-fidget 3s ease-in-out infinite;
+}
+
+.pet.is-happy .pet-body {
+  animation: pet-hop 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) 2;
+}
+
+@keyframes pet-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  40% {
+    transform: translateY(-5px) scale(0.98, 1.03);
+  }
+  70% {
+    transform: translateY(0) scale(1.03, 0.97);
+  }
+}
+
+@keyframes pet-breathe {
+  0%,
+  100% {
+    transform: scale(1, 1) rotate(-3deg);
+  }
+  50% {
+    transform: scale(1.03, 0.97) rotate(-3deg);
+  }
+}
+
+@keyframes pet-fidget {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-4deg);
+  }
+  60% {
+    transform: rotate(3deg);
+  }
+}
+
+.pet-sparkle {
+  animation: twinkle 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.pet-zzz text {
+  animation: zzz 2.4s ease-in-out infinite;
+}
+
+.pet-zzz text:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+@keyframes zzz {
+  0% {
+    opacity: 0;
+    translate: 0 2px;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: -2px -4px;
+  }
+}
+
+.pet-sweat {
+  animation: sweat 2.2s ease-in infinite;
+}
+
+@keyframes sweat {
+  0%,
+  30% {
+    translate: 0 0;
+    opacity: 1;
+  }
+  100% {
+    translate: 0 4px;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet .pet-body,
+  .pet-sparkle,
+  .pet-zzz text,
+  .pet-sweat {
+    animation: none !important;
+  }
+}

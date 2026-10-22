@@ -204,7 +204,7 @@ export function Today({
 
   const scoreBlock = (
     <section className="block score-block" aria-label="Today's score">
-      <Pet animal={profile.chart.year.branch.animal} season={reading.season.name} cheer={cheer} />
+      <Pet animal={profile.chart.year.branch.animal} season={reading.season.name} mood={overall.tone} cheer={cheer} />
       <ScoreRing score={overall.score} tone={overall.tone} label="Today's score" />
       <div className="score-copy">
         <p className="label">
