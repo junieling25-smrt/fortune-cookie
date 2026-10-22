@@ -1000,7 +1000,7 @@ export function readLife(profile: Profile): LifeReading {
 
 // ------------------------------------------------------------ a walk
 
-export type Walk = { dir: string; short: string; deg: number; element: ElementName; note: string; places: { label: string; tags: string[] }[] };
+export type Walk = { dir: string; short: string; deg: number; element: ElementName; note: string; places: { label: string; phrase: string; tags: string[] }[] };
 
 /**
  * The almanac's joy direction for the day, from the day's stem (Jia and Ji

@@ -8,7 +8,6 @@ type Found = { status: "loading" | "done" | "error"; list: Place[] };
 const TILE = 256;
 const CONE = 40; // degrees either side of today's direction
 const NEAR = 120; // closer than this isn't really a walk
-const FAR = [1500, 2500]; // meters; the wider radius is a second try
 const rad = (d: number) => (d * Math.PI) / 180;
 const deg = (r: number) => (r * 180) / Math.PI;
 
@@ -45,66 +44,95 @@ const fmtDist = (m: number) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(
 const walkLink = (from: Spot, to: Place) =>
   `https://www.google.com/maps/dir/?api=1&origin=${from.lat.toFixed(5)},${from.lon.toFixed(5)}&destination=${to.lat.toFixed(5)},${to.lon.toFixed(5)}&travelmode=walking`;
 
-const MIRRORS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
-type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
+type Raw = { name: string; kind: string; lat: number; lon: number };
+const RADIUS = 2000; // meters, about a 30-minute walk at most
 
-/** Ask every public Overpass mirror at once and keep the first good answer. Each gets 12 seconds. */
-async function overpass(query: string, signal: AbortSignal): Promise<Osm> {
+/** One fetch with its own time limit, also stopped when the page moves on. */
+async function getJson<T>(url: string, signal: AbortSignal, ms: number): Promise<T> {
   const ctl = new AbortController();
   const stop = () => ctl.abort();
   signal.addEventListener("abort", stop);
-  const timer = window.setTimeout(stop, 12000);
+  const timer = window.setTimeout(stop, ms);
   try {
-    return await Promise.any(
-      MIRRORS.map(async (url) => {
-        const res = await fetch(`${url}?data=${encodeURIComponent(query)}`, { signal: ctl.signal });
-        if (!res.ok) throw new Error(String(res.status));
-        return (await res.json()) as Osm;
-      }),
-    );
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) throw new Error(String(res.status));
+    return (await res.json()) as T;
   } finally {
     window.clearTimeout(timer);
     signal.removeEventListener("abort", stop);
-    ctl.abort();
   }
+}
+
+/** First choice: one Overpass query for every kind of place, by OpenStreetMap tag. */
+async function fromOverpass(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Raw[]> {
+  const around = `(around:${RADIUS},${spot.lat.toFixed(5)},${spot.lon.toFixed(5)})`;
+  const tags = walk.places.flatMap((p) => p.tags.map((t) => ({ t, label: p.label })));
+  const parts = tags.flatMap(({ t }) => {
+    const [k, v] = t.split("=");
+    return [`node["${k}"="${v}"]["name"]${around};`, `way["${k}"="${v}"]["name"]${around};`];
+  });
+  const query = `[out:json][timeout:15];(${parts.join("")});out center 300;`;
+  type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
+  const data = await getJson<Osm>(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, signal, 15000);
+  return data.elements.flatMap((e) => {
+    const lat = e.lat ?? e.center?.lat;
+    const lon = e.lon ?? e.center?.lon;
+    const hit = tags.find(({ t }) => {
+      const [k, v] = t.split("=");
+      return e.tags?.[k] === v;
+    });
+    return lat != null && lon != null && e.tags?.name ? [{ name: e.tags.name, kind: hit?.label ?? "Place", lat, lon }] : [];
+  });
+}
+
+/** Backup: Nominatim, one plain search per kind, held inside the box around today's cone. */
+async function fromNominatim(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Raw[]> {
+  const pts = [spot, ...[-CONE, -CONE / 2, 0, CONE / 2, CONE].map((o) => destination(spot.lat, spot.lon, walk.deg + o, RADIUS))];
+  const box = [Math.min(...pts.map((p) => p.lon)), Math.max(...pts.map((p) => p.lat)), Math.max(...pts.map((p) => p.lon)), Math.min(...pts.map((p) => p.lat))].map((n) => n.toFixed(5)).join(",");
+  const out: Raw[] = [];
+  let answered = 0;
+  for (const p of walk.places) {
+    type Hit = { lat: string; lon: string; name?: string };
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=20&bounded=1&viewbox=${box}&q=${encodeURIComponent(p.phrase)}`;
+    try {
+      const hits = await getJson<Hit[]>(url, signal, 8000);
+      answered++;
+      for (const h of hits) if (h.name) out.push({ name: h.name, kind: p.label, lat: Number(h.lat), lon: Number(h.lon) });
+    } catch (e) {
+      if (signal.aborted) throw e;
+    }
+    await new Promise((r) => window.setTimeout(r, 1100)); // Nominatim asks for one request a second
+  }
+  if (!answered) throw new Error("no answer");
+  return out;
 }
 
 /**
  * Named places of the day's element that sit in today's direction, from
- * OpenStreetMap. Each kind is asked for once; places inside the cone are
- * ranked by how close they are and how straight ahead.
+ * OpenStreetMap. Places inside the cone are ranked by how close they are and
+ * how straight ahead; a near ring is preferred, a wider one fills in.
  */
-async function findPlaces(spot: Spot, walk: Walk, radius: number, signal: AbortSignal): Promise<Place[]> {
-  const kindOf = new Map<string, string>();
-  const byKey = new Map<string, string[]>();
-  for (const p of walk.places)
-    for (const t of p.tags) {
-      kindOf.set(t, p.label);
-      const [k, v] = t.split("=");
-      byKey.set(k, [...(byKey.get(k) ?? []), v]);
-    }
-  const around = `(around:${radius},${spot.lat.toFixed(5)},${spot.lon.toFixed(5)})`;
-  const parts = [...byKey].map(([k, vs]) => `nw["${k}"~"^(${vs.join("|")})$"]["name"]${around};`);
-  const query = `[out:json][timeout:12];(${parts.join("")});out center tags 300;`;
-  const data = await overpass(query, signal);
+async function findPlaces(spot: Spot, walk: Walk, signal: AbortSignal): Promise<Place[]> {
+  let raw: Raw[] = [];
+  try {
+    raw = await fromOverpass(spot, walk, signal);
+  } catch (e) {
+    if (signal.aborted) throw e;
+  }
+  if (!raw.length) raw = await fromNominatim(spot, walk, signal);
   const seen = new Set<string>();
   const out: Place[] = [];
-  for (const e of data.elements) {
-    const lat = e.lat ?? e.center?.lat;
-    const lon = e.lon ?? e.center?.lon;
-    const name = e.tags?.name;
-    if (lat == null || lon == null || !name || seen.has(name)) continue;
-    const tag = [...kindOf.keys()].find((t) => {
-      const [k, v] = t.split("=");
-      return e.tags?.[k] === v;
-    });
-    const { dist, bearing } = legTo(spot, { lat, lon });
+  for (const r of raw) {
+    if (seen.has(r.name)) continue;
+    const { dist, bearing } = legTo(spot, r);
     const off = Math.abs(((bearing - walk.deg + 540) % 360) - 180);
-    if (off > CONE || dist < NEAR || dist > radius) continue;
-    seen.add(name);
-    out.push({ name, kind: tag ? (kindOf.get(tag) as string) : "Place", lat, lon, dist, off });
+    if (off > CONE || dist < NEAR || dist > RADIUS) continue;
+    seen.add(r.name);
+    out.push({ ...r, dist, off });
   }
-  return out.sort((a, b) => a.dist * (1 + a.off / CONE) - b.dist * (1 + b.off / CONE)).slice(0, 6);
+  const near = out.filter((p) => p.dist <= 1500);
+  const pool = near.length >= 3 ? near : out;
+  return pool.sort((a, b) => a.dist * (1 + a.off / CONE) - b.dist * (1 + b.off / CONE)).slice(0, 6);
 }
 
 function MapView({ here, walk, places, pick }: { here: Spot; walk: Walk; places: Place[]; pick: number }) {
@@ -234,9 +262,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
     setPick(0);
     (async () => {
       try {
-        let list = await findPlaces(spot, walk, FAR[0], ctl.signal);
-        if (list.length < 2) list = await findPlaces(spot, walk, FAR[1], ctl.signal);
-        setFound({ status: "done", list });
+        setFound({ status: "done", list: await findPlaces(spot, walk, ctl.signal) });
       } catch {
         if (!ctl.signal.aborted) setFound({ status: "error", list: [] });
       }
