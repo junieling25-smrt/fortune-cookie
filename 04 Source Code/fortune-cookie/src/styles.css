@@ -4559,12 +4559,12 @@ select.field {
 }
 
 .pet-sparkle {
-  animation: twinkle 1.6s ease-in-out infinite;
+  animation: pet-twinkle 1.6s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 
-@keyframes twinkle {
+@keyframes pet-twinkle {
   0%,
   100% {
     opacity: 1;
@@ -4618,5 +4618,111 @@ select.field {
   .pet-zzz text,
   .pet-sweat {
     animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------- the sky: time of day, auspicious clouds, stars at night */
+
+:root {
+  --sky-a: #ece3ff;
+  --sky-b: #f3edfc;
+  --sky-glow: rgba(187, 167, 244, 0.35);
+  --sky-glow-at: 80% -10%;
+  --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%237a5ae0' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
+  --clouds-opacity: 0.08;
+}
+
+:root[data-sky="morning"] {
+  --sky-a: #ffe0cf;
+  --sky-b: #fdf0ea;
+  --sky-glow: rgba(255, 190, 140, 0.45);
+  --sky-glow-at: 85% -8%;
+}
+
+:root[data-sky="evening"] {
+  --sky-a: #ffc8d2;
+  --sky-b: #efdcf6;
+  --sky-glow: rgba(255, 150, 170, 0.4);
+  --sky-glow-at: 12% -6%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sky-a: #0a0618;
+    --sky-b: #1a1036;
+    --sky-glow: rgba(120, 90, 220, 0.28);
+    --sky-glow-at: 75% -10%;
+    --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%23cbb8ff' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
+    --clouds-opacity: 0.06;
+  }
+}
+
+:root[data-theme="dark"] {
+  --sky-a: #0a0618;
+  --sky-b: #1a1036;
+  --sky-glow: rgba(120, 90, 220, 0.28);
+  --sky-glow-at: 75% -10%;
+  --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%23cbb8ff' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
+  --clouds-opacity: 0.06;
+}
+
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 42%, var(--bg) 88%);
+  transition: background 1.2s ease;
+}
+
+.sky-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 45% at var(--sky-glow-at), var(--sky-glow), transparent 70%);
+}
+
+.sky-clouds {
+  position: absolute;
+  inset: -300px 0 0;
+  background-image: var(--clouds);
+  background-size: 380px 300px;
+  opacity: var(--clouds-opacity);
+  animation: clouds-drift 140s linear infinite;
+}
+
+@keyframes clouds-drift {
+  to {
+    transform: translate3d(380px, 300px, 0);
+  }
+}
+
+.sky-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.4px 1.4px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 140px, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 160px 60px, #ffe9b8, transparent),
+    radial-gradient(1px 1px at 230px 190px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 280px 20px, #dcd0ff, transparent),
+    radial-gradient(1px 1px at 50px 230px, #fff, transparent);
+  background-size: 300px 260px;
+  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
+  animation: stars-twinkle 5s ease-in-out infinite alternate;
+}
+
+@keyframes stars-twinkle {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky-clouds,
+  .sky-stars {
+    animation: none;
   }
 }
