@@ -4,6 +4,7 @@ import { MATCH_REL_LABEL, readChart, readMatch, validateBirth, type BirthDetails
 import { inviteLink, isBirthDetails, load, save, type Invite } from "../lib";
 import { DateFields, TimeFields } from "./DateTimeFields";
 import { Close, Copy } from "./Icons";
+import { MatchTutorial } from "./MatchTutorial";
 import { PlaceField, type Place } from "./PlaceField";
 import { ScoreRing } from "./Score";
 import { Term } from "./Term";
@@ -68,7 +69,12 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
   }, [incoming, onIncoming]);
 
   const [rel, setRel] = useState<MatchRel>("friend");
-  const result = useMemo(() => (current ? readMatch(profile, readChart(current.birth), current.name, current.rel ?? "friend") : null), [profile, current]);
+  const otherProfile = useMemo(() => (current ? readChart(current.birth) : null), [current]);
+  const result = useMemo(
+    () => (current && otherProfile ? readMatch(profile, otherProfile, current.name, current.rel ?? "friend") : null),
+    [profile, otherProfile, current],
+  );
+  const [showChart, setShowChart] = useState(false);
 
   /** Change what someone is to you; the match is read again for that bond. */
   const setBond = (r: MatchRel) => {
@@ -233,6 +239,20 @@ export function MatchPage({ profile, incoming, onIncoming }: { profile: Profile;
               </p>
             </div>
           </div>
+          <button type="button" className="match-chart-toggle" aria-expanded={showChart} onClick={() => setShowChart((open) => !open)}>
+            <span className="match-chart-glyph" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="5.5" />
+                <line x1="12" y1="2" x2="18.5" y2="16.5" />
+                <circle cx="12" cy="2" r="2" className="dot-a" />
+                <circle cx="18.5" cy="16.5" r="2" className="dot-b" />
+              </svg>
+            </span>
+            {showChart ? "Hide chart" : "See how your charts connect"}
+            <span className="match-chart-chev" aria-hidden="true" />
+          </button>
+          {showChart ? <MatchTutorial key={current?.name} result={result} onClose={() => setShowChart(false)} /> : null}
           <div className="match-bond">
             <span className="label">They are your</span>
             {relChips(result.rel, setBond)}

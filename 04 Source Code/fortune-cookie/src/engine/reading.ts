@@ -108,9 +108,10 @@ import {
 } from "./copy-more";
 
 export type { AreaId, Tone } from "./copy";
+export type { ElementName, Family } from "./pillars";
 export { AREA_META, FAMILY_NAME, PILLAR_META, TONE_LABEL } from "./copy";
 export type { CareerCtx, GrowthCtx, HomeCtx, LoveCtx, MatchRel } from "./copy-more";
-export { MATCH_REL_LABEL, EXPLORE } from "./copy-more";
+export { MATCH_REL_LABEL, MATCH_CHART, MATCH_MONTH, EXPLORE } from "./copy-more";
 export type { ExploreItem, ExploreCat } from "./copy-more";
 
 export const AREAS: AreaId[] = ["growth", "career", "love", "family"];
@@ -715,10 +716,35 @@ export type MatchReading = {
   them: { name: string; core: ElementName; yang: boolean; nick: string; title: string; yearAnimal: string; dayAnimal: string };
   headline: string;
   rows: { label: string; text: string }[];
+  /** The exact inputs the score used, so the Match chart can show its work. */
+  evidence: MatchEvidence;
+};
+
+export type Bond = "harmony" | "trine" | "echo" | "clash" | "none";
+export type MatchPillarKey = "day" | "month" | "year";
+
+/** One pillar pair the score compares: both animals, their bond, and how much it counts for this kind of bond. */
+export type MatchPillarLink = {
+  key: MatchPillarKey;
+  mine: { animal: string; branchIdx: number };
+  theirs: { animal: string; branchIdx: number };
+  bond: Bond;
+  /** Multiplier this pillar gets for the chosen bond (REL_WEIGHTS). */
+  weight: number;
+  /** Raw points it added: weight x bond points. */
+  points: number;
+};
+
+export type MatchEvidence = {
+  core: { mine: ElementName; mineYang: boolean; theirs: ElementName; theirsYang: boolean; family: Family; points: number };
+  links: MatchPillarLink[];
+  fillsHelpfulElement: boolean;
+  helpfulElement: ElementName;
+  polarityContrast: boolean;
+  polarityPoints: number;
 };
 
 const TRINE = (a: number, b: number) => a !== b && mod(a - b, 4) === 0;
-type Bond = "harmony" | "trine" | "echo" | "clash" | "none";
 const bondOf = (a: number, b: number): Bond => {
   const r = branchRelation(a, b);
   return r !== "none" ? r : TRINE(a, b) ? "trine" : "none";
@@ -774,6 +800,19 @@ export function readMatch(me: Profile, other: Profile, name: string, rel: MatchR
   const lift = (between ? 9 : 5) + (day === "clash" ? 3 : 0);
   const bridgeScore = Math.max(score + 3, Math.min(97, matchScore(raw + lift, rel)));
   const fills = other.most === me.helpful.element;
+  const w = REL_WEIGHTS[rel];
+  const links: MatchPillarLink[] = (["day", "month", "year"] as const).map((k) => {
+    const bond = bondOf(me.chart[k].branchIdx, other.chart[k].branchIdx);
+    return {
+      key: k,
+      mine: { animal: me.chart[k].branch.animal, branchIdx: me.chart[k].branchIdx },
+      theirs: { animal: other.chart[k].branch.animal, branchIdx: other.chart[k].branchIdx },
+      bond,
+      weight: w[k],
+      points: w[k] * BOND_PTS[bond],
+    };
+  });
+  const polarityContrast = me.core.yang !== other.core.yang;
   return {
     score,
     tone,
@@ -796,6 +835,14 @@ export function readMatch(me: Profile, other: Profile, name: string, rel: MatchR
       { label: `${me.chart.year.branch.animal} and ${other.chart.year.branch.animal}`, text: MATCH_YEAR[year] },
       { label: "One tip", text: fills ? MATCH_TIP.fills : MATCH_TIP[fam] },
     ],
+    evidence: {
+      core: { mine: myEl, mineYang: me.core.yang, theirs: theirEl, theirsYang: other.core.yang, family: fam, points: w.fam[fam] },
+      links,
+      fillsHelpfulElement: fills,
+      helpfulElement: me.helpful.element,
+      polarityContrast,
+      polarityPoints: polarityContrast ? w.yinYang : 0,
+    },
   };
 }
 
