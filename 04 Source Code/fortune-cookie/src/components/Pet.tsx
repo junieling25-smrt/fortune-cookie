@@ -20,18 +20,81 @@ const BODY: Record<string, [string, string]> = {
   Pig: ["#FFC6D4", "#FFE0E8"],
 };
 
-/** A round little body under the head: arms, belly, and two feet. */
+/** A tail drawn twice: a dark outline, then the color on top. */
+function Stroke({ d, color, w }: { d: string; color: string; w: number }) {
+  return (
+    <>
+      <path d={d} fill="none" stroke={LINE} strokeWidth={w + 2.2} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  );
+}
+
+const st = { stroke: LINE, strokeWidth: 1.5, strokeLinejoin: "round" as const };
+
+/** Each animal's tail, sitting behind the body on the right. */
+const TAILS: Record<string, () => React.JSX.Element> = {
+  Rat: () => <Stroke d="M32 53 C 40 55, 44 49, 41 46 C 39 44, 37 47, 39 48" color="#FFB1C4" w={1.6} />,
+  Ox: () => (
+    <>
+      <Stroke d="M32 52 C 37 53, 40 50, 41 47" color="#D9B283" w={1.6} />
+      <circle cx="41.5" cy="46" r="2.2" fill="#8A5A3A" {...st} />
+    </>
+  ),
+  Tiger: () => (
+    <>
+      <Stroke d="M32 52 C 39 54, 43 50, 42 44" color="#F7B35C" w={3.2} />
+      <path d="M40 52 L42 50 M42 47 L44 46" stroke={LINE} strokeWidth="1.3" strokeLinecap="round" />
+    </>
+  ),
+  Rabbit: () => <circle cx="34" cy="53" r="3.6" fill="#FFFFFF" {...st} />,
+  Dragon: () => (
+    <>
+      <Stroke d="M32 52 C 39 55, 43 51, 43 45" color="#9EDFC0" w={3.2} />
+      <path d="M43 45 L41 41 L45.5 43 Z" fill="#F7D27E" {...st} />
+    </>
+  ),
+  Snake: () => <Stroke d="M30 56 C 40 59, 44 52, 39 49 C 36 47, 34 51, 37 52" color="#C8B8F6" w={3.4} />,
+  Horse: () => <path d="M32 50 C 40 49, 43 55, 41 60 C 38 57, 35 55, 32 54 Z" fill="#7A4A2E" {...st} />,
+  Goat: () => <ellipse cx="34" cy="52" rx="2.6" ry="1.8" fill="#F5EEDD" {...st} transform="rotate(-30 34 52)" />,
+  Monkey: () => <Stroke d="M32 53 C 42 56, 45 47, 41 43 C 38 41, 35 44, 38 46" color="#B98158" w={2.4} />,
+  Rooster: () => (
+    <g {...st}>
+      <ellipse cx="36" cy="47" rx="2.4" ry="5" fill="#FF7A6E" transform="rotate(30 36 47)" />
+      <ellipse cx="38" cy="50" rx="2.4" ry="5" fill="#F7C04A" transform="rotate(60 38 50)" />
+      <ellipse cx="38" cy="54" rx="2.4" ry="4.5" fill="#7FC8A9" transform="rotate(85 38 54)" />
+    </g>
+  ),
+  Dog: () => <Stroke d="M32 51 C 37 50, 39 47, 39 43" color="#EBCB9C" w={3} />,
+  Pig: () => <Stroke d="M32 52 C 35 52, 37 50, 36 48.5 C 35 47, 33 48.5, 34.5 49.5 C 36 50.5, 38 50, 38.5 48.5" color="#FF9FB8" w={1.5} />,
+};
+
+/** A small round body under a big head: arms, belly, feet, and a tail. */
 function Body({ animal }: { animal: string }) {
   const [fill, belly] = BODY[animal] ?? ["#E7D9C4", "#FFF6E8"];
-  const st = { stroke: LINE, strokeWidth: 1.6, strokeLinejoin: "round" as const };
+  const Tail = TAILS[animal];
+  const snake = animal === "Snake";
   return (
-    <g className="pet-limbs">
-      <ellipse cx="18.5" cy="62" rx="4.6" ry="2.8" fill={fill} {...st} />
-      <ellipse cx="29.5" cy="62" rx="4.6" ry="2.8" fill={fill} {...st} />
-      <ellipse cx="24" cy="51" rx="11.5" ry="11" fill={fill} {...st} />
-      <ellipse cx="24" cy="53.5" rx="6.5" ry="6.5" fill={belly} />
-      <ellipse className="pet-arm-l" cx="13.5" cy="50" rx="3" ry="5" fill={fill} transform="rotate(28 13.5 50)" {...st} />
-      <ellipse className="pet-arm-r" cx="34.5" cy="50" rx="3" ry="5" fill={fill} transform="rotate(-28 34.5 50)" {...st} />
+    <g>
+      <g className="pet-tail">{Tail ? <Tail /> : null}</g>
+      {snake ? null : (
+        <>
+          <ellipse cx="19.5" cy="57" rx="3.8" ry="2.5" fill={fill} {...st} />
+          <ellipse cx="28.5" cy="57" rx="3.8" ry="2.5" fill={fill} {...st} />
+        </>
+      )}
+      <ellipse cx="24" cy="49" rx={snake ? 11 : 10} ry={snake ? 8 : 8.5} fill={fill} {...st} />
+      <ellipse cx="24" cy="50.5" rx="5.5" ry="5" fill={belly} />
+      {snake ? null : (
+        <>
+          <g className="pet-arm-l">
+            <ellipse cx="15.5" cy="47" rx="2.4" ry="3.8" fill={fill} transform="rotate(35 15.5 47)" {...st} />
+          </g>
+          <g className="pet-arm-r">
+            <ellipse cx="32.5" cy="47" rx="2.4" ry="3.8" fill={fill} transform="rotate(-35 32.5 47)" {...st} />
+          </g>
+        </>
+      )}
     </g>
   );
 }
@@ -112,7 +175,7 @@ export function Pet({ animal, season, cheer }: { animal: string; season: SeasonN
         </span>
       ) : null}
       <span className="pet-body">
-        <svg className="animal-icon" width="56" height="80" viewBox="0 0 48 68" role="img" aria-label={`${animal} in ${season} clothes`}>
+        <svg className="animal-icon pet-svg" width="62" height="80" viewBox="0 0 48 62" role="img" aria-label={`${animal} in ${season} clothes`}>
           <Body animal={animal} />
           <AnimalHead animal={animal} />
           <Outfit season={season} faceY={FACE_Y[animal] ?? 29} />

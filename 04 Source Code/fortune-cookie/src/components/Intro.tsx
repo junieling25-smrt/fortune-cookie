@@ -10,7 +10,7 @@ export function Intro({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
   const last = i === 1;
   const { bazi, app } = INTRO;
-  const icons = [<Mark key="m" size={26} />, <Shirt key="s" size={22} />, <TabForecast key="f" size={22} />];
+  const icons = [<Mark key="m" size={26} />, <AnimalIcon key="a" animal="Dog" size={30} />, <Shirt key="s" size={22} />, <TabForecast key="f" size={22} />];
 
   return (
     <div className="intro">

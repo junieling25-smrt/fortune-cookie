@@ -22,9 +22,10 @@ export const INTRO = {
     kicker: "How the app works",
     title: "One cookie a day. About a minute.",
     steps: [
-      "Crack today's cookie for your fortune and a score from 0 to 100.",
-      "Try a small tweak, like a color to wear, picked for your chart.",
-      "Look ahead at your month, your year, and the next ten.",
+      "Crack today's cookie for your fortune and a score from 0 to 100. On a phone, pull it apart.",
+      "Meet your year animal, the zodiac sign most people know. It sits by your score, dresses for the season, and cheers when you try a tweak.",
+      "Try small tweaks picked for your chart: a color, a food, an action, and a kind of music.",
+      "Look ahead at your year, check a match with a friend, and take a walk in the day's direction.",
     ],
   },
 };

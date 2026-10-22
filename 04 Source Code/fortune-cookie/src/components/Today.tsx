@@ -27,22 +27,6 @@ function Why({ tip }: { tip: string }) {
   );
 }
 
-/** What the day is like for an area, and what to do with it, side by side. */
-function AreaCols({ text, forYou, toneLine }: { text: string; forYou: string | null; toneLine: string }) {
-  return (
-    <div className="area-cols">
-      <div>
-        <p className="label">What's going on</p>
-        <p className="area-text">{text}</p>
-      </div>
-      <div className="area-foryou">
-        <p className="label">{forYou ? "For you" : "What to do"}</p>
-        <p>{forYou ?? toneLine}</p>
-      </div>
-    </div>
-  );
-}
-
 export function Today({
   profile,
   reading,
@@ -299,7 +283,7 @@ export function Today({
                   </div>
                   <ScorePill score={focus.score} tone={focus.tone} />
                 </header>
-                <AreaCols text={focus.text} forYou={focus.forYou} toneLine={focus.toneLine} />
+                <p className="area-text">{focus.forYou ?? focus.text}</p>
               </section>
 
               <section className="block others" aria-label="Other areas">
@@ -319,7 +303,7 @@ export function Today({
                       </button>
                       {isOpen ? (
                         <div className="other-body">
-                          <AreaCols text={a.text} forYou={a.forYou} toneLine={a.toneLine} />
+                          <p className="area-text">{a.forYou ?? a.text}</p>
                         </div>
                       ) : null}
                     </div>

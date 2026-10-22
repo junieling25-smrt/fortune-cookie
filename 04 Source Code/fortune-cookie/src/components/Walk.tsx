@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { readWalk, type Profile, type Walk } from "../engine/reading";
 
-type Spot = { lat: number; lon: number; from: "here" | "birthplace" };
+type Spot = { lat: number; lon: number };
 type Place = { name: string; kind: string; lat: number; lon: number; dist: number; off: number };
 type Found = { status: "loading" | "done" | "error"; list: Place[] };
 
@@ -45,6 +45,30 @@ const fmtDist = (m: number) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(
 const walkLink = (from: Spot, to: Place) =>
   `https://www.google.com/maps/dir/?api=1&origin=${from.lat.toFixed(5)},${from.lon.toFixed(5)}&destination=${to.lat.toFixed(5)},${to.lon.toFixed(5)}&travelmode=walking`;
 
+const MIRRORS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+type Osm = { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
+
+/** Ask every public Overpass mirror at once and keep the first good answer. Each gets 12 seconds. */
+async function overpass(query: string, signal: AbortSignal): Promise<Osm> {
+  const ctl = new AbortController();
+  const stop = () => ctl.abort();
+  signal.addEventListener("abort", stop);
+  const timer = window.setTimeout(stop, 12000);
+  try {
+    return await Promise.any(
+      MIRRORS.map(async (url) => {
+        const res = await fetch(`${url}?data=${encodeURIComponent(query)}`, { signal: ctl.signal });
+        if (!res.ok) throw new Error(String(res.status));
+        return (await res.json()) as Osm;
+      }),
+    );
+  } finally {
+    window.clearTimeout(timer);
+    signal.removeEventListener("abort", stop);
+    ctl.abort();
+  }
+}
+
 /**
  * Named places of the day's element that sit in today's direction, from
  * OpenStreetMap. Each kind is asked for once; places inside the cone are
@@ -52,17 +76,17 @@ const walkLink = (from: Spot, to: Place) =>
  */
 async function findPlaces(spot: Spot, walk: Walk, radius: number, signal: AbortSignal): Promise<Place[]> {
   const kindOf = new Map<string, string>();
-  const parts = walk.places.flatMap((p) =>
-    p.tags.map((t) => {
+  const byKey = new Map<string, string[]>();
+  for (const p of walk.places)
+    for (const t of p.tags) {
       kindOf.set(t, p.label);
       const [k, v] = t.split("=");
-      return `nwr["${k}"="${v}"]["name"](around:${radius},${spot.lat.toFixed(5)},${spot.lon.toFixed(5)});`;
-    }),
-  );
-  const query = `[out:json][timeout:20];(${parts.join("")});out center tags 400;`;
-  const res = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: new URLSearchParams({ data: query }), signal });
-  if (!res.ok) throw new Error(String(res.status));
-  const data = (await res.json()) as { elements: { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }[] };
+      byKey.set(k, [...(byKey.get(k) ?? []), v]);
+    }
+  const around = `(around:${radius},${spot.lat.toFixed(5)},${spot.lon.toFixed(5)})`;
+  const parts = [...byKey].map(([k, vs]) => `nw["${k}"~"^(${vs.join("|")})$"]["name"]${around};`);
+  const query = `[out:json][timeout:12];(${parts.join("")});out center tags 300;`;
+  const data = await overpass(query, signal);
   const seen = new Set<string>();
   const out: Place[] = [];
   for (const e of data.elements) {
@@ -182,9 +206,26 @@ function Compass({ deg: d, short }: { deg: number; short: string }) {
 export function WalkPage({ profile, date }: { profile: Profile; date: string }) {
   const walk = useMemo(() => readWalk(profile, date), [profile, date]);
   const [spot, setSpot] = useState<Spot | null>(null);
-  const [status, setStatus] = useState<"idle" | "asking" | "denied">("idle");
+  const [status, setStatus] = useState<"asking" | "denied" | "ok">("asking");
   const [found, setFound] = useState<Found | null>(null);
   const [pick, setPick] = useState(0);
+  const [tries, setTries] = useState(0);
+
+  const locate = () => {
+    if (!navigator.geolocation) return setStatus("denied");
+    setStatus("asking");
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setSpot({ lat: p.coords.latitude, lon: p.coords.longitude });
+        setStatus("ok");
+      },
+      () => setStatus("denied"),
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 },
+    );
+  };
+
+  // The page is about where you are, so it asks for your location straight away.
+  useEffect(locate, []);
 
   useEffect(() => {
     if (!spot) return;
@@ -201,20 +242,7 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
       }
     })();
     return () => ctl.abort();
-  }, [spot, walk]);
-
-  const locate = () => {
-    if (!navigator.geolocation) return setStatus("denied");
-    setStatus("asking");
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setSpot({ lat: p.coords.latitude, lon: p.coords.longitude, from: "here" });
-        setStatus("idle");
-      },
-      () => setStatus("denied"),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
-    );
-  };
+  }, [spot, walk, tries]);
 
   const kinds = walk.places.map((p) => p.label.toLowerCase());
   const places = found?.list ?? [];
@@ -237,20 +265,17 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
       {spot ? (
         <>
           <MapView here={spot} walk={walk} places={places} pick={pick} />
-          {spot.from === "birthplace" ? (
-            <p className="hint">
-              Showing {profile.birth.place}.{" "}
-              <button type="button" className="link-btn" onClick={locate}>
-                Use my location
-              </button>
-            </p>
-          ) : null}
           <div className="block walk-results">
-            <p className="label block-label">
-              Places {walk.dir.toLowerCase()} of you
-            </p>
+            <p className="label block-label">Places {walk.dir.toLowerCase()} of you</p>
             {found?.status === "loading" ? <p className="muted">Looking {walk.dir.toLowerCase()}…</p> : null}
-            {found?.status === "error" ? <p className="muted">Couldn't reach the map service. Try again in a minute.</p> : null}
+            {found?.status === "error" ? (
+              <p className="muted">
+                The map service is busy right now.{" "}
+                <button type="button" className="link-btn" onClick={() => setTries((t) => t + 1)}>
+                  Try again
+                </button>
+              </p>
+            ) : null}
             {found?.status === "done" && !places.length ? (
               <p className="muted">Nothing like that on the map {walk.dir.toLowerCase()} of you. A walk that way still counts.</p>
             ) : null}
@@ -276,16 +301,19 @@ export function WalkPage({ profile, date }: { profile: Profile; date: string }) 
         </>
       ) : (
         <div className="block walk-ask">
-          <p>Find places {walk.dir.toLowerCase()} of where you are.</p>
-          <div className="walk-ask-actions">
-            <button type="button" className="btn btn-cookie" onClick={locate} disabled={status === "asking"}>
-              {status === "asking" ? "Finding you…" : "Use my location"}
-            </button>
-            <button type="button" className="btn btn-soft" onClick={() => setSpot({ lat: profile.birth.lat, lon: profile.birth.lon, from: "birthplace" })}>
-              Use my birthplace
-            </button>
-          </div>
-          {status === "denied" ? <p className="form-error">Couldn't get your location. You can use your birthplace instead.</p> : null}
+          {status === "asking" ? (
+            <p className="muted">Finding where you are…</p>
+          ) : (
+            <>
+              <p>To find places {walk.dir.toLowerCase()} of you, the app needs your location.</p>
+              <div className="walk-ask-actions">
+                <button type="button" className="btn btn-cookie" onClick={locate}>
+                  Use my location
+                </button>
+              </div>
+              <p className="hint">If nothing happens, allow location for this site in your browser settings.</p>
+            </>
+          )}
           <p className="hint">Your location stays in this browser tab and is never saved.</p>
         </div>
       )}

@@ -4033,8 +4033,8 @@ select.field {
   position: absolute;
   top: 0;
   right: 0;
-  width: 72px;
-  height: 88px;
+  width: 76px;
+  height: 94px;
   display: grid;
   place-items: center;
   background: none;
@@ -4071,7 +4071,7 @@ select.field {
     transform: translateY(0) scale(1.1, 0.88);
   }
   50% {
-    transform: translateY(-16px) scale(0.94, 1.08) rotate(6deg);
+    transform: translateY(-12px) scale(0.96, 1.05) rotate(4deg);
   }
   80% {
     transform: translateY(0) scale(1.06, 0.94);
@@ -4083,8 +4083,8 @@ select.field {
 
 .pet-bubble {
   position: absolute;
-  bottom: calc(100% - 2px);
-  right: 4px;
+  top: 8px;
+  right: calc(100% - 6px);
   white-space: nowrap;
   padding: 3px 10px;
   border-radius: 999px;
@@ -4138,7 +4138,7 @@ select.field {
 
 @media (min-width: 521px) {
   .score-copy {
-    padding-right: 76px;
+    padding-right: 80px;
   }
 }
 
@@ -4149,27 +4149,37 @@ select.field {
   }
 }
 
+/* arms swing from the shoulders, in the drawing's own units */
+.pet-arm-l,
+.pet-arm-r {
+  transform-box: view-box;
+}
+
+.pet-arm-l {
+  transform-origin: 18px 44px;
+}
+
+.pet-arm-r {
+  transform-origin: 30px 44px;
+}
+
 .pet.is-happy .pet-arm-l {
   animation: wave-l 0.35s ease-in-out 4 alternate;
-  transform-box: fill-box;
-  transform-origin: 80% 10%;
 }
 
 .pet.is-happy .pet-arm-r {
   animation: wave-r 0.35s ease-in-out 4 alternate;
-  transform-box: fill-box;
-  transform-origin: 20% 10%;
 }
 
 @keyframes wave-l {
   to {
-    rotate: 70deg;
+    rotate: 110deg;
   }
 }
 
 @keyframes wave-r {
   to {
-    rotate: -70deg;
+    rotate: -110deg;
   }
 }
 
@@ -4451,34 +4461,46 @@ select.field {
   color: var(--ink-2);
 }
 
-/* an area: today on the left, for you on the right */
-.area-cols {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 14px;
+
+/* the pet: never clipped, tail sways, a happy wag */
+.pet-svg {
+  overflow: visible;
+  width: 70px;
+  height: 90px;
 }
 
-.area-cols > div {
-  display: grid;
-  align-content: start;
-  gap: 4px;
+.pet-tail {
+  transform-box: fill-box;
+  transform-origin: 0% 60%;
+  animation: tail-sway 2.6s ease-in-out infinite;
 }
 
-.area-cols .area-text {
-  font-size: 16px;
+.pet.is-happy .pet-tail {
+  animation: tail-wag 0.18s ease-in-out 8 alternate;
 }
 
-.area-cols .area-foryou {
-  border-left: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--personal);
-  color: var(--ink);
-  font-size: 15px;
+@keyframes tail-sway {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  50% {
+    rotate: -8deg;
+  }
 }
 
-@media (max-width: 640px) {
-  .area-cols {
-    grid-template-columns: minmax(0, 1fr);
+@keyframes tail-wag {
+  from {
+    rotate: -14deg;
+  }
+  to {
+    rotate: 14deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-tail,
+  .pet.is-happy .pet-tail {
+    animation: none;
   }
 }

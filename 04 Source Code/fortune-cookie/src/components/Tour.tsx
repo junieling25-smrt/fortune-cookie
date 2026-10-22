@@ -4,16 +4,18 @@ import { useEffect, useLayoutEffect, useState } from "react";
 const STEPS: { sel: string[]; text: string }[] = [
   { sel: [".stage"], text: "Crack a new cookie every day for your fortune." },
   { sel: [".score-block .ring"], text: "Your score from 0 to 100 shows how easy today is for your chart." },
+  { sel: [".pet"], text: "This is your year animal. It dresses for the season and cheers when you try a tweak." },
   { sel: [".tweaks"], text: "Small tweaks are quick ways to work with the day. Tap the (i) to see why." },
   { sel: [".tabbar button:nth-child(2)", ".topnav-link:nth-child(2)"], text: "Forecast shows your month, your year, and the years ahead." },
   { sel: [".tabbar button:nth-child(3)", ".topnav-link:nth-child(3)"], text: "Match compares your chart with someone you care about." },
+  { sel: [".tabbar button:nth-child(4)", ".topnav-link:nth-child(4)"], text: "Walk finds real places in the day's direction." },
   { sel: [".me-btn"], text: "Your profile holds your animals, your details, and a daily reminder." },
 ];
-const STEP_MS = 1700;
+const STEP_MS = 1800;
 
 const visible = (el: Element | null): el is HTMLElement => !!el && (el as HTMLElement).getClientRects().length > 0 && getComputedStyle(el).display !== "none";
 
-/** A ten-second tour after onboarding. It moves on by itself; tap to go faster, or skip. */
+/** A short tour after onboarding. It moves on by itself; tap to go faster, or skip. */
 export function Tour({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
   const [box, setBox] = useState<DOMRect | null>(null);
