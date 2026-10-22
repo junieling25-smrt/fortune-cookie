@@ -50,18 +50,8 @@ function Moon({ s }: { s: number }) {
 
 const ART: Record<Kind, (p: { s: number }) => ReactNode> = { slip: Slip, spark: Spark, moon: Moon };
 
-/** Extra spots for the whole-page layer, which also covers the middle on wide screens. */
-const PAGE_SPOTS: typeof SPOTS = [
-  ...SPOTS.filter((f) => f.x < 10 || f.x > 90),
-  { k: "moon", x: 6, y: 24, s: 18, r: -10 },
-  { k: "slip", x: 94, y: 18, s: 24, r: 12 },
-  { k: "spark", x: 3, y: 46, s: 12 },
-  { k: "slip", x: 8, y: 66, s: 22, r: -18 },
-  { k: "moon", x: 96, y: 56, s: 20, r: 25 },
-  { k: "spark", x: 97, y: 38, s: 14 },
-  { k: "spark", x: 2, y: 84, s: 11 },
-  { k: "slip", x: 95, y: 76, s: 20, r: 8 },
-];
+/** The whole-page layer keeps only the side pieces, spaced so the clouds fit between them. */
+const PAGE_SPOTS: typeof SPOTS = SPOTS.filter((f) => f.x < 10 || f.x > 90);
 
 /**
  * `page` draws a fixed layer behind the whole app, where every piece also

@@ -4624,25 +4624,25 @@ select.field {
 /* ------------------------------------------------------------- the sky: time of day, auspicious clouds, stars at night */
 
 :root {
-  --sky-a: #ece3ff;
-  --sky-b: #f3edfc;
-  --sky-glow: rgba(187, 167, 244, 0.35);
+  --sky-a: #ece6f8;
+  --sky-b: #f3eefa;
+  --sky-glow: rgba(187, 167, 244, 0.22);
   --sky-glow-at: 80% -10%;
-  --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%237a5ae0' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
-  --clouds-opacity: 0.08;
+  --cloud-fill: rgba(255, 255, 255, 0.55);
+  --cloud-line: rgba(122, 90, 224, 0.2);
 }
 
 :root[data-sky="morning"] {
-  --sky-a: #ffe0cf;
-  --sky-b: #fdf0ea;
-  --sky-glow: rgba(255, 190, 140, 0.45);
+  --sky-a: #f8e6dc;
+  --sky-b: #f8f0ef;
+  --sky-glow: rgba(240, 196, 166, 0.3);
   --sky-glow-at: 85% -8%;
 }
 
 :root[data-sky="evening"] {
-  --sky-a: #ffc8d2;
-  --sky-b: #efdcf6;
-  --sky-glow: rgba(255, 150, 170, 0.4);
+  --sky-a: #f4d9df;
+  --sky-b: #efe3f4;
+  --sky-glow: rgba(230, 170, 185, 0.28);
   --sky-glow-at: 12% -6%;
 }
 
@@ -4652,8 +4652,8 @@ select.field {
     --sky-b: #1a1036;
     --sky-glow: rgba(120, 90, 220, 0.28);
     --sky-glow-at: 75% -10%;
-    --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%23cbb8ff' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
-    --clouds-opacity: 0.06;
+    --cloud-fill: rgba(255, 255, 255, 0.035);
+    --cloud-line: rgba(203, 184, 255, 0.16);
   }
 }
 
@@ -4662,8 +4662,8 @@ select.field {
   --sky-b: #1a1036;
   --sky-glow: rgba(120, 90, 220, 0.28);
   --sky-glow-at: 75% -10%;
-  --clouds: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='380' height='300' viewBox='0 0 380 300' fill='none' stroke='%23cbb8ff' stroke-width='1.6' stroke-linecap='round'%3E%3Cg transform='translate(24 40)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M94 46 C 104 46 116 44 124 40 C 132 36 140 38 140 44 C 140 49 134 50 132 47'/%3E%3C/g%3E%3Cg transform='translate(236 190) scale(0.72)'%3E%3Cpath d='M8 40 C 8 28 22 24 28 32 C 30 18 50 14 58 26 C 64 16 82 18 84 30 C 96 28 102 40 94 46 C 90 50 84 50 80 47'/%3E%3Cpath d='M8 40 C 8 50 20 54 28 48 C 34 56 48 56 54 48 C 62 54 76 52 80 47'/%3E%3Cpath d='M24 40 C 22 34 30 32 32 37 C 33 40 29 41 28 39'/%3E%3Cpath d='M60 36 C 60 30 68 29 70 34 C 71 37 67 38 66 36'/%3E%3Cpath d='M8 40 C -4 40 -16 44 -22 50 C -28 56 -36 54 -36 48 C -36 43 -30 42 -28 45'/%3E%3C/g%3E%3C/svg%3E");
-  --clouds-opacity: 0.06;
+  --cloud-fill: rgba(255, 255, 255, 0.035);
+  --cloud-line: rgba(203, 184, 255, 0.16);
 }
 
 .sky {
@@ -4681,18 +4681,49 @@ select.field {
   background: radial-gradient(60% 45% at var(--sky-glow-at), var(--sky-glow), transparent 70%);
 }
 
-.sky-clouds {
+.sky-cloud {
   position: absolute;
-  inset: -300px 0 0;
-  background-image: var(--clouds);
-  background-size: 380px 300px;
-  opacity: var(--clouds-opacity);
-  animation: clouds-drift 140s linear infinite;
+  line-height: 0;
+  animation: cloud-float 16s ease-in-out infinite alternate;
 }
 
-@keyframes clouds-drift {
+.sky-cloud-art {
+  overflow: visible;
+}
+
+.sky-cloud-art rect,
+.sky-cloud-art circle {
+  fill: var(--cloud-fill);
+  stroke: var(--cloud-line);
+  stroke-width: 1.4;
+}
+
+.sky-curl {
+  fill: none;
+  stroke: var(--cloud-line);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes cloud-float {
+  from {
+    translate: -6px 0;
+  }
   to {
-    transform: translate3d(380px, 300px, 0);
+    translate: 8px -3px;
+  }
+}
+
+/* on narrow screens the side gaps are thin, so only a few smaller clouds stay */
+@media (max-width: 979px) {
+  .sky-cloud.is-wide {
+    display: none;
+  }
+
+  .sky-cloud-art {
+    width: 64px;
+    height: 32px;
   }
 }
 
@@ -4721,7 +4752,7 @@ select.field {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sky-clouds,
+  .sky-cloud,
   .sky-stars {
     animation: none;
   }
