@@ -3763,7 +3763,7 @@ select.field {
     justify-self: start;
   }
 
-  .topbar .me-btn {
+  .topbar .top-right {
     justify-self: end;
   }
 
@@ -4628,8 +4628,7 @@ select.field {
   --sky-b: #f3eefa;
   --sky-glow: rgba(187, 167, 244, 0.22);
   --sky-glow-at: 80% -10%;
-  --cloud-fill: rgba(255, 255, 255, 0.55);
-  --cloud-line: rgba(122, 90, 224, 0.2);
+  --cloud-line: rgba(196, 140, 52, 0.38);
 }
 
 :root[data-sky="morning"] {
@@ -4652,8 +4651,7 @@ select.field {
     --sky-b: #1a1036;
     --sky-glow: rgba(120, 90, 220, 0.28);
     --sky-glow-at: 75% -10%;
-    --cloud-fill: rgba(255, 255, 255, 0.035);
-    --cloud-line: rgba(203, 184, 255, 0.16);
+    --cloud-line: rgba(242, 176, 74, 0.24);
   }
 }
 
@@ -4662,8 +4660,7 @@ select.field {
   --sky-b: #1a1036;
   --sky-glow: rgba(120, 90, 220, 0.28);
   --sky-glow-at: 75% -10%;
-  --cloud-fill: rgba(255, 255, 255, 0.035);
-  --cloud-line: rgba(203, 184, 255, 0.16);
+  --cloud-line: rgba(242, 176, 74, 0.24);
 }
 
 .sky {
@@ -4691,17 +4688,10 @@ select.field {
   overflow: visible;
 }
 
-.sky-cloud-art rect,
-.sky-cloud-art circle {
-  fill: var(--cloud-fill);
-  stroke: var(--cloud-line);
-  stroke-width: 1.4;
-}
-
-.sky-curl {
+.sky-cloud-art path {
   fill: none;
   stroke: var(--cloud-line);
-  stroke-width: 1.4;
+  stroke-width: 8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -4722,8 +4712,8 @@ select.field {
   }
 
   .sky-cloud-art {
-    width: 64px;
-    height: 32px;
+    width: 80px;
+    height: 45px;
   }
 }
 
@@ -4756,4 +4746,68 @@ select.field {
   .sky-stars {
     animation: none;
   }
+}
+
+/* the sky switch in the top bar */
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+}
+
+.sky-toggle {
+  position: relative;
+}
+
+.sky-toggle-btn {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+}
+
+.sky-toggle-btn:hover {
+  color: var(--ink);
+  border-color: var(--lilac);
+}
+
+.sky-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  min-width: 180px;
+  display: grid;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lift);
+  animation: pop-in 0.18s ease both;
+}
+
+.sky-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.sky-menu button:hover,
+.sky-menu button.is-on {
+  background: var(--lilac-soft);
+  color: var(--ink);
 }

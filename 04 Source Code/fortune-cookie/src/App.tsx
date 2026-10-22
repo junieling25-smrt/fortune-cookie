@@ -12,6 +12,7 @@ import { Avatar, ProfilePage } from "./components/Profile";
 import { Today, type CheckIn } from "./components/Today";
 import { Tour } from "./components/Tour";
 import { WalkPage } from "./components/Walk";
+import { SkyToggle } from "./components/Sky";
 import { describeCity, findCity, loadCities } from "./engine/cities";
 import { AREAS, DEFAULT_PERSON, readChart, readDay, tomorrowTeaser, validateBirth, type AreaId, type Person } from "./engine/reading";
 import {
@@ -306,13 +307,16 @@ export function App() {
             </button>
           ))}
         </nav>
-        <button type="button" className={`me-btn ${page === "me" ? "is-on" : ""}`} onClick={() => go("me")} aria-label="Your profile">
+        <div className="top-right">
+          <SkyToggle />
+          <button type="button" className={`me-btn ${page === "me" ? "is-on" : ""}`} onClick={() => go("me")} aria-label="Your profile">
           <span className="streak-mini" title={`${streak.streak}-day streak`}>
             <Mark size={16} />
             {streak.streak}
           </span>
-          <Avatar url={avatar} name={saved.person.name} size={36} />
-        </button>
+            <Avatar url={avatar} name={saved.person.name} size={36} />
+          </button>
+        </div>
       </header>
 
       <main className="main" id="top">
