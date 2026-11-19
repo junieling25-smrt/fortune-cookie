@@ -11,7 +11,7 @@ import * as more from "../src/engine/copy-more";
 import * as guide from "../src/engine/copy-guide";
 import { readFileSync } from "node:fs";
 import { computePillars, dayPillarForCivilDate, jdToDate, springStartJD, zonedWallClockToMs } from "../src/engine/pillars";
-import { readChart, readDay, readLife, readMatch, readMonth, readYear, readYears, type BirthDetails, type Person } from "../src/engine/reading";
+import { matchRaw, readChart, readDay, readLife, readMatch, readMonth, readYear, readYears, type BirthDetails, type Person } from "../src/engine/reading";
 // @ts-expect-error untyped test-only dependency
 import lunar from "lunar-javascript";
 
@@ -219,6 +219,26 @@ assert("compatibility gives a score and four rows", pair.score >= 50 && pair.sco
 const selfMatch = readMatch(readChart(people[0]), readChart(people[0]), "Me");
 const bonds = (["partner", "friend", "family", "work"] as const).map((r) => readMatch(readChart(people[0], fullPerson), readChart(people[1]), "Sam", r));
 assert("each bond reads its own way, never below 65, and the bridge only lifts", bonds.every((m) => m.score >= 65 && m.bridge.score > m.score) && new Set(bonds.map((m) => m.rows[0].text)).size === 4, bonds.map((m) => `${m.rel} ${m.score}->${m.bridge.score}`).join(", "));
+// Match chart: the evidence must add back up to exactly what the score used.
+const evidenceSums = bonds.every((m) => {
+  const e = m.evidence;
+  const me = readChart(people[0], fullPerson);
+  const them = readChart(people[1]);
+  const raw = 60 + e.core.points + e.links.reduce((t, l) => t + l.points, 0) + (e.fillsHelpfulElement ? 6 : 0) + e.polarityPoints;
+  return Math.abs(raw - matchRaw(me, them, m.rel)) < 1e-9;
+});
+assert("match evidence adds up to the raw score for every bond", evidenceSums);
+assert("match evidence covers day, month, and year", bonds.every((m) => m.evidence.links.map((l) => l.key).join() === "day,month,year"));
+const bondSeen = new Set<string>();
+for (let i = 0; i < people.length; i++) for (let j = 0; j < people.length; j++) readMatch(readChart(people[i]), readChart(people[j]), "X").evidence.links.forEach((l) => bondSeen.add(l.bond));
+for (let k = 0; k < 400 && bondSeen.size < 5; k++) {
+  const d = (n: number) => `${1960 + (n % 50)}-${String(1 + (n % 12)).padStart(2, "0")}-${String(1 + (n % 27)).padStart(2, "0")}`;
+  const a = { ...people[0], date: d(k * 7), timeKnown: false, time: "" };
+  const b = { ...people[0], date: d(k * 13 + 5), timeKnown: false, time: "" };
+  readMatch(readChart(a), readChart(b), "X").evidence.links.forEach((l) => bondSeen.add(l.bond));
+}
+check("match chart reaches every bond kind", [...bondSeen].sort().join(","), "clash,echo,harmony,none,trine");
+assert("self-match: every pillar is the same animal", selfMatch.evidence.links.every((l) => l.bond === "echo"));
 assert("compatibility is stable", selfMatch.score === readMatch(readChart(people[0]), readChart(people[0]), "Me").score);
 
 // ------------------------------------------------------------------ 4

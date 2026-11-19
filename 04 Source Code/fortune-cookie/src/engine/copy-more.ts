@@ -913,6 +913,47 @@ export const MATCH_TIP: Record<Family | "fills", string> = {
   fills: "They carry the element that balances your chart. Shared routines suit you two.",
 };
 
+/** Match chart: plain names and lines for each part of the score. */
+export const MATCH_MONTH: Record<"harmony" | "trine" | "echo" | "clash" | "none", string> = {
+  harmony: "Your month animals are a natural pair. Working side by side tends to click.",
+  trine: "Your month animals share a group. You pace projects in a similar way.",
+  echo: "Same month animal. You work alike, so take turns at the hard parts.",
+  clash: "Your month animals sit opposite. You split tasks differently, so agree on who does what.",
+  none: "Your month animals are neutral. A shared plan does more here than a shared rhythm.",
+};
+
+export const MATCH_CHART = {
+  bondName: { harmony: "a natural pair", trine: "on the same team", echo: "the same animal", clash: "opposites", none: "neutral" },
+  bondLegend: { harmony: "Natural pair", trine: "Same team", echo: "Same animal", clash: "Opposites", none: "Neutral" },
+  bondMeans: {
+    harmony: "Easier coordination",
+    trine: "A natural affinity",
+    echo: "Familiar, sometimes too familiar",
+    clash: "Friction, and movement",
+    none: "No built-in bond",
+  },
+  pillar: {
+    day: { title: "Day to day", about: "Day animals describe how you live side by side: routines, moods, the small stuff." },
+    month: { title: "Work and rhythm", about: "Month animals describe how you each handle work, seasons, and getting things done." },
+    year: { title: "Roots and circles", about: "Year animals describe your backgrounds and the circles you move in." },
+  },
+  weight: {
+    most: "Counts most for {who}.",
+    some: "Counts some for {who}.",
+    little: "Counts only a little for {who}.",
+  },
+  who: { partner: "a couple", friend: "friends", family: "family", work: "coworkers" },
+  coreWeight: "Their element reads as {fam} for you. This part counts for every kind of bond.",
+  coreAbout: "Your core elements describe the basic way each of you meets the world.",
+  polarity: {
+    contrast: "One of you is Yang and one is Yin. Opposite polarities add a little pull.",
+    same: "You share a polarity. Familiar, with a little less pull.",
+  },
+  fills: "They also carry plenty of {el}, the element that balances your chart. That adds a few points.",
+  tipAbout: "This is a tendency, not a verdict. Use the tip as something to try, not a rule.",
+  hour: "Birth hour isn't part of the match yet, so it stays off the wheel.",
+} as const;
+
 export type MatchRel = "partner" | "friend" | "family" | "work";
 
 export const MATCH_REL_LABEL: Record<MatchRel, string> = { partner: "Partner or crush", friend: "Friend", family: "Family", work: "Coworker" };
